@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.15)
-include(GNUInstallDirs)
 
 project(timber VERSION 0.0.1
-    DESCRIPTION "Very nice project"
-    LANGUAGES C)
+DESCRIPTION "Very nice project"
+LANGUAGES C)
 
+include(GNUInstallDirs)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
