@@ -1,0 +1,44 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+BreakBeforeBraces: Custom
+BraceWrapping:
+    AfterClass: false
+    AfterControlStatement: false
+    AfterEnum: false
+    AfterFunction: false
+    AfterNamespace: false
+    AfterObjCDeclaration: false
+    AfterStruct: false
+    AfterUnion: false
+    BeforeCatch: false
+    BeforeElse: false
+    IndentBraces: false
+ColumnLimit: 80
+AlignAfterOpenBracket: Align
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+ContinuationIndentWidth: 8
+BreakBeforeBinaryOperators: None
+AlwaysBreakAfterReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 1000
+PenaltyBreakAssignment: 1000
+AlignArrayOfStructures: Left
+AlignOperands: Align
+Cpp11BracedListStyle: false
+SpaceBeforeCpp11BracedList: true
+PointerAlignment: Left
+PenaltyBreakBeforeFirstCallParameter: 50
+PenaltyBreakString: 100
+AllowShortBlocksOnASingleLine: Always
+# AllowShortCaseExpressionOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortCompoundRequirementOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+ReflowComments: false
+SpacesBeforeTrailingComments: 1
