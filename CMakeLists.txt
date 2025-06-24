@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
+include(GNUInstallDirs)
 
 project(timber VERSION 0.0.1
     DESCRIPTION "Very nice project"
@@ -11,7 +12,21 @@ set(CMAKE_C_EXTENSIONS OFF)
 file(GLOB_RECURSE LIB_SOURCES "src/*.c")
 
 
-add_library(${PROJECT_NAME})
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+
+if(BUILD_SHARED_LIBS)
+    add_library(${PROJECT_NAME} SHARED)
+else()
+    add_library(${PROJECT_NAME} STATIC)
+endif()
+
+if(BUILD_SHARED_LIBS)
+    target_compile_definitions(${PROJECT_NAME} 
+        PRIVATE TMB_EXPORTS
+        PUBLIC TMB_SHARED
+    )
+endif()
+
 target_sources(${PROJECT_NAME}
     PRIVATE
     ${LIB_SOURCES}
@@ -28,6 +43,13 @@ target_include_directories(${PROJECT_NAME}
 set(public_headers
     include/lib.h
 )
+
+if(WIN32 AND BUILD_SHARED_LIBS)
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
+    )
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
 install(TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}Targets
