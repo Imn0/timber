@@ -24,14 +24,9 @@ endif()
 
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(${PROJECT_NAME}
-        PUBLIC TMB_EXPORTS
-        PUBLIC TMB_SHARED
+        PRIVATE TMB_EXPORTS
+        PRIVATE TMB_SHARED
     )
-    if(WIN32)
-        set_target_properties(${PROJECT_NAME} PROPERTIES
-        WINDOWS_EXPORT_ALL_SYMBOLS ON
-        )
-    endif()
 endif()
 
 target_sources(${PROJECT_NAME}
@@ -90,9 +85,9 @@ if(BUILD_TESTS)
         target_link_libraries(${TEST_NAME} ${PROJECT_NAME})
 
         set_target_properties(${TEST_NAME} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         )
-        add_test(NAME ${TEST_NAME} COMMAND ${CMAKE_BINARY_DIR}/tests/${TEST_NAME})
+        add_test(NAME ${TEST_NAME} COMMAND ${CMAKE_BINARY_DIR}/${TEST_NAME})
     endforeach()
 
     if(TEST_SOURCES)
@@ -115,7 +110,7 @@ if(BUILD_EXAMPLES)
         target_link_libraries(${EXAMPLE_NAME} ${PROJECT_NAME})
 
         set_target_properties(${EXAMPLE_NAME} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         )
     endforeach()
 
