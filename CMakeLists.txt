@@ -23,7 +23,6 @@ option(BUILD_EXAMPLES "Build examples" ON)
 
 function(setup_shared_lib)
 
-
     add_library(${PROJECT_NAME} SHARED)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE timber-objects)
@@ -80,7 +79,7 @@ if(BUILD_SHARED_AND_STATIC_LIBS)
         INCLUDES DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}
     )
 elseif(BUILD_SHARED_LIBS)
-    if(BUILD_TESTS)
+    if(BUILD_TESTS OR BUILD_EXAMPLES)
         setup_static_lib()
     endif()
     setup_shared_lib()
