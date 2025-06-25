@@ -2,7 +2,7 @@
 #define TMB_LIB
 #include <stdbool.h>
 
-#if defined(_WIN32) || defined(__CYGWIN__) || defined(WIN64)
+#if defined(_WIN32) || defined(__CYGWIN__)
     #ifdef TMB_SHARED
         #ifdef TMB_EXPORTS
             #define TMB_API __declspec(dllexport)
