@@ -29,3 +29,6 @@ TMB_API bool tmb_init(const char* init_string) {
     }
     return true;
 }
+
+
+TMB_API void tmb_log(void* logger, int log_level, const char* message, ...){}
