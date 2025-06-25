@@ -1,7 +1,7 @@
 #include <tmb.h>
 #include <stdio.h>
 
-bool tmb_init(const char* init_string) {
+TMB_API bool tmb_init(const char* init_string) {
     if (init_string == NULL) { return false; }
 
     int idx = 0;
