@@ -1,5 +1,5 @@
 #include <tmb.h>
 
-int main(void) {
-    tmb_init("[ %d ] %l - %m");
+int main(int argc, char* argv[]) {
+    tmb_init(argv[1]);
 }

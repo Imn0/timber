@@ -11,8 +11,10 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 file(GLOB_RECURSE LIB_SOURCES "src/*.c")
 
-
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+option(BUILD_TESTS "Build tests" ON)
+option(BUILD_EXAMPLES "Build examples" ON)
 
 if(BUILD_SHARED_LIBS)
     add_library(${PROJECT_NAME} SHARED)
@@ -76,8 +78,7 @@ install(FILES
 )
 
 
-option(BUILD_TESTS "Build tests" ON)
-option(BUILD_EXAMPLES "Build examples" OFF)
+
 if(BUILD_TESTS)
     enable_testing()
     file(GLOB_RECURSE TEST_SOURCES "tests/*_test.c")
