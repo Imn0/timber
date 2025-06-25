@@ -41,7 +41,7 @@ target_include_directories(${PROJECT_NAME}
 )
 
 set(public_headers
-    include/lib.h
+    include/tmb.h
 )
 
 
