@@ -26,8 +26,8 @@ if(BUILD_SHARED_LIBS)
         PUBLIC TMB_SHARED
     )
     if(WIN32)
-        set_target_properties(${PROJECT_NAME} PROPERTIESAdd commentMore actions
-            WINDOWS_EXPORT_ALL_SYMBOLS ON
+        set_target_properties(${PROJECT_NAME} PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
         )
     endif()
 endif()
