@@ -22,7 +22,7 @@ endif()
 
 if(BUILD_SHARED_LIBS)
     target_compile_definitions(${PROJECT_NAME}
-        PRIVATE TMB_EXPORTS
+        PUBLIC TMB_EXPORTS
         PUBLIC TMB_SHARED
     )
 endif()
