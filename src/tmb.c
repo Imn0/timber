@@ -55,7 +55,7 @@ error_return_only:
     return NULL;
 }
 
-TMB_API bool tmb_init(const char* config_file) {
+bool tmb_init(const char* config_file) {
 
     if (config_file == NULL) {
         // load default config here
@@ -73,4 +73,4 @@ TMB_API bool tmb_init(const char* config_file) {
     return true;
 }
 
-TMB_API void tmb_log(void* logger, int log_level, const char* message, ...) {}
+void tmb_log(void* logger, int log_level, const char* message, ...) {}

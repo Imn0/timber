@@ -1,0 +1,9 @@
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+Name: libtmb
+Version: @PROJECT_VERSION@
+Description: C logging library
+URL: https://github.com/Imn0/timber
+Libs: -L${libdir} -ltmb
+Cflags: -I${includedir} -I${includedir}/cjson
