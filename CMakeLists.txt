@@ -21,7 +21,7 @@ else()
 endif()
 
 if(BUILD_SHARED_LIBS)
-    target_compile_definitions(${PROJECT_NAME} 
+    target_compile_definitions(${PROJECT_NAME}
         PRIVATE TMB_EXPORTS
         PUBLIC TMB_SHARED
     )
@@ -44,11 +44,6 @@ set(public_headers
     include/lib.h
 )
 
-if(WIN32 AND BUILD_SHARED_LIBS)
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        WINDOWS_EXPORT_ALL_SYMBOLS ON
-    )
-endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${public_headers}")
 install(TARGETS ${PROJECT_NAME}

@@ -42,3 +42,4 @@ AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
 ReflowComments: false
 SpacesBeforeTrailingComments: 1
+IndentPPDirectives: BeforeHash

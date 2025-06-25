@@ -1,5 +1,6 @@
 #ifndef TMB_LIB
 #define TMB_LIB
+#include <stdbool.h>
 
 #if defined(_WIN32) || defined(__CYGWIN__)
     #ifdef TMB_SHARED
@@ -19,6 +20,7 @@
     #endif
 #endif
 
-TMB_API int VERY_SPECIAL_FUNCTION_THAT_IS_IMPLEMENTED_IN_LIB_C(int b);
+TMB_API bool tmb_init(const char* init_string);
+TMB_API void tmb_log(void* logger, int log_level, const char* message, ...);
 
 #endif
