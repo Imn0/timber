@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(timber VERSION 0.0.1
+include(version.cmake)
+
+project(timber VERSION ${PROJECT_VERSION}
     DESCRIPTION "C logging library"
     LANGUAGES C)
+set(soversion ${GIT_SOVERSION})
 
 include(GNUInstallDirs)
 set(CMAKE_C_STANDARD 99)
@@ -11,7 +14,6 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 file(GLOB_RECURSE LIB_SOURCES "src/*.c")
 set(public_headers include/tmb.h)
-set(soversion 0)
 
 option(BUILD_SHARED_LIBS "Build shared libraries, builds static when off, can be overwriten with BUILD_SHARED_AND_STATIC_LIBS" ON)
 option(BUILD_SHARED_AND_STATIC_LIBS "Build both shared and static libraries" OFF)
@@ -55,7 +57,7 @@ function(setup_static_lib)
 endfunction(setup_static_lib)
 
 
-add_library(${PROJECT_NAME}-objects OBJECT ${LIB_SOURCES})
+add_library(${PROJECT_NAME}-objects OBJECT ${LIB_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 target_include_directories(${PROJECT_NAME}-objects
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -68,6 +70,13 @@ install(TARGETS ${PROJECT_NAME}-objects
     EXPORT ${PROJECT_NAME}Targets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/_version.c
+    ${CMAKE_CURRENT_BINARY_DIR}/version.c
+    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake
+    VERBATIM
 )
 
 if(BUILD_SHARED_AND_STATIC_LIBS)
