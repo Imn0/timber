@@ -1,7 +1,9 @@
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <tmb.h>
 
 /*
@@ -73,4 +75,21 @@ bool tmb_init(const char* config_file) {
     return true;
 }
 
-void tmb_log(void* logger, int log_level, const char* message, ...) {}
+void __tmb_log(void* logger,
+               int log_level,
+               int line_no,
+               const char* filename,
+               const char* funcname,
+               const char* message,
+               ...) {
+    printf("log level %d, lineno %d, filename %s, funcname %s\n",
+           log_level,
+           line_no,
+           filename,
+           funcname);
+    va_list args;
+    va_start(args, message);
+    vprintf(message, args);
+    va_end(args);
+    printf("\n");
+}

@@ -1,5 +1,5 @@
 #include <tmb.h>
 
 int main(int argc, char* argv[]) {
-    tmb_init(argv[1]);
+    TMB_LOG(0, 0, "helloge");
 }
