@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "cmake>=3.15"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "timber"
+dynamic = ["version"]
+description = "Python bindings for the timber C library"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {text = "MIT"}  # Change to your license
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: C",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/timber"
+Repository = "https://github.com/yourusername/timber.git"
+Issues = "https://github.com/yourusername/timber/issues"

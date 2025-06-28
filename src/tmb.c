@@ -93,3 +93,8 @@ void __tmb_log(void* logger,
     va_end(args);
     printf("\n");
 }
+
+void tmb_test(){
+    printf("helloge\n");
+}
+

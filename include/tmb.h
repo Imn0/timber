@@ -30,4 +30,6 @@ extern void __tmb_log(void* logger,
                       const char* message,
                       ...);
 
+void tmb_test();
+
 #endif

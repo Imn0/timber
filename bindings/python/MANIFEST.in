@@ -1,0 +1,18 @@
+# Include C source files and headers
+recursive-include src *.c *.h
+recursive-include include *.h
+include CMakeLists.txt
+include readme.txt
+include version.cmake
+
+# Include library config files
+recursive-include library_config *.in *.cmake
+
+# Include examples and tests (optional)
+recursive-include examples *.c *.txt
+recursive-include tests *.c *.txt
+
+# Python-specific files
+include bindings/python/timber_module.c
+include pyproject.toml
+include MANIFEST.in

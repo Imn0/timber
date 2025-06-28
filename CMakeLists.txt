@@ -27,7 +27,7 @@ function(setup_shared_lib)
 
     add_library(${PROJECT_NAME} SHARED)
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE timber-objects)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-objects)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${soversion}
@@ -53,7 +53,7 @@ endfunction(setup_shared_lib)
 
 function(setup_static_lib)
     add_library(${PROJECT_NAME}-static STATIC)
-    target_link_libraries(${PROJECT_NAME}-static PRIVATE timber-objects)
+    target_link_libraries(${PROJECT_NAME}-static PRIVATE ${PROJECT_NAME}-objects)
 endfunction(setup_static_lib)
 
 
@@ -113,6 +113,24 @@ else()
         NAMESPACE ${PROJECT_NAME}::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
     )
+endif()
+
+
+option(BUILD_PYTHON_BINDINGS "" OFF)
+if(BUILD_PYTHON_BINDINGS)
+    set(Python_ADDITIONAL_VERSIONS 3)
+    find_package(PythonLibs REQUIRED)
+    find_package(PythonInterp REQUIRED)
+    add_library(${PROJECT_NAME}-python MODULE bindings/python/_timber.c)
+    target_link_libraries(${PROJECT_NAME}-python PRIVATE ${PROJECT_NAME}-objects)
+    include_directories ("${PYTHON_INCLUDE_DIRS}")
+    set_target_properties(${PROJECT_NAME}-python PROPERTIES PREFIX "")
+    set_target_properties(${PROJECT_NAME}-python PROPERTIES OUTPUT_NAME "_timber")
+    if(WIN32)
+        set_target_properties(${PROJECT_NAME}-python PROPERTIES SUFFIX ".pyd")
+    else()
+        set_target_properties(${PROJECT_NAME}-python PROPERTIES SUFFIX ".so")
+    endif()
 endif()
 
 configure_file(
