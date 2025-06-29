@@ -1,6 +1,8 @@
 #ifndef TMB_LIB_H
 #define TMB_LIB_H
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -22,7 +24,7 @@
         (da)->items[(da)->size++] = (item);                                    \
     } while (0)
 
-#define da_nappend(da, new_items, new_items_size)                              \
+#define da_appendn(da, new_items, new_items_size)                              \
     do {                                                                       \
         da_reserve((da), (da)->size + (new_items_size));                       \
         memcpy((da)->items + (da)->size,                                       \
@@ -50,7 +52,25 @@ typedef struct {
     do {                                                                       \
         const char* __s = (char*)cstr;                                         \
         size_t __n = strlen(__s);                                              \
-        da_nappend(sb, __s, __n);                                              \
+        da_appendn(sb, __s, __n);                                              \
     } while (0)
+
+void sb_appendf(StringBuilder* sb, const char* fmt, ...)
+        __attribute__((format(printf, 2, 3)));
+
+void sb_appendf(StringBuilder* sb, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    int n = vsnprintf(NULL, 0, fmt, args);
+    va_end(args);
+
+    da_reserve(sb, sb->size + n + 1);
+
+    va_start(args, fmt);
+    vsnprintf(sb->items + sb->size, n + 1, fmt, args);
+    va_end(args);
+
+    sb->size += n;
+}
 
 #endif //TMB_LIB_H

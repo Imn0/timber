@@ -28,7 +28,7 @@ int main() {
     assert(da.size == 4);
 
     int a[] = { 1, 2, 3, 4 };
-    da_nappend(&da, a, 4);
+    da_appendn(&da, a, 4);
     assert(da.size == 8);
     assert(da.items[4] == 1);
     assert(da.items[5] == 2);
