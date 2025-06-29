@@ -55,8 +55,10 @@ typedef struct {
         da_appendn(sb, __s, __n);                                              \
     } while (0)
 
-void sb_appendf(StringBuilder* sb, const char* fmt, ...)
-        __attribute__((format(printf, 2, 3)));
+#ifndef _WIN32
+__attribute__((format(printf, 2, 3)))
+#endif
+void sb_appendf(StringBuilder* sb, const char* fmt, ...);
 
 void sb_appendf(StringBuilder* sb, const char* fmt, ...) {
     va_list args;
