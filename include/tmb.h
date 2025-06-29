@@ -9,14 +9,6 @@ extern const char* GIT_PROJECT_VERSION;
 extern const char* PROJECT_VERSION;
 extern const char* SOVERSION;
 
-
-
-
-typedef struct {
-    int a;
-    char** consts;
-} Logger;
-
 typedef enum {
     TMB_TRACE = 0,
     TMB_DEBUG,
@@ -34,6 +26,11 @@ typedef struct {
     const char* funcname;
 } LogCtx;
 
+typedef struct {
+    void** sinks;
+    void** formatters;
+} Logger;
+
 #define TMB_LOG(logger, log_level, ...)                                        \
     __tmb_log(logger,                                                          \
               log_level,                                                       \
@@ -42,12 +39,14 @@ typedef struct {
 
 bool tmb_init(const char* init_string);
 
-void __tmb_log(void* logger,
+void tmb_logger_init_default(Logger* lg);
+
+void __tmb_log(const Logger* logger,
                tmb_log_level log_level,
                LogCtx ctx,
                const char* message,
                ...);
 
-void tmb_test();
+void tmb_test(void);
 
 #endif

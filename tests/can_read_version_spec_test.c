@@ -1,6 +1,6 @@
 #include <tmb.h>
 
-volatile int a() {
+int a(void) {
 
     const char* a = GIT_REV;
     const char* b = GIT_TAG;
@@ -12,6 +12,5 @@ volatile int a() {
 }
 
 int main(void) {
-    a();
-    return 0;
+    return a();
 }

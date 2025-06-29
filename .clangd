@@ -1,5 +1,27 @@
 CompileFlags:
-  Add: [-xc, -std=c99]
+  Add:
+    - -xc
+    - -std=c99
+    - -Wall
+    - -Wextra
+    - -Wpedantic
+    - -Wconversion
+    - -Wsign-conversion
+    - -Wshadow
+    - -Wunused-variable
+    - -Wstrict-prototypes
+    - -Wold-style-definition
+    - -Wdouble-promotion
+    - -Wfloat-equal
+    - -Wcast-align
+    - -Wundef
+    - -Wuninitialized
+    - -Winit-self
+    - -Wswitch-enum
+    - -Wswitch-default
+    - -Wbad-function-cast
+    - -Wstrict-aliasing
+    # - -Wmissing-prototypes
 
 Completion:
   HeaderInsertion: Never

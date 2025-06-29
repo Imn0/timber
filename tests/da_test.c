@@ -7,7 +7,7 @@ typedef struct {
     int capacity;
 } DynamicArray;
 
-int main() {
+int main(void) {
     DynamicArray da = { 0 };
     da_reserve(&da, 2);
 
@@ -34,4 +34,4 @@ int main() {
     assert(da.items[5] == 2);
     assert(da.items[6] == 3);
     assert(da.items[7] == 4);
-};
+}

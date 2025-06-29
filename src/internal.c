@@ -1,15 +1,13 @@
+#include <errno.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <internal.h>
+#include <tmb_lib.h>
 
 const char* default_format = "[ {D} ] {F} {L} - {M}";
-
-
 
 #define HANDLE_ERROR(lbl, ...)                                                 \
     do {                                                                       \

@@ -1,7 +1,6 @@
-#include <string.h>
 #include <tmb.h>
 
 int main(void){
-    tmb_init(NULL);
+    tmb_test();
     return 0;
 }

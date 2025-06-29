@@ -1,8 +1,7 @@
-#include <stdio.h>
-#include <string.h>
 #include <tmb.h>
 
 int main(int argc, char* argv[]) {
-    int a = 3;
-    TMB_LOG(NULL, TMB_INFO, "helloge");
+    Logger lg;
+    tmb_logger_init_default(&lg);
+    TMB_LOG(&lg, TMB_ERROR, "wtf");
 }

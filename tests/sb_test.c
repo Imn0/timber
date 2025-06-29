@@ -2,7 +2,7 @@
 #include <string.h>
 #include <tmb_lib.h>
 
-int main() {
+int main(void) {
     StringBuilder sb = { 0 };
     sb_append_cstr(&sb, "hello");
     sb_append_cstr(&sb, " world");
@@ -12,5 +12,4 @@ int main() {
     sb_appendf(&sb, "%d", 3);
     assert(sb.size == 12);
     assert(strncmp("hello world3", sb.items, sb.size) == 0);
-
-};
+}

@@ -13,6 +13,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Debug)
 
+
 file(GLOB_RECURSE LIB_SOURCES "src/*.c")
 set(public_headers include/tmb.h)
 
@@ -66,6 +67,11 @@ target_include_directories(${PROJECT_NAME}-objects
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+target_compile_options(${PROJECT_NAME}-objects PRIVATE
+    $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
+    -Wall -Wextra -pedantic>
+    $<$<C_COMPILER_ID:MSVC>:
+    /W4>)
 set_target_properties(${PROJECT_NAME}-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
 install(TARGETS ${PROJECT_NAME}-objects
     EXPORT ${PROJECT_NAME}Targets
@@ -124,7 +130,7 @@ if(BUILD_PYTHON_BINDINGS)
     find_package(PythonInterp REQUIRED)
     add_library(${PROJECT_NAME}-python MODULE bindings/python/_timber.c)
     target_link_libraries(${PROJECT_NAME}-python PRIVATE ${PROJECT_NAME}-objects)
-    include_directories ("${PYTHON_INCLUDE_DIRS}")
+    include_directories("${PYTHON_INCLUDE_DIRS}")
     set_target_properties(${PROJECT_NAME}-python PROPERTIES PREFIX "")
     set_target_properties(${PROJECT_NAME}-python PROPERTIES OUTPUT_NAME "_timber")
     if(WIN32)
