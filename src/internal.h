@@ -1,3 +1,6 @@
+#ifndef TMB_INTERNAL_H
+#define TMB_INTERNAL_H
+
 extern const char* default_format;
 
 #define UNREACHABLE(...)                                                       \
@@ -11,3 +14,5 @@ extern const char* default_format;
         fprintf(stderr, __VA_ARGS__);                                          \
         exit(1);                                                               \
     } while (0)
+
+#endif

@@ -1,5 +1,5 @@
-#ifndef TMB_LIB
-#define TMB_LIB
+#ifndef TMB_H
+#define TMB_H
 #include <stdbool.h>
 
 extern const char* GIT_REV;

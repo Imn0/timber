@@ -1,9 +1,56 @@
+#ifndef TMB_LIB_H
+#define TMB_LIB_H
+
+#include <stdlib.h>
+#include <string.h>
+
+#define TMB_DA_INIT_CAP 1
+
+#define da_reserve(da, expected_cap)                                           \
+    do {                                                                       \
+        if ((expected_cap) > (da)->capacity) {                                 \
+            if ((da)->capacity == 0) { (da)->capacity = TMB_DA_INIT_CAP; }     \
+            while ((expected_cap) > (da)->capacity) { (da)->capacity *= 2; }   \
+            (da)->items = realloc((da)->items,                                 \
+                                  (da)->capacity * sizeof(*(da)->items));      \
+        }                                                                      \
+    } while (0)
+
+#define da_append(da, item)                                                    \
+    do {                                                                       \
+        da_reserve(da, (da)->size + 1);                                        \
+        (da)->items[(da)->size++] = (item);                                    \
+    } while (0)
+
+#define da_nappend(da, new_items, new_items_size)                              \
+    do {                                                                       \
+        da_reserve((da), (da)->size + (new_items_size));                       \
+        memcpy((da)->items + (da)->size,                                       \
+               (new_items),                                                    \
+               (new_items_size) * sizeof(*(da)->items));                       \
+        (da)->size += new_items_size;                                          \
+    } while (0)
+
+#define da_free(da)                                                            \
+    do {                                                                       \
+        free((da)->items);                                                     \
+        (da)->capacity = 0;                                                    \
+        (da)->size = 0;                                                        \
+    } while (0);
+
 typedef struct {
-    char* str;
+    char* items;
     int size;
     int capacity;
 } StringBuilder;
 
-void sb_append(StringBuilder* sb, const char* what);
+#define sb_to_cstr(sb) da_append(sb, 0)
 
-void sb_nappend(StringBuilder* sb, const char* what, int n);
+#define sb_append_cstr(sb, cstr)                                               \
+    do {                                                                       \
+        const char* __s = (char*)cstr;                                         \
+        size_t __n = strlen(__s);                                              \
+        da_nappend(sb, __s, __n);                                              \
+    } while (0)
+
+#endif //TMB_LIB_H
