@@ -1,1 +1,1 @@
-tmb lib
+a C logging library

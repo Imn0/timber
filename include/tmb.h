@@ -9,26 +9,44 @@ extern const char* GIT_PROJECT_VERSION;
 extern const char* PROJECT_VERSION;
 extern const char* SOVERSION;
 
-// formater f type
+
+
+
+typedef struct {
+    int a;
+    char** consts;
+} Logger;
+
+typedef enum {
+    TMB_TRACE = 0,
+    TMB_DEBUG,
+    TMB_INFO,
+    TMB_NOTICE,
+    TMB_WARNING,
+    TMB_ERROR,
+    TMB_ALERT,
+    TMB_CRITICAL = 9,
+} tmb_log_level;
+
+typedef struct {
+    int line_no;
+    const char* filename;
+    const char* funcname;
+} LogCtx;
+
 #define TMB_LOG(logger, log_level, ...)                                        \
-    do {                                                                       \
-        __tmb_log(logger,                                                      \
-                  log_level,                                                   \
-                  __LINE__,                                                    \
-                  __FILE__,                                                    \
-                  __func__,                                                    \
-                  __VA_ARGS__);                                                \
-    } while (0)
+    __tmb_log(logger,                                                          \
+              log_level,                                                       \
+              (LogCtx) { __LINE__, __FILE__, __func__ },                       \
+              __VA_ARGS__)
 
 bool tmb_init(const char* init_string);
 
-extern void __tmb_log(void* logger,
-                      int log_level,
-                      int line_no,
-                      const char* filename,
-                      const char* funcname,
-                      const char* message,
-                      ...);
+void __tmb_log(void* logger,
+               tmb_log_level log_level,
+               LogCtx ctx,
+               const char* message,
+               ...);
 
 void tmb_test();
 

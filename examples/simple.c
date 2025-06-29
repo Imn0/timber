@@ -1,5 +1,6 @@
+#include <string.h>
 #include <tmb.h>
 
 int main(int argc, char* argv[]) {
-    TMB_LOG(0, 0, "helloge");
+    TMB_LOG(NULL, TMB_INFO, "helloge");
 }
