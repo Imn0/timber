@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <tmb.h>
 
 #define UNREACHABLE(...)                                                       \
     do {                                                                       \
@@ -70,9 +71,6 @@ typedef struct {
         da_appendn(sb, __s, __n);                                              \
     } while (0)
 
-#ifndef _WIN32
-__attribute__((format(printf, 2, 3)))
-#endif
-void sb_appendf(StringBuilder* sb, const char* fmt, ...);
+void sb_appendf(StringBuilder* sb, const char* fmt, ...) TMB_FMT_CHECK(2, 3);
 
 #endif //TMB_LIB_H
