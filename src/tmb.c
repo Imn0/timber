@@ -46,7 +46,7 @@ char* fmt_format(Formatter* fmt,
             fmt->blocks[i].d.fmt_function(&sb, ctx);
             break;
         case FMT_MSG:
-            sb_appendf(&sb, msg_fmt, msg_arg);
+            sb_appendv(&sb, msg_fmt, msg_arg);
             break;
         default:
             UNREACHABLE("");

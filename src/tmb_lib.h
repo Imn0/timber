@@ -10,7 +10,7 @@
 #define UNREACHABLE(...)                                                       \
     do {                                                                       \
         fprintf(stderr, __VA_ARGS__);                                          \
-        exit(1);                                                               \
+        abort();                                                               \
     } while (0)
 
 #define TODO(...)                                                              \
@@ -72,5 +72,5 @@ typedef struct {
     } while (0)
 
 void sb_appendf(StringBuilder* sb, const char* fmt, ...) TMB_FMT_CHECK(2, 3);
-
+void sb_appendv(StringBuilder* sb, const char* fmt, va_list args);
 #endif //TMB_LIB_H

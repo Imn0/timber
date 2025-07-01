@@ -1,6 +1,14 @@
 #include <assert.h>
+#include <stdarg.h>
 #include <string.h>
 #include <tmb_lib.h>
+
+void test_sb_anppendv(StringBuilder* sb, char* msg, ...) {
+    va_list args;
+    va_start(args, msg);
+    sb_appendv(sb, msg, args);
+    va_end(args);
+}
 
 int main(void) {
     StringBuilder sb = { 0 };
@@ -12,4 +20,7 @@ int main(void) {
     sb_appendf(&sb, "%d", 3);
     assert(sb.size == 12);
     assert(strncmp("hello world3", sb.items, sb.size) == 0);
+
+    test_sb_anppendv(&sb, "aa%d", 2);
+    assert(strncmp("hello world3aa2", sb.items, sb.size) == 0);
 }
