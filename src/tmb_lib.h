@@ -7,9 +7,14 @@
 #include <string.h>
 #include <tmb.h>
 
-#define UNREACHABLE(...)                                                       \
+typedef char* cstr;
+
+#define UNREACHABLE()                                                          \
     do {                                                                       \
-        fprintf(stderr, __VA_ARGS__);                                          \
+        fprintf(stderr,                                                        \
+                "reached unreachable code at %s:%d",                           \
+                __FILE__,                                                      \
+                __LINE__);                                                     \
         abort();                                                               \
     } while (0)
 

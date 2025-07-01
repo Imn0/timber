@@ -122,6 +122,6 @@ bool tmb_logger_destroy(Logger* lg);
 void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...)
         TMB_FMT_CHECK(3, 4);
 
-void tmb_test(void);
+void tmb_print_version(void);
 
 #endif

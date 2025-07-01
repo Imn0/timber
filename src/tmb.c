@@ -57,7 +57,7 @@ char* fmt_format(Formatter* fmt,
             sb_appendv(&sb, msg_fmt, msg_arg);
             break;
         default:
-            UNREACHABLE("");
+            UNREACHABLE();
         }
     }
     sb_to_cstr(&sb);
@@ -125,7 +125,7 @@ bool tmb_logger_destroy(Logger* lg) {
 
 void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...) {
 
-    char** formated = malloc(logger->formatters_count * sizeof(char*));
+    cstr* formated = malloc(logger->formatters_count * sizeof(cstr));
     Formatter** fmts = (Formatter**)logger->formatters;
     Sink** sinks = (Sink**)logger->sinks;
     for (int i = 0; i < logger->formatters_count; i++) {
@@ -145,6 +145,11 @@ void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...) {
     free(formated);
 }
 
-void tmb_test(void) {
-    printf("helloge\n");
+void tmb_print_version(void) {
+    printf("%s.%s.%s @ %s\nSO Version: %s\n",
+           TMB_PATCH_V,
+           TMB_MINOR_V,
+           TMB_MAJOR_V,
+           GIT_REV,
+           TMB_SO_V);
 }
