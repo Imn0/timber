@@ -135,7 +135,7 @@ bool tmb_logger_destroy(Logger* lg) {
         Formatter* fmt = lg->formatters[i];
         for (int j = 0; j < fmt->token_count; j++) {
             FormatToken* tok = &fmt->tokens[j];
-            if (tok->free_fn) tok->free_fn(tok->token_data);
+            if (tok->free_fn) { tok->free_fn(tok->token_data); }
         }
         free(lg->formatters[i]);
     }

@@ -51,7 +51,7 @@ typedef char* cstr;
         memcpy((da)->items + (da)->size,                                       \
                (new_items),                                                    \
                (unsigned long)(new_items_size) * sizeof(*(da)->items));        \
-        (da)->size += new_items_size;                                          \
+        (da)->size += (new_items_size);                                        \
     } while (0)
 
 #define da_free(da)                                                            \
@@ -73,9 +73,9 @@ typedef struct {
 
 #define sb_append_cstr(sb, cstr)                                               \
     do {                                                                       \
-        const char* __s = (char*)cstr;                                         \
-        int __n = (int)strlen(__s);                                            \
-        da_appendn(sb, __s, __n);                                              \
+        const char* _m__s = (char*)cstr;                                       \
+        int _m__n = (int)strlen(_m__s);                                        \
+        da_appendn(sb, _m__s, _m__n);                                          \
     } while (0)
 
 void sb_appendf(StringBuilder* sb, const char* fmt, ...) TMB_FMT_CHECK(2, 3);

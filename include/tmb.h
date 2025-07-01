@@ -14,7 +14,7 @@ static const char TMB_PATCH_V[] = "0";
 static const char TMB_MINOR_V[] = "0";
 static const char TMB_MAJOR_V[] = "0";
 static const char TMB_SO_V[] = "0";
-extern const char* GIT_REV;
+extern const char* const GIT_REV;
 
 #define TMB_LEVEL_TRACE 0
 #define TMB_LEVEL_DEBUG 1
@@ -114,16 +114,16 @@ typedef struct {
 
 #define TMB_LOG(logger, log_level, ...)                                        \
     do {                                                                       \
-        LogCtx __ctx = { log_level, __LINE__,                                  \
-                         __FILE__,  sizeof(__FILE__) - 1,                      \
-                         __func__,  sizeof(__func__) - 1,                      \
-                         0 }; /* -1 coz sizeof includes null terminator */     \
-        time(&__ctx.now);                                                      \
-        tmb_log(logger, __ctx, __VA_ARGS__);                                   \
+        LogCtx _m__ctx = { log_level, __LINE__,                                \
+                           __FILE__,  sizeof(__FILE__) - 1,                    \
+                           __func__,  sizeof(__func__) - 1,                    \
+                           0 }; /* -1 coz sizeof includes null terminator */   \
+        time(&_m__ctx.now);                                                    \
+        tmb_log(logger, _m__ctx, __VA_ARGS__);                                 \
     } while (0)
 
-bool tmb_logger_init_default(Logger* lg);
-bool tmb_logger_destroy(Logger* lg);
+bool tmb_logger_init_default(Logger* lgr);
+bool tmb_logger_destroy(Logger* lgr);
 
 void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...)
         TMB_FMT_CHECK(3, 4);

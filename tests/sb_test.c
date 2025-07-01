@@ -3,7 +3,7 @@
 #include <string.h>
 #include <tmb_lib.h>
 
-void test_sb_anppendv(StringBuilder* sb, char* msg, ...) {
+static void test_sb_anppendv(StringBuilder* sb, char* msg, ...) {
     va_list args;
     va_start(args, msg);
     sb_appendv(sb, msg, args);

@@ -22,6 +22,8 @@ CompileFlags:
     - -Wstrict-aliasing
     - -Wno-sign-conversion
     - -Wmissing-prototypes
+    - -Wreserved-identifier
+    - -Wno-empty-translation-unit
 
 Completion:
   HeaderInsertion: Never
