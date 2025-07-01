@@ -1,6 +1,7 @@
 #ifndef TMB_H
 #define TMB_H
 #include <stdbool.h>
+#include <time.h>
 
 #ifndef _WIN32
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)                                  \
@@ -36,15 +37,6 @@ typedef enum {
 } tmb_log_level;
 
 typedef struct {
-    const int log_level;
-    const int line_no;
-    const char* filename;
-    const int filename_len;
-    const char* funcname;
-    const int funcname_len;
-} LogCtx;
-
-typedef struct {
     void** sinks;
     int sinks_count;
     void** formatters;
@@ -53,10 +45,14 @@ typedef struct {
 } Logger;
 
 #ifndef TMB_MIN_LOG_LEVEL
-    #define TMB_MIN_LOG_LEVEL TMB_LEVEL_DEBUG
+    #define TMB_MIN_LOG_LEVEL TMB_LEVEL_INFO
 #endif
 
 // clang-format off
+#if TMB_MIN_LOG_LEVEL < TMB_LEVEL_TRACE || TMB_MIN_LOG_LEVEL > TMB_LEVEL_CRITICAL
+    #error "TMB_MIN_LOG_LEVEL must be between TMB_LEVEL_TRACE(9) and TMB_LEVEL_CRITICAL(9)"
+#endif
+
 #if TMB_LEVEL_TRACE >= TMB_MIN_LOG_LEVEL
     #define TMB_TRACE(logger, ...) TMB_LOG(logger, TMB_LEVEL_TRACE, __VA_ARGS__)
 #else
@@ -106,15 +102,25 @@ typedef struct {
 #endif
 // clang-format on
 
+typedef struct {
+    const int log_level;
+    const int line_no;
+    const char* filename;
+    const int filename_len;
+    const char* funcname;
+    const int funcname_len;
+    time_t now;
+} LogCtx;
+
 #define TMB_LOG(logger, log_level, ...)                                        \
-    tmb_log(logger,                                                            \
-            (LogCtx) { log_level,                                              \
-                       __LINE__,                                               \
-                       __FILE__,                                               \
-                       sizeof(__FILE__),                                       \
-                       __func__,                                               \
-                       sizeof(__func__) },                                     \
-            __VA_ARGS__)
+    do {                                                                       \
+        LogCtx __ctx = { log_level, __LINE__,                                  \
+                         __FILE__,  sizeof(__FILE__) - 1,                      \
+                         __func__,  sizeof(__func__) - 1,                      \
+                         0 }; /* -1 coz sizeof includes null terminator */     \
+        time(&__ctx.now);                                                      \
+        tmb_log(logger, __ctx, __VA_ARGS__);                                   \
+    } while (0)
 
 bool tmb_logger_init_default(Logger* lg);
 bool tmb_logger_destroy(Logger* lg);

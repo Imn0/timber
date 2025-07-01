@@ -11,22 +11,20 @@ format_name="[ %date ] %message"
 other_format="[ %date ] %message"
 */
 
-typedef void fmt_fn_t(StringBuilder* sb, const LogCtx* ctx);
+typedef void fmt_fn_t(StringBuilder* sb, const LogCtx* ctx, void* data);
 typedef void sink_log_fn_t(const char* msg, void* data);
 typedef void free_fn_t(void* data);
 
 typedef enum {
-    FMT_STR,
     FMT_FN,
     FMT_MSG
 } FormatTokenType;
 
 typedef struct {
     FormatTokenType type;
-    union {
-        char* str;
-        fmt_fn_t* fmt_function;
-    } data;
+    void* token_data;
+    fmt_fn_t* fmt_function;
+    free_fn_t* free_fn;
 } FormatToken;
 
 typedef struct {
@@ -46,12 +44,10 @@ char* fmt_format(Formatter* fmt,
                  va_list msg_arg) {
     StringBuilder sb = { 0 };
     for (int i = 0; i < fmt->token_count; i++) {
-        switch (fmt->tokens[i].type) {
-        case FMT_STR:
-            sb_append_cstr(&sb, fmt->tokens[i].data.str);
-            break;
+        FormatToken* tok = &fmt->tokens[i];
+        switch (tok->type) {
         case FMT_FN:
-            fmt->tokens[i].data.fmt_function(&sb, ctx);
+            tok->fmt_function(&sb, ctx, tok->token_data);
             break;
         case FMT_MSG:
             sb_appendv(&sb, msg_fmt, msg_arg);
@@ -64,8 +60,25 @@ char* fmt_format(Formatter* fmt,
     return sb.items;
 }
 
-void _append_filename(StringBuilder* sb, const LogCtx* ctx) {
-    sb_appendf(sb, "%s", ctx->filename);
+struct __fmt_fn_const_data {
+    int str_len;
+    char str[];
+};
+struct __fmt_fn_const_data* __fmt_fn_const_data_create(const cstr str) {
+    int str_size = strlen(str);
+    struct __fmt_fn_const_data* data = malloc(
+            sizeof(struct __fmt_fn_const_data) + str_size * sizeof(char));
+    strcpy(data->str, str);
+    data->str_len = str_size;
+    return data;
+}
+void __fmt_fn_const(StringBuilder* sb, const LogCtx* ctx, void* data) {
+    struct __fmt_fn_const_data* _data = (struct __fmt_fn_const_data*)data;
+    sb_appendn(sb, _data->str, _data->str_len);
+}
+
+void __fmt_fn_filename(StringBuilder* sb, const LogCtx* ctx, void* data) {
+    sb_appendn(sb, ctx->filename, ctx->filename_len);
 }
 
 void __do_nothing(void* __data) {
@@ -88,10 +101,18 @@ bool tmb_logger_init_default(Logger* lg) {
     lg->formatters_count = 1;
     Formatter* fmt1 = malloc(sizeof(Formatter) + 4 * (sizeof(FormatToken)));
     fmt1->token_count = 4;
-    fmt1->tokens[0] = (FormatToken) { .type = FMT_STR, .data.str = "[ " };
+    fmt1->tokens[0] = (FormatToken) { .type = FMT_FN,
+                                      .fmt_function = __fmt_fn_const,
+                                      .token_data = __fmt_fn_const_data_create(
+                                              "[ "),
+                                      .free_fn = free };
     fmt1->tokens[1] = (FormatToken) { .type = FMT_FN,
-                                      .data.fmt_function = _append_filename };
-    fmt1->tokens[2] = (FormatToken) { .type = FMT_STR, .data.str = " ] " };
+                                      .fmt_function = __fmt_fn_filename };
+    fmt1->tokens[2] = (FormatToken) { .type = FMT_FN,
+                                      .fmt_function = __fmt_fn_const,
+                                      .token_data = __fmt_fn_const_data_create(
+                                              " ] "),
+                                      .free_fn = free };
     fmt1->tokens[3] = (FormatToken) { .type = FMT_MSG };
     lg->formatters[0] = fmt1;
 
@@ -110,7 +131,14 @@ bool tmb_logger_init_default(Logger* lg) {
 }
 
 bool tmb_logger_destroy(Logger* lg) {
-    for (int i = 0; i < lg->formatters_count; i++) { free(lg->formatters[i]); }
+    for (int i = 0; i < lg->formatters_count; i++) {
+        Formatter* fmt = lg->formatters[i];
+        for (int j = 0; j < fmt->token_count; j++) {
+            FormatToken* tok = &fmt->tokens[j];
+            if (tok->free_fn) tok->free_fn(tok->token_data);
+        }
+        free(lg->formatters[i]);
+    }
     for (int i = 0; i < lg->sinks_count; i++) {
         Sink* sink = lg->sinks[i];
         sink->free_fn(sink->sink_data);

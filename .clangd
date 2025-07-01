@@ -21,7 +21,7 @@ CompileFlags:
     - -Wbad-function-cast
     - -Wstrict-aliasing
     - -Wno-sign-conversion
-    # - -Wmissing-prototypes
+    - -Wmissing-prototypes
 
 Completion:
   HeaderInsertion: Never

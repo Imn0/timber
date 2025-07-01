@@ -69,6 +69,8 @@ typedef struct {
 
 #define sb_to_cstr(sb) da_append(sb, 0)
 
+#define sb_appendn(sb, buff, n) da_appendn(sb, buff, n)
+
 #define sb_append_cstr(sb, cstr)                                               \
     do {                                                                       \
         const char* __s = (char*)cstr;                                         \

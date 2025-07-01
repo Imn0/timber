@@ -22,5 +22,10 @@ int main(void) {
     assert(strncmp("hello world3", sb.items, sb.size) == 0);
 
     test_sb_anppendv(&sb, "aa%d", 2);
+    assert(sb.size == 15);
     assert(strncmp("hello world3aa2", sb.items, sb.size) == 0);
+
+    sb_appendn(&sb, "hell", 4);
+    assert(sb.size == 19);
+    assert(strncmp("hello world3aa2hell", sb.items, sb.size) == 0);
 }
