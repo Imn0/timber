@@ -17,80 +17,48 @@ if(GIT_FOUND)
     endif()
 endif()
 
+file(READ "${CMAKE_CURRENT_LIST_DIR}/include/tmb.h" VERSION_FILE_CONTENT)
+
+string(REGEX MATCH "TMB_MAJOR_V\\[] = \"([0-9]+)\";" _major_match "${VERSION_FILE_CONTENT}")
+set(MAJOR "${CMAKE_MATCH_1}")
+
+string(REGEX MATCH "TMB_MINOR_V\\[] = \"([0-9]+)\";" _minor_match "${VERSION_FILE_CONTENT}")
+set(MINOR "${CMAKE_MATCH_1}")
+
+string(REGEX MATCH "TMB_PATCH_V\\[] = \"([0-9]+)\";" _patch_match "${VERSION_FILE_CONTENT}")
+set(PATCH "${CMAKE_MATCH_1}")
+
+string(REGEX MATCH "TMB_SO_V\\[] = \"([0-9]+)\";" _so_match "${VERSION_FILE_CONTENT}")
+set(SOVERSION "${CMAKE_MATCH_1}")
+
+set(PROJECT_VERSION "${MAJOR}.${MINOR}.${PATCH}")
+message(STATUS "Parsed version: ${PROJECT_VERSION}")
+
 
 if(NOT (GIT_OK))
     set(PROJECT_VERSION "0.0.0")
-    set(GIT_PROJECT_VERSION "0.0.0")
+    set(SOVERSION "0")
     set(GIT_REV "N/A")
     set(GIT_DIFF "")
-    set(GIT_TAG "N/A")
-    set(GIT_BRANCH "N/A")
-    set(GIT_SOVERSION "0")
 else()
-    set(GIT_SOVERSION "0")
-    set(PROJECT_VERSION "0.0.0")
-    execute_process(
-        COMMAND git rev-parse --abbrev-ref HEAD
-        OUTPUT_VARIABLE GIT_BRANCH
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
 
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
-        OUTPUT_VARIABLE GIT_TAG
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-    execute_process(
-        COMMAND ${GIT_EXECUTABLE} describe --tags --long --dirty=-dirty
-        OUTPUT_VARIABLE GIT_DESCRIBE
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-    )
-    execute_process(
         COMMAND ${GIT_EXECUTABLE} rev-parse HEAD
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE GIT_REV
         OUTPUT_STRIP_TRAILING_WHITESPACE
         ERROR_QUIET
     )
-
-    if(GIT_TAG AND GIT_DESCRIBE)
-        string(REGEX MATCH "^([^-]+)-([0-9]+)-g([0-9a-f]+)(-dirty)?$" MATCH_RESULT ${GIT_DESCRIBE})
-        if(CMAKE_MATCH_1) # tag in normal-ish form
-
-            set(GIT_TAG ${CMAKE_MATCH_1})
-            set(COMMITS_AHEAD ${CMAKE_MATCH_2})
-            set(COMMIT_HASH ${CMAKE_MATCH_3})
-            set(IS_DIRTY ${CMAKE_MATCH_4})
-            string(REGEX REPLACE "^v" "" BASE_VERSION ${GIT_TAG})
-            if(COMMITS_AHEAD EQUAL 0)
-                # exactly on a tag
-                set(PROJECT_VERSION ${BASE_VERSION})
-                set(GIT_PROJECT_VERSION ${BASE_VERSION})
-                if(IS_DIRTY)
-                    set(GIT_PROJECT_VERSION "${GIT_PROJECT_VERSION}-dirty")
-                endif()
-            else()
-                # commits since tag
-                set(GIT_PROJECT_VERSION "${BASE_VERSION}-${COMMITS_AHEAD}-g${COMMIT_HASH}")
-                if(IS_DIRTY)
-                    set(GIT_PROJECT_VERSION "${GIT_PROJECT_VERSION}-dirty")
-                endif()
-            endif()
-
-
-        endif()
-    else()
-        # No tags found, use commit hash
-        if(GIT_REV)
-            set(GIT_PROJECT_VERSION "${PROJECT_VERSION}-g${GIT_REV}")
-            if(NOT GIT_DIRTY EQUAL 0)
-                set(GIT_PROJECT_VERSION "${GIT_PROJECT_VERSION}-dirty")
-            endif()
-        else()
-        endif()
+    execute_process(
+        COMMAND git status --porcelain
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_STATUS_OUTPUT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(GIT_STATUS_OUTPUT)
+        set(GIT_DIFF "-dirty")
     endif()
+
 endif()
 
 set(PROJECT_VERSION "${PROJECT_VERSION}")
@@ -99,11 +67,6 @@ set(GIT_SOVERSION "${GIT_SOVERSION}")
 set(VERSION
     "
 const char* GIT_REV=\"${GIT_REV}${GIT_DIFF}\";
-const char* GIT_TAG=\"${GIT_TAG}\";
-const char* GIT_BRANCH=\"${GIT_BRANCH}\";
-const char* GIT_PROJECT_VERSION=\"${GIT_PROJECT_VERSION}\";
-const char* PROJECT_VERSION=\"${PROJECT_VERSION}\";
-const char* SOVERSION=\"${GIT_SOVERSION}\";
 "
 )
 

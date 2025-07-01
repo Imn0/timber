@@ -32,7 +32,7 @@ function(setup_shared_lib)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-objects)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
-        SOVERSION ${soversion}
+        SOVERSION ${SOVERSION}
         PUBLIC_HEADER ${public_headers}
         OUTPUT_NAME ${PROJECT_NAME}
     )

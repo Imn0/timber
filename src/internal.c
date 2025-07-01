@@ -116,16 +116,3 @@ void parse_config(const char* config_string) {
         }
     }
 }
-
-bool tmb_init(const char* config_file) {
-
-    if (config_file == NULL) {
-        parse_config(default_format);
-        return true;
-    }
-    TODO("");
-    // parse file
-    // return logging handle
-
-    return true;
-}
