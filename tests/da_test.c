@@ -34,4 +34,8 @@ int main(void) {
     assert(da.items[5] == 2);
     assert(da.items[6] == 3);
     assert(da.items[7] == 4);
+
+    da_for_each(int, it, &da){
+        printf("%d\n", *it);
+    }
 }

@@ -1,6 +1,7 @@
 #ifndef TMB_LIB_H
 #define TMB_LIB_H
 
+#include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,9 +25,11 @@ typedef char* cstr;
         exit(1);                                                               \
     } while (0)
 
+#define ASSERT assert
+
 #define UNUSED (void)
 
-#define TMB_DA_INIT_CAP 1
+#define TMB_DA_INIT_CAP 16
 
 #define da_reserve(da, expected_cap)                                           \
     do {                                                                       \
@@ -54,6 +57,18 @@ typedef char* cstr;
         (da)->size += (new_items_size);                                        \
     } while (0)
 
+#define da_last(da) (da)->items[ASSERT((da)->size > 0), (da)->size - 1]
+
+#define da_for_each(T, it, da)                                                 \
+    for (T * (it) = (da)->items; (it) < (da)->items + (da)->size; (it)++)
+
+#define da_remove(da, idx)                                                     \
+    do {                                                                       \
+        size_t _m__i = (idx);                                                  \
+        ASSERT(_m__i < (da)->size);                                            \
+        (da)->items[j] = (da)->items[(da)->items[--(da)->size]]                \
+    } while (0)
+
 #define da_free(da)                                                            \
     do {                                                                       \
         free((da)->items);                                                     \
@@ -73,7 +88,7 @@ typedef struct {
 
 #define sb_append_cstr(sb, cstr)                                               \
     do {                                                                       \
-        const char* _m__s = (char*)cstr;                                       \
+        const char* _m__s = (char*)(cstr);                                     \
         int _m__n = (int)strlen(_m__s);                                        \
         da_appendn(sb, _m__s, _m__n);                                          \
     } while (0)

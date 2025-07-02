@@ -99,8 +99,8 @@ bool tmb_logger_init_default(Logger* lg) {
 
     // create formatter
     lg->formatters_count = 1;
-    Formatter* fmt1 = malloc(sizeof(Formatter) + 4 * (sizeof(FormatToken)));
-    fmt1->token_count = 4;
+    Formatter* fmt1 = malloc(sizeof(Formatter) + 5 * (sizeof(FormatToken)));
+    fmt1->token_count = 5;
     fmt1->tokens[0] = (FormatToken) { .type = FMT_FN,
                                       .fmt_function = __fmt_fn_const,
                                       .token_data = __fmt_fn_const_data_create(
@@ -114,6 +114,11 @@ bool tmb_logger_init_default(Logger* lg) {
                                               " ] "),
                                       .free_fn = free };
     fmt1->tokens[3] = (FormatToken) { .type = FMT_MSG };
+    fmt1->tokens[4] = (FormatToken) { .type = FMT_FN,
+                                      .fmt_function = __fmt_fn_const,
+                                      .token_data = __fmt_fn_const_data_create(
+                                              "\n"),
+                                      .free_fn = free };
     lg->formatters[0] = fmt1;
 
     // create sink
