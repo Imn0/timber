@@ -2,7 +2,7 @@ Checks: >
   clang-analyzer-*,
   bugprone-*,
   performance-*,
-  readability-*,
+  readability-*<readability-math-missing-parentheses,
   cppcoreguidelines-*,
   linuxkernel-*
 

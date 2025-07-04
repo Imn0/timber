@@ -23,3 +23,17 @@ void sb_appendv(StringBuilder* sb, const char* fmt, va_list args) {
 
     sb->size += n;
 }
+
+void do_nothing(void* _data) {
+    UNUSED _data;
+}
+
+String* make_string(cstr str, unsigned long size) {
+    struct {
+        unsigned long size;
+        char items[];
+    }* string = malloc(sizeof(String) + size * sizeof(char));
+    memcpy(string, &(String) { .size = size }, sizeof(String));
+    memcpy(string->items, str, size);
+    return (String*)string;
+}

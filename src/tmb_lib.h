@@ -36,9 +36,14 @@ typedef char* cstr;
         if ((expected_cap) > (da)->capacity) {                                 \
             if ((da)->capacity == 0) { (da)->capacity = TMB_DA_INIT_CAP; }     \
             while ((expected_cap) > (da)->capacity) { (da)->capacity *= 2; }   \
-            (da)->items = realloc((da)->items,                                 \
-                                  ((unsigned long)(da)->capacity *             \
-                                   sizeof(*(da)->items)));                     \
+            void* new_items = realloc((da)->items,                             \
+                                      ((unsigned long)(da)->capacity *         \
+                                       sizeof(*(da)->items)));                 \
+            if (new_items == NULL) {                                           \
+                fprintf(stderr, "realloc faield");                             \
+            } else {                                                           \
+                (da)->items = new_items;                                       \
+            }                                                                  \
         }                                                                      \
     } while (0)
 
@@ -77,6 +82,11 @@ typedef char* cstr;
     } while (0);
 
 typedef struct {
+    const unsigned long size;
+    const char items[];
+} String;
+
+typedef struct {
     char* items;
     int size;
     int capacity;
@@ -95,4 +105,11 @@ typedef struct {
 
 void sb_appendf(StringBuilder* sb, const char* fmt, ...) TMB_FMT_CHECK(2, 3);
 void sb_appendv(StringBuilder* sb, const char* fmt, va_list args);
+void do_nothing(void* _data);
+String* make_string(cstr str, unsigned long size);
+
+typedef void fmt_fn_t(StringBuilder* sb, const LogCtx* ctx, void* data);
+typedef void sink_log_fn_t(const char* msg, void* data);
+typedef void free_fn_t(void* data);
+
 #endif //TMB_LIB_H
