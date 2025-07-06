@@ -10,7 +10,7 @@ Sink* stderror_sink_create(void) {
     return sink;
 }
 
-void stderror_sink(const char* msg, void* data) {
+void stderror_sink(const cstr msg, void* data) {
     UNUSED data;
     fprintf(stderr, "%s", msg);
 }

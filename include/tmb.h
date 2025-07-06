@@ -122,6 +122,8 @@ typedef struct {
         tmb_log(logger, _m__ctx, __VA_ARGS__);                                 \
     } while (0)
 
+bool tmb_logger_init(Logger* lgr, const char* config);
+bool tmb_logger_init_file(Logger* lgr, const char* filename);
 bool tmb_logger_init_default(Logger* lgr);
 bool tmb_logger_destroy(Logger* lgr);
 

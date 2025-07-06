@@ -5,13 +5,9 @@
 
 #include <format.h>
 #include <sink.h>
+#include <string.h>
 #include <tmb_lib.h>
-
-/*
-[formats]
-format_name="[ %date ] %message"
-other_format="[ %date ] %message"
-*/
+#include <config/lex.h>
 
 cstr fmt_format(Formatter* fmt,
                 const LogCtx* ctx,
@@ -35,6 +31,20 @@ cstr fmt_format(Formatter* fmt,
     return sb.items;
 }
 
+bool tmb_logger_init(Logger *lgr, const char *config){
+    Lexer lex;
+    lexer_init(&lex, config, strlen(config));
+    lexer_lex(&lex);
+
+    return true;
+}
+
+bool tmb_logger_init_file(Logger *lgr, const char *filename){
+    char* config = load_entire_file(filename);
+    tmb_logger_init(lgr, config);
+    return true;
+}
+
 bool tmb_logger_init_default(Logger* lg) {
     if (lg == NULL) { return false; }
 
@@ -55,7 +65,7 @@ bool tmb_logger_init_default(Logger* lg) {
     filename_format_token_init(&fmt1->tokens[1]);
     const_format_token_init(&fmt1->tokens[2], " ] ");
     fmt1->tokens[3] = (FormatToken) { .type = FMT_MSG };
-    const_format_token_init(&fmt1->tokens[4], "\n");
+    const_format_token_init(&fmt1->tokens[4], TMB_NEW_LINE);
 
     // create sink
     lg->sinks_count = 1;
@@ -89,7 +99,6 @@ bool tmb_logger_destroy(Logger* lg) {
 }
 
 void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...) {
-
     cstr* formated = (cstr*)malloc(logger->formatters_count * sizeof(cstr));
     Formatter** fmts = (Formatter**)logger->formatters;
     Sink** sinks = (Sink**)logger->sinks;

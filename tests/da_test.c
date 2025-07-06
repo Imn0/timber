@@ -21,7 +21,7 @@ int main(void) {
 
     da_append(&da, 3);
     assert(da.items[2] == 3);
-    assert(da.size == 3);
+    assert(da.size == 3); //
 
     da_append(&da, 4);
     assert(da.items[3] == 4);
