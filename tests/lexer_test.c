@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <config/lex.h>
+#include <string.h>
 
 int main(void) {
     Lexer lex = { 0 };
@@ -10,14 +11,28 @@ int main(void) {
                       "[hello]";
     lexer_init(&lex, in, strlen(in));
 
-    // ignore all comments
-    // after file ends just return eof
-    Token tok = lexer_lex(&lex);
+    Token tok = { 0 };
+    lexer_lex(&lex, &tok);
+    assert(tok.type == TOK_NEWLINE);
+
+    lexer_lex(&lex, &tok);
+    assert(tok.type == TOK_NEWLINE);
+
+    lexer_lex(&lex, &tok);
+    assert(tok.type == TOK_NEWLINE);
+
+    lexer_lex(&lex, &tok);
+    assert(tok.type == TOK_NEWLINE);
+
+    lexer_lex(&lex, &tok);
     assert(tok.type == TOK_SECTION);
-    tok = lexer_lex(&lex);
+    assert(strncmp(tok.data, "hello", tok.data_size) == 0);
+
+    lexer_lex(&lex, &tok);
     assert(tok.type == TOK_EOF);
-    assert(lexer_lex(&lex).type == TOK_EOF);
-    tok = lexer_lex(&lex);
+    lexer_lex(&lex, &tok);
+    assert(tok.type == TOK_EOF);
+    lexer_lex(&lex, &tok);
     assert(tok.line == 5);
-    assert(tok.col == 8);
+    assert(tok.column == 8);
 }

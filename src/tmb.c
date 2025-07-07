@@ -1,13 +1,15 @@
+#include "config/lex.h"
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <config/lex.h>
 #include <format.h>
 #include <sink.h>
 #include <string.h>
 #include <tmb_lib.h>
-#include <config/lex.h>
+
 
 cstr fmt_format(Formatter* fmt,
                 const LogCtx* ctx,
@@ -31,15 +33,21 @@ cstr fmt_format(Formatter* fmt,
     return sb.items;
 }
 
-bool tmb_logger_init(Logger *lgr, const char *config){
+bool tmb_logger_init(Logger* lgr, const char* config) {
     Lexer lex;
     lexer_init(&lex, config, strlen(config));
-    lexer_lex(&lex);
+
+    Token tok = {0 };
+    while (true) {
+        lexer_lex(&lex, &tok);
+        token_print(&tok);
+        if (tok.type == TOK_EOF) break;
+    }
 
     return true;
 }
 
-bool tmb_logger_init_file(Logger *lgr, const char *filename){
+bool tmb_logger_init_file(Logger* lgr, const char* filename) {
     char* config = load_entire_file(filename);
     tmb_logger_init(lgr, config);
     return true;

@@ -5,33 +5,41 @@
 #include <tmb_lib.h>
 
 typedef enum {
-    TOK_IDENT,
-    TOK_STRING,
-    TOK_SECTION,
     TOK_EOF,
-    TOK_EQUALS,
-    TOK_ERR,
-
-    TOK_COUNT,
+    TOK_SECTION, // [section_name]
+    TOK_IDENT,   // key_name
+    TOK_STRING,  // 'quoted string'
+    TOK_EQUALS,  // =
+    TOK_NEWLINE, // \n
+    TOK_ERROR
 } TokenType;
+
+static const char* const TokenTypeStr[] = {
+    [TOK_EOF] = "TOK_EOF",       [TOK_SECTION] = "TOK_SECTION",
+    [TOK_IDENT] = "TOK_IDENT",   [TOK_STRING] = "TOK_STRING",
+    [TOK_EQUALS] = "TOK_EQUALS", [TOK_NEWLINE] = "TOK_NEWLINE",
+    [TOK_ERROR] = "TOK_ERROR",
+};
 
 typedef struct {
     TokenType type;
-    char* value;
-    int value_size;
+    const char* data;
+    size_t data_size;
     int line;
-    int col;
+    int column;
 } Token;
 
 typedef struct {
-    char* input;
-    int input_size;
+    const char* input;
+    size_t pos;
+    size_t length;
     int line;
-    int col;
-    int current_pos;
+    int column;
+    char current_char;
 } Lexer;
 
-void lexer_init(Lexer* lex, char* input, int input_size);
-Token lexer_lex(Lexer* lex);
+void lexer_init(Lexer* lex, const char* input, int input_size);
+void lexer_lex(Lexer* lex, Token* tok);
+void token_print(Token* tok);
 
 #endif //  TMB_CONFIG_LEX_H_
