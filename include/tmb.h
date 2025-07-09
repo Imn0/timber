@@ -1,5 +1,5 @@
-#ifndef TMB_H
-#define TMB_H
+#ifndef TMB_H_
+#define TMB_H_
 #include <stdbool.h>
 #include <time.h>
 
@@ -79,7 +79,6 @@ typedef struct {
 // initializes the default logger
 TMB_INIT void tmb_init();
 TMB_DEINIT void tmb_deinit();
-const Logger* tmb_get_default_logger();
 bool tmb_logger_init(Logger* lgr, const char* config);
 bool tmb_logger_init_file(Logger* lgr, const char* filename);
 bool tmb_logger_init_default(Logger* lgr);
@@ -172,4 +171,72 @@ void tmb_print_version(void);
         TMB_DISPATCH(_m__ctx, logger_or_format, __VA_ARGS__);                  \
     } while (0)
 
-#endif
+#define TMB_CONST_STR_SIZE(X) (sizeof(X) - 1)
+
+#ifdef TMB_LOGGING_IMPLEMENTATION
+    #include <stdarg.h>
+    #include <stdio.h>
+
+const char* const tmb_log_level_str[] = {
+    [TMB_LOG_LEVEL_EMERGENCY] = "EMERGENCY", [TMB_LOG_LEVEL_ALERT] = "ALERT",
+    [TMB_LOG_LEVEL_CRITICAL] = "CRITICAL",   [TMB_LOG_LEVEL_ERROR] = "ERROR",
+    [TMB_LOG_LEVEL_WARNING] = "WARNING",     [TMB_LOG_LEVEL_NOTICE] = "NOTICE",
+    [TMB_LOG_LEVEL_INFO] = "INFO",           [TMB_LOG_LEVEL_DEBUG] = "DEBUG",
+};
+
+const int tmb_log_level_str_len[] = {
+    [TMB_LOG_LEVEL_EMERGENCY] = TMB_CONST_STR_SIZE("EMERGENCY"),
+    [TMB_LOG_LEVEL_ALERT] = TMB_CONST_STR_SIZE("ALERT"),
+    [TMB_LOG_LEVEL_CRITICAL] = TMB_CONST_STR_SIZE("CRITICAL"),
+    [TMB_LOG_LEVEL_ERROR] = TMB_CONST_STR_SIZE("ERROR"),
+    [TMB_LOG_LEVEL_WARNING] = TMB_CONST_STR_SIZE("WARNING"),
+    [TMB_LOG_LEVEL_NOTICE] = TMB_CONST_STR_SIZE("NOTICE"),
+    [TMB_LOG_LEVEL_INFO] = TMB_CONST_STR_SIZE("INFO"),
+    [TMB_LOG_LEVEL_DEBUG] = TMB_CONST_STR_SIZE("DEBUG"),
+};
+
+TMB_INIT void tmb_init() {}
+TMB_DEINIT void tmb_deinit() {}
+bool tmb_logger_init(Logger* lgr, const char* config) {
+    return true;
+}
+bool tmb_logger_init_file(Logger* lgr, const char* filename) {
+    return true;
+}
+bool tmb_logger_init_default(Logger* lgr) {
+    return true;
+}
+bool tmb_logger_destroy(Logger* lgr) {
+    return true;
+}
+
+void tmb_log_imp(LogCtx ctx, const char* message, va_list args) {
+    fprintf(stderr, "[ %s ] ", tmb_log_level_str[ctx.log_level]);
+    vfprintf_s(stderr, message, args);
+    fprintf(stderr, "\n");
+}
+
+void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+    tmb_log_imp(ctx, message, args);
+    va_end(args);
+}
+
+void tmb_log_default(LogCtx ctx, const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+    tmb_log_imp(ctx, message, args);
+    va_end(args);
+}
+
+void tmb_print_version(void) {
+    printf("%s.%s.%s @ HEADER IMPL\nSO Version: %s\n",
+           TMB_PATCH_V,
+           TMB_MINOR_V,
+           TMB_MAJOR_V,
+           TMB_SO_V);
+}
+#endif // TMB_LOGGING_IMPLEMENTATION
+
+#endif // TMB_H_

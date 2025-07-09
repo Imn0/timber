@@ -16,7 +16,6 @@ typedef const char* cstr;
     #define TMB_NEW_LINE "\n"
 #endif
 
-#define CONST_STR_SIZE(X) (sizeof(X) - 1)
 
 #define UNREACHABLE()                                                          \
     do {                                                                       \
@@ -115,6 +114,9 @@ void sb_appendf(StringBuilder* sb, const cstr fmt, ...) TMB_FMT_CHECK(2, 3);
 void sb_appendv(StringBuilder* sb, const cstr fmt, va_list args);
 void do_nothing(void* _data);
 String* make_string(const cstr str, size_t size);
+
+const Logger* tmb_get_default_logger();
+
 
 /**
  * @brief Returns heap allocated zero terminated string with contents of the file
