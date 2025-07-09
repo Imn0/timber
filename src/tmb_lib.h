@@ -8,7 +8,7 @@
 #include <string.h>
 #include <tmb.h>
 
-typedef char* cstr;
+typedef const char* cstr;
 
 #ifdef _WIN32
     #define TMB_NEW_LINE "\n\r"
@@ -29,12 +29,6 @@ typedef char* cstr;
     do {                                                                       \
         fprintf(stderr, __VA_ARGS__);                                          \
         exit(1);                                                               \
-    } while (0)
-
-#define HANDLE_ERROR(lbl, ...)                                                 \
-    do {                                                                       \
-        fprintf(stderr, __VA_ARGS__);                                          \
-        goto lbl;                                                              \
     } while (0)
 
 #define ASSERT assert
@@ -94,14 +88,14 @@ typedef char* cstr;
     } while (0);
 
 typedef struct {
-    const unsigned long size;
+    const size_t size;
     const char items[];
 } String;
 
 typedef struct {
-    cstr items;
-    int size;
-    int capacity;
+    char* items;
+    size_t size;
+    size_t capacity;
 } StringBuilder;
 
 #define sb_to_cstr(sb) da_append(sb, 0)
@@ -118,7 +112,7 @@ typedef struct {
 void sb_appendf(StringBuilder* sb, const cstr fmt, ...) TMB_FMT_CHECK(2, 3);
 void sb_appendv(StringBuilder* sb, const cstr fmt, va_list args);
 void do_nothing(void* _data);
-String* make_string(cstr str, unsigned long size);
+String* make_string(const cstr str, size_t size);
 
 /**
  * @brief Returns heap allocated zero terminated string with contents of the file

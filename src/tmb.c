@@ -10,10 +10,27 @@
 #include <string.h>
 #include <tmb_lib.h>
 
+const char* const tmb_log_level_str[] = {
+    [TMB_LOG_TRACE] = "TRACE",     [TMB_LOG_DEBUG] = "DEBUG",
+    [TMB_LOG_INFO] = "INFO",       [TMB_LOG_NOTICE] = "NOTICE",
+    [TMB_LOG_WARNING] = "WARNING", [TMB_LOG_ERROR] = "ERROR",
+    [TMB_LOG_ALERT] = "ALERT",     [TMB_LOG_CRITICAL] = "CRITICAL",
+};
+
+const int tmb_log_level_str_len[] = {
+    [TMB_LOG_TRACE] = sizeof(tmb_log_level_str[TMB_LOG_TRACE]) - 1,
+    [TMB_LOG_DEBUG] = sizeof(tmb_log_level_str[TMB_LOG_DEBUG]) - 1,
+    [TMB_LOG_INFO] = sizeof(tmb_log_level_str[TMB_LOG_INFO]) - 1,
+    [TMB_LOG_NOTICE] = sizeof(tmb_log_level_str[TMB_LOG_NOTICE]) - 1,
+    [TMB_LOG_WARNING] = sizeof(tmb_log_level_str[TMB_LOG_WARNING]) - 1,
+    [TMB_LOG_ERROR] = sizeof(tmb_log_level_str[TMB_LOG_ERROR]) - 1,
+    [TMB_LOG_ALERT] = sizeof(tmb_log_level_str[TMB_LOG_ALERT]) - 1,
+    [TMB_LOG_CRITICAL] = sizeof(tmb_log_level_str[TMB_LOG_CRITICAL]) - 1,
+};
 
 cstr fmt_format(Formatter* fmt,
                 const LogCtx* ctx,
-                const char* msg_fmt,
+                const cstr msg_fmt,
                 va_list msg_arg) {
     StringBuilder sb = { 0 };
     for (int i = 0; i < fmt->token_count; i++) {
@@ -34,10 +51,11 @@ cstr fmt_format(Formatter* fmt,
 }
 
 bool tmb_logger_init(Logger* lgr, const char* config) {
+    UNUSED lgr;
     Lexer lex;
     lexer_init(&lex, config, strlen(config));
 
-    Token tok = {0 };
+    Token tok = { 0 };
     while (true) {
         lexer_lex(&lex, &tok);
         token_print(&tok);
@@ -70,7 +88,7 @@ bool tmb_logger_init_default(Logger* lg) {
     fmt1->token_count = default_token_count;
 
     const_format_token_init(&fmt1->tokens[0], "[ ");
-    filename_format_token_init(&fmt1->tokens[1]);
+    log_level_format_init(&fmt1->tokens[1], false);
     const_format_token_init(&fmt1->tokens[2], " ] ");
     fmt1->tokens[3] = (FormatToken) { .type = FMT_MSG };
     const_format_token_init(&fmt1->tokens[4], TMB_NEW_LINE);
@@ -113,7 +131,7 @@ void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...) {
     for (int i = 0; i < logger->formatters_count; i++) {
         Formatter* fmt = fmts[i];
         assert(fmt != NULL);
-        va_list args;
+        va_list args = NULL;
         va_start(args, message);
         formated[i] = fmt_format(fmt, &ctx, message, args);
         va_end(args);
@@ -123,7 +141,9 @@ void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...) {
         assert(sink != NULL);
         sink->sink_log(formated[logger->fmt_map[i]], sink->sink_data);
     }
-    for (int i = 0; i < logger->formatters_count; i++) { free(formated[i]); }
+    for (int i = 0; i < logger->formatters_count; i++) {
+        free((void*)formated[i]);
+    }
     free((void*)formated);
 }
 

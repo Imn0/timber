@@ -21,9 +21,9 @@ typedef struct {
 } Formatter;
 
 void const_format_token_init(FormatToken* fmt, cstr value);
-fmt_fn_t const_format_token_fn;
 
 void filename_format_token_init(FormatToken* fmt);
-fmt_fn_t filename_format_token_fn;
+
+void log_level_format_init(FormatToken* fmt, bool use_color);
 
 #endif // TMB_FORMAT_H

@@ -23,7 +23,7 @@ extern const char* const GIT_REV;
 #define TMB_LEVEL_WARNING 4
 #define TMB_LEVEL_ERROR 5
 #define TMB_LEVEL_ALERT 6
-#define TMB_LEVEL_CRITICAL 9
+#define TMB_LEVEL_CRITICAL 7
 
 typedef enum {
     TMB_LOG_TRACE = TMB_LEVEL_TRACE,
@@ -34,7 +34,25 @@ typedef enum {
     TMB_LOG_ERROR = TMB_LEVEL_ERROR,
     TMB_LOG_ALERT = TMB_LEVEL_ALERT,
     TMB_LOG_CRITICAL = TMB_LEVEL_CRITICAL,
+
+    TMB_LOG_COUNT
 } tmb_log_level;
+
+extern const char* const tmb_log_level_str[TMB_LOG_COUNT];
+extern int const tmb_log_level_str_len[TMB_LOG_COUNT];
+
+#define ANSI_ESCAPE "\x1b["
+#define ANSI_BLUE ANSI_ESCAPE "34m"
+#define ANSI_RESET ANSI_ESCAPE "0m"
+
+#define ANSI_BLACK ANSI_ESCAPE "30m"
+#define ANSI_RED ANSI_ESCAPE "31m"
+#define ANSI_GREEN ANSI_ESCAPE "32m"
+#define ANSI_YELLOW ANSI_ESCAPE "33m"
+#define ANSI_BLUE ANSI_ESCAPE "34m"
+#define ANSI_MAGENTA ANSI_ESCAPE "35m"
+#define ANSI_CYAN ANSI_ESCAPE "36m"
+#define ANSI_WHITE ANSI_ESCAPE "37m"
 
 typedef struct {
     void** sinks;
@@ -103,22 +121,23 @@ typedef struct {
 // clang-format on
 
 typedef struct {
-    const int log_level;
+    const tmb_log_level log_level;
     const int line_no;
-    const char* filename;
+    const char* const filename;
     const int filename_len;
-    const char* funcname;
+    const char* const funcname;
     const int funcname_len;
-    time_t now;
+    const time_t log_time;
 } LogCtx;
 
 #define TMB_LOG(logger, log_level, ...)                                        \
     do {                                                                       \
+        time_t now;                                                            \
+        time(&now);                                                            \
         LogCtx _m__ctx = { log_level, __LINE__,                                \
                            __FILE__,  sizeof(__FILE__) - 1,                    \
                            __func__,  sizeof(__func__) - 1,                    \
-                           0 }; /* -1 coz sizeof includes null terminator */   \
-        time(&_m__ctx.now);                                                    \
+                           now }; /* -1 coz sizeof includes null terminator */ \
         tmb_log(logger, _m__ctx, __VA_ARGS__);                                 \
     } while (0)
 

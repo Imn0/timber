@@ -1,9 +1,8 @@
 #include <stdio.h>
-#include <errno.h>
 #include <tmb_lib.h>
 
 void sb_appendf(StringBuilder* sb, const cstr fmt, ...) {
-    va_list args;
+    va_list args = NULL;
     va_start(args, fmt);
     sb_appendv(sb, fmt, args);
     va_end(args);
@@ -11,7 +10,7 @@ void sb_appendf(StringBuilder* sb, const cstr fmt, ...) {
 
 void sb_appendv(StringBuilder* sb, const cstr fmt, va_list args) {
 
-    va_list args1;
+    va_list args1 = NULL;
     va_copy(args1, args);
 
     int n = vsnprintf(NULL, 0, fmt, args1);
@@ -30,9 +29,9 @@ void do_nothing(void* _data) {
     UNUSED _data;
 }
 
-String* make_string(cstr str, unsigned long size) {
+String* make_string(const cstr str, size_t size) {
     struct {
-        unsigned long size;
+        size_t size;
         char items[];
     }* string = malloc(sizeof(String) + size * sizeof(char));
     memcpy(string, &(String) { .size = size }, sizeof(String));
@@ -41,29 +40,25 @@ String* make_string(cstr str, unsigned long size) {
 }
 
 char* load_entire_file(const cstr file) {
-    FILE* f = fopen(file, "r");
-    if (f == NULL) {
-        HANDLE_ERROR(error_return_only,
-                     "cannot open file:\n\t%s\n",
-                     strerror(errno));
+    FILE* f = NULL;
+    if (fopen_s(&f, file, "r")) {
+        perror("cannot open file");
+        goto error_return_only;
     }
 
     if (fseek(f, 0L, SEEK_END) != 0) {
-        HANDLE_ERROR(error_close,
-                     "error reading file size:\n\t%s\n",
-                     strerror(errno));
+        goto error_close;
+        perror("error reading file size");
     }
     long buffsize = ftell(f);
     if (buffsize == -1) {
-        HANDLE_ERROR(error_close,
-                     "error reading file size:\n\t%s\n",
-                     strerror(errno));
+        goto error_close;
+        perror("error reading file size");
     }
     char* file_conents = malloc(sizeof(char) * (buffsize + 1));
     if (fseek(f, 0L, SEEK_SET) != 0) {
-        HANDLE_ERROR(error_free,
-                     "error reading file size:\n\t%s\n",
-                     strerror(errno));
+        goto error_free;
+        perror("error reading file size");
     }
 
     fread(file_conents, buffsize, 1, f);

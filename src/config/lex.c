@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-void lexer_init(Lexer* lex, const char* input, int input_size){
+void lexer_init(Lexer* lex, const char* input, size_t input_size){
     lex->input = input;
     lex->length = input_size;
     lex->pos = 0;

@@ -1,7 +1,7 @@
 CompileFlags:
   Add:
     - -xc
-    - -std=c99
+    - -std=c11
     - -Wall
     - -Wextra
     - -Wpedantic
@@ -24,6 +24,8 @@ CompileFlags:
     - -Wmissing-prototypes
     - -Wreserved-identifier
     - -Wno-empty-translation-unit
+    - -Wno-unused-const-variable
+    - -Wno-missing-prototypes
 
 Completion:
   HeaderInsertion: Never

@@ -27,3 +27,23 @@ void filename_format_token_init(FormatToken* fmt) {
     fmt->free_fn = do_nothing;
     fmt->type = FMT_FN;
 }
+
+void log_level_format_color_fn(StringBuilder* sb,
+                               const LogCtx* ctx,
+                               void* data) {
+    sb_appendn(sb,
+               tmb_log_level_str[ctx->log_level],
+               tmb_log_level_str_len[ctx->log_level]);
+}
+void log_level_format_fn(StringBuilder* sb, const LogCtx* ctx, void* data) {
+    sb_appendn(sb,
+               tmb_log_level_str[ctx->log_level],
+               tmb_log_level_str_len[ctx->log_level]);
+}
+
+void log_level_format_init(FormatToken* fmt, bool use_color) {
+    fmt->token_data = NULL;
+    fmt->fmt_function = log_level_format_fn;
+    fmt->free_fn = do_nothing;
+    fmt->type = FMT_FN;
+}
