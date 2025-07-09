@@ -212,7 +212,7 @@ bool tmb_logger_destroy(Logger* lgr) {
 
 void tmb_log_imp(LogCtx ctx, const char* message, va_list args) {
     fprintf(stderr, "[ %s ] ", tmb_log_level_str[ctx.log_level]);
-    vfprintf_s(stderr, message, args);
+    vfprintf(stderr, message, args);
     fprintf(stderr, "\n");
 }
 
