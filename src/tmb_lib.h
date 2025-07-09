@@ -16,6 +16,8 @@ typedef const char* cstr;
     #define TMB_NEW_LINE "\n"
 #endif
 
+#define CONST_STR_SIZE(X) (sizeof(X) - 1)
+
 #define UNREACHABLE()                                                          \
     do {                                                                       \
         fprintf(stderr,                                                        \

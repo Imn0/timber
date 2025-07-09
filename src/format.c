@@ -43,7 +43,8 @@ void log_level_format_fn(StringBuilder* sb, const LogCtx* ctx, void* data) {
 
 void log_level_format_init(FormatToken* fmt, bool use_color) {
     fmt->token_data = NULL;
-    fmt->fmt_function = log_level_format_fn;
+    fmt->fmt_function = use_color ? log_level_format_color_fn
+                                  : log_level_format_fn;
     fmt->free_fn = do_nothing;
     fmt->type = FMT_FN;
 }

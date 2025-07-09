@@ -2,7 +2,7 @@
 #include <tmb_lib.h>
 
 void sb_appendf(StringBuilder* sb, const cstr fmt, ...) {
-    va_list args = NULL;
+    va_list args;
     va_start(args, fmt);
     sb_appendv(sb, fmt, args);
     va_end(args);
@@ -10,7 +10,7 @@ void sb_appendf(StringBuilder* sb, const cstr fmt, ...) {
 
 void sb_appendv(StringBuilder* sb, const cstr fmt, va_list args) {
 
-    va_list args1 = NULL;
+    va_list args1;
     va_copy(args1, args);
 
     int n = vsnprintf(NULL, 0, fmt, args1);

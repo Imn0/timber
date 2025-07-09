@@ -11,21 +11,21 @@
 #include <tmb_lib.h>
 
 const char* const tmb_log_level_str[] = {
-    [TMB_LOG_TRACE] = "TRACE",     [TMB_LOG_DEBUG] = "DEBUG",
-    [TMB_LOG_INFO] = "INFO",       [TMB_LOG_NOTICE] = "NOTICE",
-    [TMB_LOG_WARNING] = "WARNING", [TMB_LOG_ERROR] = "ERROR",
-    [TMB_LOG_ALERT] = "ALERT",     [TMB_LOG_CRITICAL] = "CRITICAL",
+    [TMB_LOG_LEVEL_EMERGENCY] = "EMERGENCY", [TMB_LOG_LEVEL_ALERT] = "ALERT",
+    [TMB_LOG_LEVEL_CRITICAL] = "CRITICAL",   [TMB_LOG_LEVEL_ERROR] = "ERROR",
+    [TMB_LOG_LEVEL_WARNING] = "WARNING",     [TMB_LOG_LEVEL_NOTICE] = "NOTICE",
+    [TMB_LOG_LEVEL_INFO] = "INFO",           [TMB_LOG_LEVEL_DEBUG] = "DEBUG",
 };
 
 const int tmb_log_level_str_len[] = {
-    [TMB_LOG_TRACE] = sizeof(tmb_log_level_str[TMB_LOG_TRACE]) - 1,
-    [TMB_LOG_DEBUG] = sizeof(tmb_log_level_str[TMB_LOG_DEBUG]) - 1,
-    [TMB_LOG_INFO] = sizeof(tmb_log_level_str[TMB_LOG_INFO]) - 1,
-    [TMB_LOG_NOTICE] = sizeof(tmb_log_level_str[TMB_LOG_NOTICE]) - 1,
-    [TMB_LOG_WARNING] = sizeof(tmb_log_level_str[TMB_LOG_WARNING]) - 1,
-    [TMB_LOG_ERROR] = sizeof(tmb_log_level_str[TMB_LOG_ERROR]) - 1,
-    [TMB_LOG_ALERT] = sizeof(tmb_log_level_str[TMB_LOG_ALERT]) - 1,
-    [TMB_LOG_CRITICAL] = sizeof(tmb_log_level_str[TMB_LOG_CRITICAL]) - 1,
+    [TMB_LOG_LEVEL_EMERGENCY] = CONST_STR_SIZE("EMERGENCY"),
+    [TMB_LOG_LEVEL_ALERT] = CONST_STR_SIZE("ALERT"),
+    [TMB_LOG_LEVEL_CRITICAL] = CONST_STR_SIZE("CRITICAL"),
+    [TMB_LOG_LEVEL_ERROR] = CONST_STR_SIZE("ERROR"),
+    [TMB_LOG_LEVEL_WARNING] = CONST_STR_SIZE("WARNING"),
+    [TMB_LOG_LEVEL_NOTICE] = CONST_STR_SIZE("NOTICE"),
+    [TMB_LOG_LEVEL_INFO] = CONST_STR_SIZE("INFO"),
+    [TMB_LOG_LEVEL_DEBUG] = CONST_STR_SIZE("DEBUG"),
 };
 
 cstr fmt_format(Formatter* fmt,
@@ -124,17 +124,17 @@ bool tmb_logger_destroy(Logger* lg) {
     return true;
 }
 
-void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...) {
+void tmb_log_impl(LogCtx ctx,
+                  const Logger* logger,
+                  const char* message,
+                  va_list args) {
     cstr* formated = (cstr*)malloc(logger->formatters_count * sizeof(cstr));
     Formatter** fmts = (Formatter**)logger->formatters;
     Sink** sinks = (Sink**)logger->sinks;
     for (int i = 0; i < logger->formatters_count; i++) {
         Formatter* fmt = fmts[i];
         assert(fmt != NULL);
-        va_list args = NULL;
-        va_start(args, message);
         formated[i] = fmt_format(fmt, &ctx, message, args);
-        va_end(args);
     }
     for (int i = 0; i < logger->sinks_count; i++) {
         Sink* sink = sinks[i];
@@ -145,6 +145,20 @@ void tmb_log(const Logger* logger, LogCtx ctx, const char* message, ...) {
         free((void*)formated[i]);
     }
     free((void*)formated);
+}
+
+void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+    tmb_log_impl(ctx, logger, message, args);
+    va_end(args);
+}
+
+void tmb_log_default(LogCtx ctx, const char* message, ...) {
+    va_list args;
+    va_start(args, message);
+    tmb_log_impl(ctx, tmb_get_default_logger(), message, args);
+    va_end(args);
 }
 
 void tmb_print_version(void) {
