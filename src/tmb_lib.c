@@ -40,8 +40,8 @@ String* make_string(const cstr str, size_t size) {
 }
 
 char* load_entire_file(const cstr file) {
-    FILE* f = NULL;
-    if (fopen_s(&f, file, "r")) {
+    FILE* f = fopen(file, "r");
+    if (f == NULL) {
         perror("cannot open file");
         goto error_return_only;
     }
