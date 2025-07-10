@@ -1,14 +1,34 @@
+/**
+ * @brief Timber logging library. 
+ * 
+ * This file can be used as a normal header file for linking 
+ * or as a STB style single header library.
+ * 
+ * When using as standalone header in one C file.
+ * In one C file
+ *  #define TMB_LOGGING_IMPLEMENTATION
+ *  #include "tmb.h"
+ * 
+ * in other C files just include. 
+ * 
+ * @copyright Copyright (c) 2025
+ * 
+ */
+
 #ifndef TMB_H_
 #define TMB_H_
 #include <stdbool.h>
 #include <time.h>
 
 #if !defined(_MSC_VER) || defined(__clang__)
+    // https://clang.llvm.org/docs/AttributeReference.html#format
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)                                  \
         __attribute__((format(printf, STR_IDX, ARG_BEGIN)))
+
+    //https://clang.llvm.org/docs/AttributeReference.html#constructor-destructor
     #define TMB_INIT __attribute__((constructor))
     #define TMB_DEINIT __attribute__((destructor))
-#else
+#else // not supported on MSVC
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)
     #define TMB_INIT
     #define TMB_DEINIT
@@ -58,6 +78,9 @@ extern int const tmb_log_level_str_len[TMB_LOG_LEVEL_COUNT];
 #define ANSI_CYAN ANSI_ESCAPE "36m"
 #define ANSI_WHITE ANSI_ESCAPE "37m"
 
+/**
+ * @brief Logger internal data, not to be edited manually.
+ */
 typedef struct {
     void** sinks;
     int sinks_count;
@@ -66,6 +89,10 @@ typedef struct {
     int* fmt_map;
 } Logger;
 
+/**
+ * @brief Log context meant to be created with macros.
+ * 
+ */
 typedef struct {
     const tmb_log_level log_level;
     const int line_no;
@@ -76,20 +103,86 @@ typedef struct {
     const time_t log_time;
 } LogCtx;
 
-// initializes the default logger
-TMB_INIT void tmb_init();
-TMB_DEINIT void tmb_deinit();
+/**
+ * @brief Initializes default logger.
+ * 
+ * on gcc and clang has constructor attribute.
+ * 
+ */
+TMB_INIT void tmb_init(void);
+
+/**
+ * @brief Deinitializes default logger.
+ * 
+ * on gcc and clang has destructor attribute.
+ * 
+ */
+TMB_DEINIT void tmb_deinit(void);
+
+/**
+ * @brief Initializes logger with config string.
+ * 
+ * @param lgr Logger to initialize
+ * @param config conifg string.
+ * @return true initialization succeeded
+ * @return false initialization failed
+ */
 bool tmb_logger_init(Logger* lgr, const char* config);
+
+/**
+ * @brief Initializes logger with configuration from file.
+ * 
+ * @param lgr Logger to initialize
+ * @param filename config file
+ * @return true initialization succeeded
+ * @return false initialization failed
+ */
 bool tmb_logger_init_file(Logger* lgr, const char* filename);
+
+/**
+ * @brief Initializes logger with default configuration.
+ * 
+ * @param lgr Logger to initialize
+ * @return true initialization succeeded
+ * @return false initialization failed
+ */
 bool tmb_logger_init_default(Logger* lgr);
-bool tmb_logger_destroy(Logger* lgr);
 
-TMB_FMT_CHECK(3, 4)
-void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...);
+/**
+ * @brief Deinitializes logger freeing internal managed memory.
+ *  Does not free the logger itself.
+ * 
+ * @param lgr Logger to deinitialize
+ * @return true deinitialization succeeded
+ * @return false deinitialization failed
+ */
+bool tmb_logger_deinit(Logger* lgr);
 
-TMB_FMT_CHECK(2, 3)
-void tmb_log_default(LogCtx ctx, const char* message, ...);
+/**
+ * @brief Loggs message with given logger and context.
+ * 
+ * @param ctx 
+ * @param logger 
+ * @param message string in printf format. 
+ * @param ... 
+ */
+void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...)
+        TMB_FMT_CHECK(3, 4);
 
+/**
+ * @brief Loggs message with context and default logger.
+ * 
+ * @param ctx 
+ * @param logger 
+ * @param message string in printf format. 
+ * @param ... 
+ */
+void tmb_log_default(LogCtx ctx, const char* message, ...) TMB_FMT_CHECK(2, 3);
+
+/**
+ * @brief prints version string to stdout
+ * 
+ */
 void tmb_print_version(void);
 
 #ifndef TMB_MIN_LOG_LEVEL
@@ -97,6 +190,7 @@ void tmb_print_version(void);
 #endif
 
 #define TMB_CALL(func, ...) func(__VA_ARGS__)
+#define TMB_CONST_STR_SIZE(X) (sizeof(X) - 1)
 
 // clang-format off
 #if TMB_MIN_LOG_LEVEL > TMB_LEVEL_DEBUG || TMB_MIN_LOG_LEVEL < TMB_LEVEL_EMERGENCY
@@ -105,49 +199,49 @@ void tmb_print_version(void);
 
 #if TMB_LEVEL_EMERGENCY <= TMB_MIN_LOG_LEVEL
     #define TMB_EMERGENCY(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_EMERGENCY, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_EMERGENCY(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_ALERT <= TMB_MIN_LOG_LEVEL
     #define TMB_ALERT(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ALERT, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_ALERT(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_CRITICAL <= TMB_MIN_LOG_LEVEL
     #define TMB_CRITICAL(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_CRITICAL, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_CRITICAL(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_ERROR <= TMB_MIN_LOG_LEVEL
     #define TMB_ERROR(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ERROR, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_ERROR(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_WARNING <= TMB_MIN_LOG_LEVEL
     #define TMB_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_WARNING(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_NOTICE <= TMB_MIN_LOG_LEVEL
     #define TMB_NOTICE(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_NOTICE, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_NOTICE(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_INFO <= TMB_MIN_LOG_LEVEL
     #define TMB_INFO(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_INFO, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_INFO(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_DEBUG <= TMB_MIN_LOG_LEVEL
     #define TMB_DEBUG(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_DEBUG, lgr_or_fmt,  __VA_ARGS__)
-#else 
+#else
     #define TMB_DEBUG(lgr_or_fmt, ...)
 #endif
 // clang-format on
@@ -165,15 +259,18 @@ void tmb_print_version(void);
         time_t now;                                                            \
         time(&now);                                                            \
         LogCtx _m__ctx = { log_level, __LINE__,                                \
-                           __FILE__,  sizeof(__FILE__) - 1,                    \
-                           __func__,  sizeof(__func__) - 1,                    \
-                           now }; /* -1 coz sizeof includes null terminator */ \
+                           __FILE__,  TMB_CONST_STR_SIZE(__FILE__),            \
+                           __func__,  TMB_CONST_STR_SIZE(__func__),            \
+                           now };                                              \
         TMB_DISPATCH(_m__ctx, logger_or_format, __VA_ARGS__);                  \
     } while (0)
 
-#define TMB_CONST_STR_SIZE(X) (sizeof(X) - 1)
-
 #ifdef TMB_LOGGING_IMPLEMENTATION
+/**
+ * Implementation for header only mode
+ * see https://github.com/nothings/stb
+ */
+
     #include <stdarg.h>
     #include <stdio.h>
 
@@ -206,7 +303,7 @@ bool tmb_logger_init_file(Logger* lgr, const char* filename) {
 bool tmb_logger_init_default(Logger* lgr) {
     return true;
 }
-bool tmb_logger_destroy(Logger* lgr) {
+bool tmb_logger_deinit(Logger* lgr) {
     return true;
 }
 

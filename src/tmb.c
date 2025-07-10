@@ -102,7 +102,7 @@ bool tmb_logger_init_default(Logger* lg) {
     return true;
 }
 
-bool tmb_logger_destroy(Logger* lg) {
+bool tmb_logger_deinit(Logger* lg) {
     for (int i = 0; i < lg->formatters_count; i++) {
         Formatter* fmt = lg->formatters[i];
         for (int j = 0; j < fmt->token_count; j++) {
@@ -120,6 +120,8 @@ bool tmb_logger_destroy(Logger* lg) {
     free((void*)lg->sinks);
     free((void*)lg->formatters);
     free(lg->fmt_map);
+    lg->formatters_count = 0;
+    lg->sinks_count = 0;
     return true;
 }
 
