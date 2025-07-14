@@ -29,6 +29,9 @@ function(setup_shared_lib)
 
     add_library(${PROJECT_NAME} SHARED)
 
+    target_compile_definitions(${PROJECT_NAME} PRIVATE TMB_BUILD_DLL=1)
+    target_compile_definitions(${PROJECT_NAME}-objects PRIVATE TMB_BUILD_DLL=1)
+
     target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-objects)
     set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
@@ -55,6 +58,15 @@ endfunction(setup_shared_lib)
 
 function(setup_static_lib)
     add_library(${PROJECT_NAME}-static STATIC)
+    if(WIN32)
+        set_target_properties(${PROJECT_NAME}-static PROPERTIES
+            OUTPUT_NAME ${PROJECT_NAME}_static
+        )
+    else()
+        set_target_properties(${PROJECT_NAME}-static PROPERTIES
+            OUTPUT_NAME ${PROJECT_NAME}
+        )
+    endif()
     target_link_libraries(${PROJECT_NAME}-static PRIVATE ${PROJECT_NAME}-objects)
 endfunction(setup_static_lib)
 
@@ -69,9 +81,9 @@ target_include_directories(${PROJECT_NAME}-objects
 )
 target_compile_options(${PROJECT_NAME}-objects PRIVATE
     $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-    -Wall -Wextra -pedantic>
+    -Wall -Wextra -pedantic -D_CRT_SECURE_NO_WARNINGS>
     $<$<C_COMPILER_ID:MSVC>:
-    /W4>)
+    /W4 /D_CRT_SECURE_NO_WARNINGS>)
 set_target_properties(${PROJECT_NAME}-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
 install(TARGETS ${PROJECT_NAME}-objects
     EXPORT ${PROJECT_NAME}Targets

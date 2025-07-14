@@ -115,7 +115,7 @@ void sb_appendv(StringBuilder* sb, const cstr fmt, va_list args);
 void do_nothing(void* _data);
 String* make_string(const cstr str, size_t size);
 
-const Logger* tmb_get_default_logger();
+const Logger* tmb_get_default_logger(void);
 
 
 /**

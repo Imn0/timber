@@ -20,6 +20,18 @@
 #include <stdbool.h>
 #include <time.h>
 
+#if defined(_WIN32)
+    #ifdef TMB_BUILD_DLL
+        #define TMB_API __declspec(dllexport)
+    // #elif defined(TMB_IMPORT_DLL)
+    //     #define TMB_API __declspec(dllimport)
+    #else
+        #define TMB_API
+    #endif
+#else
+    #define TMB_API
+#endif
+
 #if !defined(_MSC_VER) || defined(__clang__)
     // https://clang.llvm.org/docs/AttributeReference.html#format
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)                                  \
@@ -109,7 +121,7 @@ typedef struct {
  * on gcc and clang has constructor attribute.
  * 
  */
-TMB_INIT void tmb_init(void);
+TMB_API TMB_INIT void tmb_init(void);
 
 /**
  * @brief Deinitializes default logger.
@@ -117,7 +129,7 @@ TMB_INIT void tmb_init(void);
  * on gcc and clang has destructor attribute.
  * 
  */
-TMB_DEINIT void tmb_deinit(void);
+TMB_API TMB_DEINIT void tmb_deinit(void);
 
 /**
  * @brief Initializes logger with config string.
@@ -127,7 +139,7 @@ TMB_DEINIT void tmb_deinit(void);
  * @return true initialization succeeded
  * @return false initialization failed
  */
-bool tmb_logger_init(Logger* lgr, const char* config);
+TMB_API bool tmb_logger_init(Logger* lgr, const char* config);
 
 /**
  * @brief Initializes logger with configuration from file.
@@ -137,7 +149,7 @@ bool tmb_logger_init(Logger* lgr, const char* config);
  * @return true initialization succeeded
  * @return false initialization failed
  */
-bool tmb_logger_init_file(Logger* lgr, const char* filename);
+TMB_API bool tmb_logger_init_file(Logger* lgr, const char* filename);
 
 /**
  * @brief Initializes logger with default configuration.
@@ -146,7 +158,7 @@ bool tmb_logger_init_file(Logger* lgr, const char* filename);
  * @return true initialization succeeded
  * @return false initialization failed
  */
-bool tmb_logger_init_default(Logger* lgr);
+TMB_API bool tmb_logger_init_default(Logger* lgr);
 
 /**
  * @brief Deinitializes logger freeing internal managed memory.
@@ -156,7 +168,7 @@ bool tmb_logger_init_default(Logger* lgr);
  * @return true deinitialization succeeded
  * @return false deinitialization failed
  */
-bool tmb_logger_deinit(Logger* lgr);
+TMB_API bool tmb_logger_deinit(Logger* lgr);
 
 /**
  * @brief Loggs message with given logger and context.
@@ -166,7 +178,7 @@ bool tmb_logger_deinit(Logger* lgr);
  * @param message string in printf format. 
  * @param ... 
  */
-void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...)
+TMB_API void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...)
         TMB_FMT_CHECK(3, 4);
 
 /**
@@ -177,13 +189,14 @@ void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...)
  * @param message string in printf format. 
  * @param ... 
  */
-void tmb_log_default(LogCtx ctx, const char* message, ...) TMB_FMT_CHECK(2, 3);
+TMB_API void tmb_log_default(LogCtx ctx, const char* message, ...)
+        TMB_FMT_CHECK(2, 3);
 
 /**
  * @brief prints version string to stdout
  * 
  */
-void tmb_print_version(void);
+TMB_API void tmb_print_version(void);
 
 #ifndef TMB_MIN_LOG_LEVEL
     #define TMB_MIN_LOG_LEVEL TMB_LEVEL_INFO
@@ -266,7 +279,7 @@ void tmb_print_version(void);
     } while (0)
 
 #ifdef TMB_LOGGING_IMPLEMENTATION
-/**
+    /**
  * Implementation for header only mode
  * see https://github.com/nothings/stb
  */
