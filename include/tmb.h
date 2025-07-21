@@ -211,49 +211,49 @@ TMB_API void tmb_print_version(void);
 #endif
 
 #if TMB_LEVEL_EMERGENCY <= TMB_MIN_LOG_LEVEL
-    #define TMB_EMERGENCY(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_EMERGENCY, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_EMERGENCY(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_EMERGENCY, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_EMERGENCY(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_ALERT <= TMB_MIN_LOG_LEVEL
-    #define TMB_ALERT(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ALERT, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_ALERT(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ALERT, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_ALERT(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_CRITICAL <= TMB_MIN_LOG_LEVEL
-    #define TMB_CRITICAL(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_CRITICAL, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_CRITICAL(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_CRITICAL, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_CRITICAL(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_ERROR <= TMB_MIN_LOG_LEVEL
-    #define TMB_ERROR(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ERROR, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_ERROR(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ERROR, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_ERROR(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_WARNING <= TMB_MIN_LOG_LEVEL
-    #define TMB_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_WARNING(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_NOTICE <= TMB_MIN_LOG_LEVEL
-    #define TMB_NOTICE(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_NOTICE, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_NOTICE(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_NOTICE, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_NOTICE(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_INFO <= TMB_MIN_LOG_LEVEL
-    #define TMB_INFO(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_INFO, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_INFO(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_INFO, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_INFO(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_DEBUG <= TMB_MIN_LOG_LEVEL
-    #define TMB_DEBUG(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_DEBUG, lgr_or_fmt,  __VA_ARGS__)
+    #define TMB_DEBUG(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_DEBUG, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
     #define TMB_DEBUG(lgr_or_fmt, ...)
 #endif
@@ -264,8 +264,7 @@ TMB_API void tmb_print_version(void);
                      Logger*: tmb_log,                                         \
                      char*: tmb_log_default),                                  \
              ctx,                                                              \
-             logger_or_format,                                                 \
-             __VA_ARGS__)
+             logger_or_format __VA_OPT__(, ) __VA_ARGS__)
 
 #define TMB_LOG(log_level, logger_or_format, ...)                              \
     do {                                                                       \
@@ -275,7 +274,7 @@ TMB_API void tmb_print_version(void);
                            __FILE__,  TMB_CONST_STR_SIZE(__FILE__),            \
                            __func__,  TMB_CONST_STR_SIZE(__func__),            \
                            now };                                              \
-        TMB_DISPATCH(_m__ctx, logger_or_format, __VA_ARGS__);                  \
+        TMB_DISPATCH(_m__ctx, logger_or_format __VA_OPT__(, ) __VA_ARGS__);    \
     } while (0)
 
 #ifdef TMB_LOGGING_IMPLEMENTATION
