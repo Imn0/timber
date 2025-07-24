@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
 
 include(version.cmake)
 
@@ -8,7 +8,11 @@ project(timber VERSION ${PROJECT_VERSION}
 set(soversion ${GIT_SOVERSION})
 
 include(GNUInstallDirs)
-set(CMAKE_C_STANDARD 23)
+if(MSVC)
+    set(CMAKE_C_STANDARD 17)
+else()
+    set(CMAKE_C_STANDARD 23)
+endif()
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE Debug)
@@ -81,10 +85,12 @@ target_include_directories(${PROJECT_NAME}-objects
 )
 target_compile_options(${PROJECT_NAME}-objects PRIVATE
     $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-    -Wall -Wextra -pedantic -D_CRT_SECURE_NO_WARNINGS>
+    -Wall -Wextra -pedantic -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
     $<$<C_COMPILER_ID:MSVC>:
     /W4 /D_CRT_SECURE_NO_WARNINGS>)
-set_target_properties(${PROJECT_NAME}-objects PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(${PROJECT_NAME}-objects PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    UNITY_BUILD ON)
 install(TARGETS ${PROJECT_NAME}-objects
     EXPORT ${PROJECT_NAME}Targets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

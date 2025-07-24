@@ -9,7 +9,7 @@
  *  #define TMB_LOGGING_IMPLEMENTATION
  *  #include "tmb.h"
  * 
- * in other C files just include. 
+ * in other C files just include.
  * 
  * @copyright Copyright (c) 2025
  * 
@@ -23,13 +23,15 @@
 #if defined(_WIN32)
     #ifdef TMB_BUILD_DLL
         #define TMB_API __declspec(dllexport)
-    // #elif defined(TMB_IMPORT_DLL)
-    //     #define TMB_API __declspec(dllimport)
+    #else
+        #define TMB_API __declspec(dllimport)
+    #endif
+#else
+    #ifdef TMB_BUILD_DLL
+        #define TMB_API __attribute__((visibility("default")))
     #else
         #define TMB_API
     #endif
-#else
-    #define TMB_API
 #endif
 
 #if !defined(_MSC_VER) || defined(__clang__)
@@ -237,6 +239,7 @@ TMB_API void tmb_print_version(void);
 #if TMB_LEVEL_WARNING <= TMB_MIN_LOG_LEVEL
     #define TMB_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
+    #define TMB_WARN(lgr_or_fmt, ...)
     #define TMB_WARNING(lgr_or_fmt, ...)
 #endif
 
@@ -305,16 +308,21 @@ const int tmb_log_level_str_len[] = {
 };
 
 TMB_INIT void tmb_init() {}
+
 TMB_DEINIT void tmb_deinit() {}
+
 bool tmb_logger_init(Logger* lgr, const char* config) {
     return true;
 }
+
 bool tmb_logger_init_file(Logger* lgr, const char* filename) {
     return true;
 }
+
 bool tmb_logger_init_default(Logger* lgr) {
     return true;
 }
+
 bool tmb_logger_deinit(Logger* lgr) {
     return true;
 }
