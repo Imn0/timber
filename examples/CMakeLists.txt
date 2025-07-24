@@ -10,6 +10,9 @@ if(BUILD_EXAMPLES)
         set_target_properties(${EXAMPLE_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
         )
+        if(MSVC)
+            target_compile_definitions(${EXAMPLE_NAME} PRIVATE TMB_WIN_USE_STAIC=1)
+        endif()
     endforeach()
 
     if(EXAMPLE_SOURCES)

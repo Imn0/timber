@@ -20,8 +20,10 @@
 #include <stdbool.h>
 #include <time.h>
 
-#if defined(_WIN32)
-    #ifdef TMB_BUILD_DLL
+#if defined(_WIN32) && defined(_MSC_VER)
+    #ifdef TMB_WIN_USE_STAIC
+        #define TMB_API
+    #elif defined(TMB_BUILD_DLL)
         #define TMB_API __declspec(dllexport)
     #else
         #define TMB_API __declspec(dllimport)

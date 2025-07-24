@@ -87,7 +87,7 @@ target_compile_options(${PROJECT_NAME}-objects PRIVATE
     $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
     -Wall -Wextra -pedantic -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
     $<$<C_COMPILER_ID:MSVC>:
-    /W4 /D_CRT_SECURE_NO_WARNINGS>)
+    /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
 set_target_properties(${PROJECT_NAME}-objects PROPERTIES
     POSITION_INDEPENDENT_CODE ON
     UNITY_BUILD ON)
