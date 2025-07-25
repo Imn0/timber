@@ -2,9 +2,7 @@
 #include <tmb_lib.h>
 
 typedef struct {
-    int* items;
-    int size;
-    int capacity;
+   _da_header_(int*);
 } DynamicArray;
 
 int main(void) {

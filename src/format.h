@@ -3,27 +3,11 @@
 
 #include <tmb_lib.h>
 
-typedef enum {
-    FMT_FN,
-    FMT_MSG
-} FormatTokenType;
+void tmb_formatter_add_chip(Formatter* fmt, FormatToken chip);
+void tmb_formatter_add_chips(Formatter* fmt, size_t count, ...);
 
-typedef struct {
-    FormatTokenType type;
-    void* token_data;
-    fmt_fn_t* fmt_function;
-    free_fn_t* free_fn;
-} FormatToken;
-
-typedef struct {
-    int token_count;
-    FormatToken tokens[];
-} Formatter;
-
-void const_format_token_init(FormatToken* fmt, cstr value);
-
-void filename_format_token_init(FormatToken* fmt);
-
-void log_level_format_init(FormatToken* fmt, bool use_color);
+FormatToken tmb_fmt_chip_const_val_make(const char* value);
+FormatToken tmb_fmt_chip_message_make();
+FormatToken tmb_fmt_chip_log_level_make(bool use_color);
 
 #endif // TMB_FORMAT_H

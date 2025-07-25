@@ -42,7 +42,7 @@
         __attribute__((format(printf, STR_IDX, ARG_BEGIN)))
 
     //https://clang.llvm.org/docs/AttributeReference.html#constructor-destructor
-    #define TMB_INIT __attribute__((constructor))
+    #define TMB_INIT   __attribute__((constructor))
     #define TMB_DEINIT __attribute__((destructor))
 #else // not supported on MSVC
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)
@@ -53,27 +53,25 @@
 static const char TMB_PATCH_V[] = "0";
 static const char TMB_MINOR_V[] = "0";
 static const char TMB_MAJOR_V[] = "0";
-static const char TMB_SO_V[] = "0";
+static const char TMB_SO_V[]    = "0";
 extern const char* const GIT_REV;
 
-#define TMB_LEVEL_EMERGENCY 0
-#define TMB_LEVEL_ALERT 1
-#define TMB_LEVEL_CRITICAL 2
-#define TMB_LEVEL_ERROR 3
-#define TMB_LEVEL_WARNING 4
-#define TMB_LEVEL_NOTICE 5
-#define TMB_LEVEL_INFO 6
-#define TMB_LEVEL_DEBUG 7
+#define TMB_LEVEL_NONE    -1
+#define TMB_LEVEL_FATAL   0
+#define TMB_LEVEL_ERROR   1
+#define TMB_LEVEL_WARNING 2
+#define TMB_LEVEL_INFO    3
+#define TMB_LEVEL_DEBUG   4
+#define TMB_LEVEL_TRACE   5
+#define TMB_LEVEL_ALL     5
 
 typedef enum {
-    TMB_LOG_LEVEL_EMERGENCY = TMB_LEVEL_EMERGENCY,
-    TMB_LOG_LEVEL_ALERT = TMB_LEVEL_ALERT,
-    TMB_LOG_LEVEL_CRITICAL = TMB_LEVEL_CRITICAL,
-    TMB_LOG_LEVEL_ERROR = TMB_LEVEL_ERROR,
+    TMB_LOG_LEVEL_FATAL   = TMB_LEVEL_FATAL,
+    TMB_LOG_LEVEL_ERROR   = TMB_LEVEL_ERROR,
     TMB_LOG_LEVEL_WARNING = TMB_LEVEL_WARNING,
-    TMB_LOG_LEVEL_NOTICE = TMB_LEVEL_NOTICE,
-    TMB_LOG_LEVEL_INFO = TMB_LEVEL_INFO,
-    TMB_LOG_LEVEL_DEBUG = TMB_LEVEL_DEBUG,
+    TMB_LOG_LEVEL_INFO    = TMB_LEVEL_INFO,
+    TMB_LOG_LEVEL_DEBUG   = TMB_LEVEL_DEBUG,
+    TMB_LOG_LEVEL_TRACE   = TMB_LEVEL_TRACE,
 
     TMB_LOG_LEVEL_COUNT
 } tmb_log_level;
@@ -81,29 +79,66 @@ typedef enum {
 extern const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT];
 extern int const tmb_log_level_str_len[TMB_LOG_LEVEL_COUNT];
 
-#define ANSI_ESCAPE "\x1b["
-#define ANSI_BLUE ANSI_ESCAPE "34m"
-#define ANSI_RESET ANSI_ESCAPE "0m"
+#define ANSI_RESET     "0"
+#define ANSI_BOLD      "1"
+#define ANSI_DIM       "2"
+#define ANSI_ITALIC    "3"
+#define ANSI_UNDERLINE "4"
+#define ANSI_BLINK     "5"
+#define ANSI_REVERSE   "7"
 
-#define ANSI_BLACK ANSI_ESCAPE "30m"
-#define ANSI_RED ANSI_ESCAPE "31m"
-#define ANSI_GREEN ANSI_ESCAPE "32m"
-#define ANSI_YELLOW ANSI_ESCAPE "33m"
-#define ANSI_BLUE ANSI_ESCAPE "34m"
-#define ANSI_MAGENTA ANSI_ESCAPE "35m"
-#define ANSI_CYAN ANSI_ESCAPE "36m"
-#define ANSI_WHITE ANSI_ESCAPE "37m"
+#define ANSI_BLACK   "30"
+#define ANSI_RED     "31"
+#define ANSI_GREEN   "32"
+#define ANSI_YELLOW  "33"
+#define ANSI_BLUE    "34"
+#define ANSI_MAGENTA "35"
+#define ANSI_CYAN    "36"
+#define ANSI_WHITE   "37"
 
-/**
- * @brief Logger internal data, not to be edited manually.
- */
+#define ANSI_BG_BLACK   "40"
+#define ANSI_BG_RED     "41"
+#define ANSI_BG_GREEN   "42"
+#define ANSI_BG_YELLOW  "43"
+#define ANSI_BG_BLUE    "44"
+#define ANSI_BG_MAGENTA "45"
+#define ANSI_BG_CYAN    "46"
+#define ANSI_BG_WHITE   "47"
+
+#define ANSI_256(ID)    "38;5;" ID
+#define ANSI_BG_256(ID) "48;5;" ID
+
+#define MAKE_ANSI(...)                                                         \
+    MAKE_ANSI_SELECT(__VA_ARGS__,                                              \
+                     MAKE_ANSI6,                                               \
+                     MAKE_ANSI5,                                               \
+                     MAKE_ANSI4,                                               \
+                     MAKE_ANSI3,                                               \
+                     MAKE_ANSI2,                                               \
+                     MAKE_ANSI1)(__VA_ARGS__)
+#define MAKE_ANSI_SELECT(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
+#define MAKE_ANSI1(a)                                       "\x1b[" a "m"
+#define MAKE_ANSI2(a, b)                                    "\x1b[" a ";" b "m"
+#define MAKE_ANSI3(a, b, c)                                 "\x1b[" a ";" b ";" c "m"
+#define MAKE_ANSI4(a, b, c, d)                              "\x1b[" a ";" b ";" c ";" d "m"
+#define MAKE_ANSI5(a, b, c, d, e)                           "\x1b[" a ";" b ";" c ";" d ";" e "m"
+#define MAKE_ANSI6(a, b, c, d, e, f)                                           \
+    "\x1b[" a ";" b ";" c ";" d ";" e ";" f "; "                               \
+    "m"
+
+#define _da_header_(T)                                                         \
+    size_t size;                                                               \
+    size_t capacity;                                                           \
+    T items
+
 typedef struct {
-    void** sinks;
-    int sinks_count;
-    void** formatters;
-    int formatters_count;
-    int* fmt_map;
-} Logger;
+    _da_header_(char*);
+} StringBuilder;
+
+typedef struct {
+    size_t size;
+    char* items;
+} String;
 
 /**
  * @brief Log context meant to be created with macros.
@@ -118,6 +153,50 @@ typedef struct {
     const int funcname_len;
     const time_t log_time;
 } LogCtx;
+
+typedef void fmt_fn_t(StringBuilder* sb, const LogCtx* ctx, void* data);
+typedef void sink_log_fn_t(const String* msg, void* data);
+typedef void free_fn_t(void* data);
+
+// sink definition
+typedef enum { STDERR_SINK } SINK_TYPE;
+
+typedef struct {
+    sink_log_fn_t* sink_log;
+    free_fn_t* free_fn;
+    void* sink_data;
+} Sink;
+// sink definition end
+
+typedef enum { FMT_FN, FMT_MSG } FormatTokenType;
+
+typedef struct {
+    FormatTokenType type;
+    void* token_data;
+    fmt_fn_t* fmt_function;
+    free_fn_t* free_fn;
+} FormatToken;
+
+typedef struct {
+    _da_header_(FormatToken*);
+} Formatter;
+
+/**
+ * @brief Logger internal data, not to be edited manually.
+ */
+typedef struct {
+    struct {
+        _da_header_(Sink*);
+    } sinks;
+    struct {
+        _da_header_(Formatter*);
+    } formatters;
+    struct {
+        _da_header_(size_t*);
+    } fmt_map;
+} Logger;
+
+struct Logger;
 
 /**
  * @brief Initializes default logger.
@@ -206,61 +285,46 @@ TMB_API void tmb_print_version(void);
     #define TMB_MIN_LOG_LEVEL TMB_LEVEL_INFO
 #endif
 
-#define TMB_CALL(func, ...) func(__VA_ARGS__)
+#define TMB_CALL(func, ...)   func(__VA_ARGS__)
 #define TMB_CONST_STR_SIZE(X) (sizeof(X) - 1)
 
 // clang-format off
-#if TMB_MIN_LOG_LEVEL > TMB_LEVEL_DEBUG || TMB_MIN_LOG_LEVEL < TMB_LEVEL_EMERGENCY
-    #error "TMB_MIN_LOG_LEVEL must be between TMB_LEVEL_DEBUG(7) and TMB_LEVEL_EMERGENCY(0)"
-#endif
-
-#if TMB_LEVEL_EMERGENCY <= TMB_MIN_LOG_LEVEL
-    #define TMB_EMERGENCY(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_EMERGENCY, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+#if TMB_LEVEL_FATAL <= TMB_MIN_LOG_LEVEL
+    #define LOG_FATAL(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_FATAL, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define TMB_EMERGENCY(lgr_or_fmt, ...)
-#endif
-
-#if TMB_LEVEL_ALERT <= TMB_MIN_LOG_LEVEL
-    #define TMB_ALERT(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ALERT, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
-#else
-    #define TMB_ALERT(lgr_or_fmt, ...)
-#endif
-
-#if TMB_LEVEL_CRITICAL <= TMB_MIN_LOG_LEVEL
-    #define TMB_CRITICAL(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_CRITICAL, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
-#else
-    #define TMB_CRITICAL(lgr_or_fmt, ...)
+    #define LOG_FATAL(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_ERROR <= TMB_MIN_LOG_LEVEL
-    #define TMB_ERROR(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ERROR, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define LOG_ERROR(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ERROR, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define TMB_ERROR(lgr_or_fmt, ...)
+    #define LOG_ERROR(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_WARNING <= TMB_MIN_LOG_LEVEL
-    #define TMB_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define LOG_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define LOG_WARN(lgr_or_fmt, ...) LOG_WARNING(lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define TMB_WARN(lgr_or_fmt, ...)
-    #define TMB_WARNING(lgr_or_fmt, ...)
-#endif
-
-#if TMB_LEVEL_NOTICE <= TMB_MIN_LOG_LEVEL
-    #define TMB_NOTICE(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_NOTICE, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
-#else
-    #define TMB_NOTICE(lgr_or_fmt, ...)
+    #define LOG_WARN(lgr_or_fmt, ...)
+    #define LOG_WARNING(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_INFO <= TMB_MIN_LOG_LEVEL
-    #define TMB_INFO(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_INFO, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define LOG_INFO(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_INFO, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define TMB_INFO(lgr_or_fmt, ...)
+    #define LOG_INFO(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_DEBUG <= TMB_MIN_LOG_LEVEL
-    #define TMB_DEBUG(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_DEBUG, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define LOG_DEBUG(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_DEBUG, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define TMB_DEBUG(lgr_or_fmt, ...)
+    #define LOG_DEBUG(lgr_or_fmt, ...)
+#endif
+
+#if TMB_LEVEL_TRACE <= TMB_MIN_LOG_LEVEL
+    #define LOG_TRACE(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_TRACE, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+#else
+    #define LOG_TRACE(lgr_or_fmt, ...)
 #endif
 // clang-format on
 
@@ -292,21 +356,18 @@ TMB_API void tmb_print_version(void);
     #include <stdio.h>
 
 const char* const tmb_log_level_str[] = {
-    [TMB_LOG_LEVEL_EMERGENCY] = "EMERGENCY", [TMB_LOG_LEVEL_ALERT] = "ALERT",
-    [TMB_LOG_LEVEL_CRITICAL] = "CRITICAL",   [TMB_LOG_LEVEL_ERROR] = "ERROR",
-    [TMB_LOG_LEVEL_WARNING] = "WARNING",     [TMB_LOG_LEVEL_NOTICE] = "NOTICE",
-    [TMB_LOG_LEVEL_INFO] = "INFO",           [TMB_LOG_LEVEL_DEBUG] = "DEBUG",
+    [TMB_LEVEL_FATAL] = "FATAL",     [TMB_LEVEL_ERROR] = "ERROR",
+    [TMB_LEVEL_WARNING] = "WARNING", [TMB_LEVEL_INFO] = "INFO",
+    [TMB_LEVEL_DEBUG] = "DEBUG",     [TMB_LEVEL_TRACE] = "TRACE",
 };
 
 const int tmb_log_level_str_len[] = {
-    [TMB_LOG_LEVEL_EMERGENCY] = TMB_CONST_STR_SIZE("EMERGENCY"),
-    [TMB_LOG_LEVEL_ALERT] = TMB_CONST_STR_SIZE("ALERT"),
-    [TMB_LOG_LEVEL_CRITICAL] = TMB_CONST_STR_SIZE("CRITICAL"),
-    [TMB_LOG_LEVEL_ERROR] = TMB_CONST_STR_SIZE("ERROR"),
-    [TMB_LOG_LEVEL_WARNING] = TMB_CONST_STR_SIZE("WARNING"),
-    [TMB_LOG_LEVEL_NOTICE] = TMB_CONST_STR_SIZE("NOTICE"),
-    [TMB_LOG_LEVEL_INFO] = TMB_CONST_STR_SIZE("INFO"),
-    [TMB_LOG_LEVEL_DEBUG] = TMB_CONST_STR_SIZE("DEBUG"),
+    [TMB_LEVEL_FATAL]   = TMB_CONST_STR_SIZE("FATAL"),
+    [TMB_LEVEL_ERROR]   = TMB_CONST_STR_SIZE("ERROR"),
+    [TMB_LEVEL_WARNING] = TMB_CONST_STR_SIZE("WARNING"),
+    [TMB_LEVEL_INFO]    = TMB_CONST_STR_SIZE("INFO"),
+    [TMB_LEVEL_DEBUG]   = TMB_CONST_STR_SIZE("DEBUG"),
+    [TMB_LEVEL_TRACE]   = TMB_CONST_STR_SIZE("TRACE"),
 };
 
 TMB_INIT void tmb_init() {}

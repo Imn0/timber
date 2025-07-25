@@ -37,12 +37,12 @@ function(setup_shared_lib)
     target_compile_definitions(${PROJECT_NAME}-objects PRIVATE TMB_BUILD_DLL=1)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-objects)
-    set_target_properties(${PROJECT_NAME} PROPERTIES
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${SOVERSION}
-        PUBLIC_HEADER ${public_headers}
-        OUTPUT_NAME ${PROJECT_NAME}
-    )
+    # set_target_properties(${PROJECT_NAME} PROPERTIES
+    #     VERSION ${PROJECT_VERSION}
+    #     SOVERSION ${SOVERSION}
+    #     PUBLIC_HEADER ${public_headers}
+    #     OUTPUT_NAME ${PROJECT_NAME}
+    # )
     set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ${public_headers})
     install(TARGETS ${PROJECT_NAME}
         EXPORT ${PROJECT_NAME}Targets
@@ -89,8 +89,7 @@ target_compile_options(${PROJECT_NAME}-objects PRIVATE
     $<$<C_COMPILER_ID:MSVC>:
     /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
 set_target_properties(${PROJECT_NAME}-objects PROPERTIES
-    POSITION_INDEPENDENT_CODE ON
-    UNITY_BUILD ON)
+    POSITION_INDEPENDENT_CODE ON)
 install(TARGETS ${PROJECT_NAME}-objects
     EXPORT ${PROJECT_NAME}Targets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

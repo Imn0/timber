@@ -1,6 +1,6 @@
 Checks: >
   clang-analyzer-*,
-  bugprone-*,
+  bugprone-*<bugprone-multi-level-implicit-pointer-conversion,
   performance-*,
   concurrency-*
   readability-*<readability-math-missing-parentheses,

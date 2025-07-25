@@ -1,14 +1,14 @@
 #define TMB_LOGGING_IMPLEMENTATION
-#define TMB_MIN_LOG_LEVEL 7
+#define TMB_MIN_LOG_LEVEL 5
 #include <tmb.h>
 
 int main(void) {
-    TMB_EMERGENCY("message %d", 3);
-    TMB_ALERT("message %d", 3);
-    TMB_CRITICAL("message %d", 3);
-    TMB_ERROR("message %d", 3);
-    TMB_WARNING("message %d", 3);
-    TMB_NOTICE("message %d", 3);
-    TMB_INFO("message %d", 3);
-    TMB_DEBUG("message %d", 3);
+    LOG_FATAL("message %d", 3);
+    LOG_ERROR("message %d", 3);
+    LOG_WARNING("message %d", 3);
+    LOG_INFO("message %d", 3);
+    LOG_DEBUG("message %d", 3);
+    LOG_TRACE("message %d", 3);
+
+    LOG_WARN("WAWD");
 }

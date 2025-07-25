@@ -3,6 +3,7 @@ IndentWidth: 4
 BreakBeforeBraces: Custom
 BraceWrapping:
     AfterClass: false
+    AfterCaseLabel: false
     AfterControlStatement: false
     AfterEnum: false
     AfterFunction: false
@@ -17,7 +18,7 @@ ColumnLimit: 80
 AlignAfterOpenBracket: Align
 BinPackArguments: false
 BinPackParameters: false
-AllowAllArgumentsOnNextLine: false
+AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: false
 ContinuationIndentWidth: 8
 BreakBeforeBinaryOperators: None
@@ -32,14 +33,14 @@ PointerAlignment: Left
 PenaltyBreakBeforeFirstCallParameter: 50
 PenaltyBreakString: 100
 AllowShortBlocksOnASingleLine: Always
-# AllowShortCaseExpressionOnASingleLine: false
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortCompoundRequirementOnASingleLine: false
-AllowShortEnumsOnASingleLine: false
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
 ReflowComments: false
 SpacesBeforeTrailingComments: 1
 IndentPPDirectives: BeforeHash
+AlignConsecutiveAssignments: AcrossEmptyLines
+AlignConsecutiveMacros: true 

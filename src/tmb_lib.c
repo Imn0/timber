@@ -29,16 +29,6 @@ void do_nothing(void* _data) {
     UNUSED _data;
 }
 
-String* make_string(const cstr str, size_t size) {
-    struct {
-        size_t size;
-        char items[];
-    }* string = malloc(sizeof(String) + size * sizeof(char));
-    memcpy(string, &(String) { .size = size }, sizeof(String));
-    memcpy(string->items, str, size);
-    return (String*)string;
-}
-
 char* load_entire_file(const cstr file) {
     FILE* f = fopen(file, "r");
     if (f == NULL) {
