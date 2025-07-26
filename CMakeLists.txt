@@ -85,9 +85,9 @@ target_include_directories(${PROJECT_NAME}-objects
 )
 target_compile_options(${PROJECT_NAME}-objects PRIVATE
     $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-    -Wall -Wextra -pedantic -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
+    -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
     $<$<C_COMPILER_ID:MSVC>:
-    /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
+    /W4 /WX /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
 set_target_properties(${PROJECT_NAME}-objects PROPERTIES
     POSITION_INDEPENDENT_CODE ON)
 install(TARGETS ${PROJECT_NAME}-objects
@@ -97,11 +97,14 @@ install(TARGETS ${PROJECT_NAME}-objects
 )
 
 add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/_version.c
-    ${CMAKE_CURRENT_BINARY_DIR}/version.c
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.c ${CMAKE_CURRENT_BINARY_DIR}/_version.c
     COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_SOURCE_DIR}/version.cmake
+    DEPENDS FORCE_REBUILD_DUMMY
     VERBATIM
+    COMMENT "Generating version.c"
 )
+
+add_custom_target(FORCE_REBUILD_DUMMY)
 
 if(BUILD_SHARED_AND_STATIC_LIBS)
     setup_shared_lib()

@@ -55,7 +55,7 @@ typedef const char* cstr;
                                       ((unsigned long)(da)->capacity_name *    \
                                        sizeof(*(da)->items_name)));            \
             if (new_items == NULL) {                                           \
-                fprintf(stderr, "realloc faield");                             \
+                fprintf(stderr, "realloc faield");                           \
             } else {                                                           \
                 (da)->items_name = new_items;                                  \
             }                                                                  \

@@ -1,10 +1,12 @@
 Checks: >
   clang-analyzer-*,
-  bugprone-*<bugprone-multi-level-implicit-pointer-conversion,
+  bugprone-*,
   performance-*,
-  concurrency-*
+  concurrency-*,
   readability-*<readability-math-missing-parentheses,
-  linuxkernel-*
+  linuxkernel-*,
+  portability-*,
+  unix-*,
 
 CheckOptions:
   - key: 'readability-identifier-length.IgnoredVariableNames'
