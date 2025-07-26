@@ -1,4 +1,5 @@
 #include <stdio.h>
+
 #include <tmb_lib.h>
 
 void sb_appendf(StringBuilder* sb, const cstr fmt, ...) {

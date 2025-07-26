@@ -3,10 +3,15 @@ Checks: >
   bugprone-*,
   performance-*,
   concurrency-*,
-  readability-*<readability-math-missing-parentheses,
+  cert-*,
+  readability-*,
   linuxkernel-*,
   portability-*,
   unix-*,
+  -readability-math-missing-parentheses,
+  -readability-enum-initial-value,
+  -readability-function-cognitive-complexity,
+  -cert-int09-c,
 
 CheckOptions:
   - key: 'readability-identifier-length.IgnoredVariableNames'

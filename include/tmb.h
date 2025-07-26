@@ -50,13 +50,19 @@
     #define TMB_DEINIT
 #endif
 
+#if defined(__clang__) || defined(__GNUC__)
+    #define TMB_BASEFILENAME __FILE_NAME__
+#else
+    #define TMB_BASEFILENAME __FILE__
+#endif
+
 static const char TMB_PATCH_V[] = "0";
 static const char TMB_MINOR_V[] = "0";
 static const char TMB_MAJOR_V[] = "0";
 static const char TMB_SO_V[]    = "0";
 extern const char* const GIT_REV;
 
-#define TMB_LEVEL_NONE    -1
+#define TMB_LEVEL_NONE    (-1)
 #define TMB_LEVEL_FATAL   0
 #define TMB_LEVEL_ERROR   1
 #define TMB_LEVEL_WARNING 2
@@ -337,11 +343,13 @@ TMB_API void tmb_print_version(void);
 
 #define TMB_LOG(log_level, logger_or_format, ...)                              \
     do {                                                                       \
-        time_t now;                                                            \
-        time(&now);                                                            \
-        LogCtx _m__ctx = { log_level, __LINE__,                                \
-                           __FILE__,  TMB_CONST_STR_SIZE(__FILE__),            \
-                           __func__,  TMB_CONST_STR_SIZE(__func__),            \
+        time_t now     = time(NULL);                                           \
+        LogCtx _m__ctx = { log_level,                                          \
+                           __LINE__,                                           \
+                           TMB_BASEFILENAME,                                   \
+                           TMB_CONST_STR_SIZE(TMB_BASEFILENAME),               \
+                           __func__,                                           \
+                           TMB_CONST_STR_SIZE(__func__),                       \
                            now };                                              \
         TMB_DISPATCH(_m__ctx, logger_or_format __VA_OPT__(, ) __VA_ARGS__);    \
     } while (0)

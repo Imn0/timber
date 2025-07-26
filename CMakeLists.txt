@@ -85,7 +85,7 @@ target_include_directories(${PROJECT_NAME}-objects
 )
 target_compile_options(${PROJECT_NAME}-objects PRIVATE
     $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-    -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
+    -Wall -Wextra -pedantic -Wshadow -Werror -Wno-gnu-zero-variadic-macro-arguments -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
     $<$<C_COMPILER_ID:MSVC>:
     /W4 /WX /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
 set_target_properties(${PROJECT_NAME}-objects PROPERTIES

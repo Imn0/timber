@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include <format.h>
 
 void filename_format_token_fn(StringBuilder* sb,
@@ -45,6 +47,29 @@ void log_level_format_fn(StringBuilder* sb, const LogCtx* ctx, void* data) {
     sb_appendn(sb,
                tmb_log_level_str[ctx->log_level],
                tmb_log_level_str_len[ctx->log_level]);
+}
+
+void date_format_fn(StringBuilder* sb, const LogCtx* ctx, void* data) {
+    UNUSED data;
+    struct tm tm = *localtime(&ctx->log_time);
+    sb_appendf(sb,
+               "%d-%02d-%02d %02d:%02d:%02d",
+               tm.tm_year + 1900,
+               tm.tm_mon + 1,
+               tm.tm_mday,
+               tm.tm_hour,
+               tm.tm_min,
+               tm.tm_sec);
+}
+
+void file_format_fn(StringBuilder* sb, const LogCtx* ctx, void* data) {
+    UNUSED data;
+    sb_appendn(sb, ctx->filename, ctx->filename_len);
+}
+
+void function_format_fn(StringBuilder* sb, const LogCtx* ctx, void* data) {
+    UNUSED data;
+    sb_appendn(sb, ctx->funcname, ctx->funcname_len);
 }
 
 void tmb_formatter_add_chip(Formatter* fmt, FormatToken chip) {
@@ -120,4 +145,25 @@ FormatToken tmb_fmt_chip_log_level_make(bool use_color) {
         .free_fn      = do_nothing,
         .type         = FMT_FN,
     };
+}
+
+FormatToken tmb_fmt_chip_funcname() {
+    return (FormatToken) { .type         = FMT_FN,
+                           .fmt_function = function_format_fn,
+                           .token_data   = NULL,
+                           .free_fn      = do_nothing };
+}
+
+FormatToken tmb_fmt_chip_filename() {
+    return (FormatToken) { .type         = FMT_FN,
+                           .fmt_function = file_format_fn,
+                           .token_data   = NULL,
+                           .free_fn      = do_nothing };
+}
+
+FormatToken tmb_fmt_chip_date() {
+    return (FormatToken) { .type         = FMT_FN,
+                           .fmt_function = date_format_fn,
+                           .token_data   = NULL,
+                           .free_fn      = do_nothing };
 }

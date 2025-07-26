@@ -64,6 +64,12 @@ bool tmb_logger_init_default(Logger* lg) {
     if (lg == NULL) { return false; }
 
     Formatter fmt = {};
+    da_append(&fmt, tmb_fmt_chip_date());
+    da_append(&fmt, tmb_fmt_chip_const_val_make(" - "));
+    da_append(&fmt, tmb_fmt_chip_filename());
+    da_append(&fmt, tmb_fmt_chip_const_val_make(" - "));
+    da_append(&fmt, tmb_fmt_chip_funcname());
+    da_append(&fmt, tmb_fmt_chip_const_val_make(" - "));
     da_append(&fmt, tmb_fmt_chip_const_val_make("[ "));
     da_append(&fmt, tmb_fmt_chip_log_level_make(true));
     da_append(&fmt, tmb_fmt_chip_const_val_make(" ] "));

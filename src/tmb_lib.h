@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <tmb.h>
 
 typedef const char* cstr;
@@ -18,7 +19,7 @@ typedef const char* cstr;
 
 #define UNREACHABLE()                                                          \
     do {                                                                       \
-        fprintf(stderr,                                                        \
+        UNUSED fprintf(stderr,                                                        \
                 "reached unreachable code at %s:%d",                           \
                 __FILE__,                                                      \
                 __LINE__);                                                     \
@@ -55,7 +56,7 @@ typedef const char* cstr;
                                       ((unsigned long)(da)->capacity_name *    \
                                        sizeof(*(da)->items_name)));            \
             if (new_items == NULL) {                                           \
-                fprintf(stderr, "realloc faield");                           \
+                UNUSED fprintf(stderr, "realloc faield");                           \
             } else {                                                           \
                 (da)->items_name = new_items;                                  \
             }                                                                  \
