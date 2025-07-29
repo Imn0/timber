@@ -19,11 +19,11 @@ jobs:
             c_compiler: cl
             cpp_compiler: cl
             build_type: Release
-          - os: ubuntu-latest
+          - os: ${{ github.event_name == 'pull_request' && 'ubuntu-latest' || 'self-hosted' }}
             c_compiler: gcc
             cpp_compiler: g++
             build_type: Release
-          - os: ubuntu-latest
+          - os: ${{ github.event_name == 'pull_request' && 'ubuntu-latest' || 'self-hosted' }}
             c_compiler: clang
             cpp_compiler: clang++
             build_type: Release
