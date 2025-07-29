@@ -19,17 +19,13 @@ jobs:
             c_compiler: cl
             cpp_compiler: cl
             build_type: Release
-          - os: ${{ github.event_name == 'pull_request' && 'ubuntu-latest' || 'self-hosted' }}
+          - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
             build_type: Release
-          - os: ${{ github.event_name == 'pull_request' && 'ubuntu-latest' || 'self-hosted' }}
+          - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-            build_type: Release
-          - os: macos-15-large
-            c_compiler: gcc-14
-            cpp_compiler: g++-14
             build_type: Release
 
     steps:
