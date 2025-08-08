@@ -13,4 +13,9 @@ Sink file_sink_create(const char* filename);
 sink_log_fn_t file_sink;
 // end file sink
 
+// rotating file sink
+Sink rotating_file_sink_create(const char* filename, size_t max_size_kb);
+sink_log_fn_t rotating_file_sink;
+// end rotating file sink
+
 #endif // end TMB_SINK_H

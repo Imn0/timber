@@ -1,19 +1,13 @@
 #include <Python.h>
 #include <tmb.h>
 
-static PyObject* _hello_world(PyObject* self) {
-    return PyUnicode_FromString("hello world");
-}
-
-static PyObject* _test_tmb(PyObject* self) {
-    tmb_test();
-    return PyUnicode_FromString("hello world");
-
+static PyObject* py_tmb_print_version_(PyObject* self) {
+    tmb_print_version();
+    return Py_None;
 }
 
 static struct PyMethodDef methods[] = {
-    { "hello_world", (PyCFunction)_hello_world, METH_NOARGS },
-    { "test_tmb", (PyCFunction)_test_tmb, METH_NOARGS },
+    { "print_version", (PyCFunction)py_tmb_print_version_, METH_NOARGS },
     { NULL, NULL }
 };
 

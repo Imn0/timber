@@ -6,11 +6,7 @@
 #include <tmb_internal.h>
 #include <tmb_lib.h>
 
-size_t tmb_logger_add_formatter(Logger* lg, Formatter fmt);
-size_t tmb_logger_add_sink(Logger* lg, Sink sink);
-bool tmb_logger_fmt_sink_assign(Logger* lg,
-                                size_t formmatter_idx,
-                                size_t sink_idx);
+
 
 size_t tmb_logger_add_formatter(Logger* lg, Formatter fmt) {
     da_append(&lg->formatters, fmt);

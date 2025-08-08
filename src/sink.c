@@ -25,7 +25,7 @@ void file_sink_data_destroy(void* data) {
 }
 
 Sink file_sink_create(const char* filename) {
-    FileSinkData* sink_data = malloc(sizeof(FileSinkData));
+    FileSinkData* sink_data = malloc(sizeof(*sink_data));
     sink_data->fd           = fopen(filename, "a");
     if (sink_data->fd == NULL) { perror("cannot open file"); }
     return (Sink) { .sink_data = sink_data,
@@ -40,3 +40,45 @@ void file_sink(const String* msg, void* data) {
     fprintf(sink_data->fd, "%.*s", (int)msg->size, msg->items);
 }
 // end file sink
+
+// rotating file sink
+typedef struct {
+    const char* base_filename;
+    size_t current_log;
+    size_t max_size;
+    size_t written;
+    FILE* fd;
+
+} RotatingFileSinkData;
+
+Sink rotating_file_sink_create(const char* filename, size_t max_size_kb) {
+    RotatingFileSinkData* data = malloc(sizeof(*data));
+
+    data->base_filename        = filename;
+    data->written              = 0;
+    data->max_size             = max_size_kb;
+    data->fd                   = fopen(filename, "a");
+    data->current_log          = 0;
+
+    return (Sink) { .sink_data = data,
+                    .sink_log  = rotating_file_sink,
+                    .free_fn   = free };
+}
+
+void rotating_file_sink(const String* msg, void* data) {
+    RotatingFileSinkData* sink_data = (RotatingFileSinkData*)data;
+    if (msg->size + sink_data->written > sink_data->max_size) {
+        // rotate
+        fclose(sink_data->fd);
+        sink_data->current_log++;
+        StringBuilder sb = { 0 };
+        sb_append_cstr(&sb, sink_data->base_filename);
+        sb_appendf(&sb, "%lu", sink_data->current_log);
+        sb_to_cstr(&sb);
+        sink_data->fd      = fopen(sb.items, "a");
+        sink_data->written = 0;
+    }
+    fprintf(sink_data->fd, "%.*s", (int)msg->size, msg->items);
+    sink_data->written += msg->size;
+}
+// end rotating file sink
