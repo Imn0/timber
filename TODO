@@ -1,4 +1,3 @@
-- improve public api, allow sink and formatters creation
 - cleanup format.h/format.c
 - python bindings
 - actual log rotation

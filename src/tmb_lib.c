@@ -2,14 +2,14 @@
 
 #include <tmb_lib.h>
 
-void sb_appendf(StringBuilder* sb, const cstr fmt, ...) {
+void sb_appendf(StringBuilder* sb, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     sb_appendv(sb, fmt, args);
     va_end(args);
 }
 
-void sb_appendv(StringBuilder* sb, const cstr fmt, va_list args) {
+void sb_appendv(StringBuilder* sb, const char* fmt, va_list args) {
 
     va_list args1;
     va_copy(args1, args);
@@ -30,7 +30,7 @@ void do_nothing(void* _data) {
     UNUSED _data;
 }
 
-char* load_entire_file(const cstr file) {
+char* load_entire_file(const char* file) {
     FILE* f = fopen(file, "r");
     if (f == NULL) {
         perror("cannot open file");

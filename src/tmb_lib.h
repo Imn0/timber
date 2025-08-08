@@ -9,8 +9,6 @@
 
 #include <tmb.h>
 
-typedef const char* cstr;
-
 #ifdef _WIN32
     #define TMB_NEW_LINE "\n\r"
 #else
@@ -19,10 +17,10 @@ typedef const char* cstr;
 
 #define UNREACHABLE()                                                          \
     do {                                                                       \
-        UNUSED fprintf(stderr,                                                        \
-                "reached unreachable code at %s:%d",                           \
-                __FILE__,                                                      \
-                __LINE__);                                                     \
+        UNUSED fprintf(stderr,                                                 \
+                       "reached unreachable code at %s:%d",                    \
+                       __FILE__,                                               \
+                       __LINE__);                                              \
         abort();                                                               \
     } while (0)
 
@@ -56,7 +54,7 @@ typedef const char* cstr;
                                       ((unsigned long)(da)->capacity_name *    \
                                        sizeof(*(da)->items_name)));            \
             if (new_items == NULL) {                                           \
-                UNUSED fprintf(stderr, "realloc faield");                           \
+                UNUSED fprintf(stderr, "realloc faield");                      \
             } else {                                                           \
                 (da)->items_name = new_items;                                  \
             }                                                                  \
@@ -134,23 +132,23 @@ typedef const char* cstr;
 
 #define sb_append_cstr(sb, str)                                                \
     do {                                                                       \
-        const cstr _m__s = (cstr)(str);                                        \
-        int _m__n        = (int)strlen(_m__s);                                 \
+        const char* _m__s = (char*)(str);                                      \
+        int _m__n         = (int)strlen(_m__s);                                \
         da_appendn(sb, _m__s, _m__n);                                          \
     } while (0)
 
-void sb_appendf(StringBuilder* sb, const cstr fmt, ...) TMB_FMT_CHECK(2, 3);
-void sb_appendv(StringBuilder* sb, const cstr fmt, va_list args);
+void sb_appendf(StringBuilder* sb, const char* fmt, ...) TMB_FMT_CHECK(2, 3);
+void sb_appendv(StringBuilder* sb, const char* fmt, va_list args);
 void do_nothing(void* _data);
 
 const Logger* tmb_get_default_logger(void);
 
 /**
  * @brief Returns heap allocated zero terminated string with contents of the file
- * 
+ *
  * @param file
  * @return char*
  */
-char* load_entire_file(const cstr file);
+char* load_entire_file(const char* file);
 
 #endif //TMB_LIB_H

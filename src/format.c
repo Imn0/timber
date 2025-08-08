@@ -1,6 +1,7 @@
 #include <time.h>
 
-#include <format.h>
+#include <tmb.h>
+#include <tmb_lib.h>
 
 void filename_format_token_fn(StringBuilder* sb,
                               const LogCtx* ctx,
@@ -86,9 +87,9 @@ void tmb_formatter_add_chips(Formatter* fmt, size_t count, ...) {
     va_end(args);
 }
 
-String fmt_format(Formatter* fmt,
+String tmb_formatter_format(Formatter* fmt,
                   const LogCtx* ctx,
-                  const cstr msg_fmt,
+                  const char* msg_fmt,
                   va_list msg_arg) {
     StringBuilder sb = { 0 };
 
@@ -147,21 +148,21 @@ FormatToken tmb_fmt_chip_log_level_make(bool use_color) {
     };
 }
 
-FormatToken tmb_fmt_chip_funcname() {
+FormatToken tmb_fmt_chip_funcname_make() {
     return (FormatToken) { .type         = FMT_FN,
                            .fmt_function = function_format_fn,
                            .token_data   = NULL,
                            .free_fn      = do_nothing };
 }
 
-FormatToken tmb_fmt_chip_filename() {
+FormatToken tmb_fmt_chip_filename_make() {
     return (FormatToken) { .type         = FMT_FN,
                            .fmt_function = file_format_fn,
                            .token_data   = NULL,
                            .free_fn      = do_nothing };
 }
 
-FormatToken tmb_fmt_chip_date() {
+FormatToken tmb_fmt_chip_date_make() {
     return (FormatToken) { .type         = FMT_FN,
                            .fmt_function = date_format_fn,
                            .token_data   = NULL,

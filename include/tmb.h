@@ -1,22 +1,23 @@
 /**
- * @brief Timber logging library. 
- * 
- * This file can be used as a normal header file for linking 
+ * @brief Timber logging library.
+ *
+ * This file can be used as a normal header file for linking
  * or as a STB style single header library.
- * 
+ *
  * When using as standalone header in one C file.
  * In one C file
  *  #define TMB_LOGGING_IMPLEMENTATION
  *  #include "tmb.h"
- * 
+ *
  * in other C files just include.
- * 
+ *
  * @copyright Copyright (c) 2025
- * 
+ *
  */
 
 #ifndef TMB_H_
 #define TMB_H_
+#include <stdarg.h>
 #include <stdbool.h>
 #include <time.h>
 
@@ -56,10 +57,10 @@
     #define TMB_BASEFILENAME __FILE__
 #endif
 
-static const char TMB_PATCH_V[] = "0";
-static const char TMB_MINOR_V[] = "0";
-static const char TMB_MAJOR_V[] = "0";
-static const char TMB_SO_V[]    = "0";
+extern const char* const TMB_PATCH_V;
+extern const char* const TMB_MINOR_V;
+extern const char* const TMB_MAJOR_V;
+extern const char* const TMB_SO_V;
 extern const char* const GIT_REV;
 
 #define TMB_LEVEL_NONE    (-1)
@@ -148,7 +149,7 @@ typedef struct {
 
 /**
  * @brief Log context meant to be created with macros.
- * 
+ *
  */
 typedef struct {
     const tmb_log_level log_level;
@@ -204,88 +205,61 @@ typedef struct {
 
 struct Logger;
 
-/**
- * @brief Initializes default logger.
- * 
- * on gcc and clang has constructor attribute.
- * 
- */
+/* Library functions */
 TMB_API TMB_INIT void tmb_init(void);
-
-/**
- * @brief Deinitializes default logger.
- * 
- * on gcc and clang has destructor attribute.
- * 
- */
 TMB_API TMB_DEINIT void tmb_deinit(void);
+TMB_API void tmb_print_version(void);
+TMB_API const char* tmb_get_version(void);
 
-/**
- * @brief Initializes logger with config string.
- * 
- * @param lgr Logger to initialize
- * @param config conifg string.
- * @return true initialization succeeded
- * @return false initialization failed
- */
+/* Logger functions */
 TMB_API bool tmb_logger_init(Logger* lgr, const char* config);
-
-/**
- * @brief Initializes logger with configuration from file.
- * 
- * @param lgr Logger to initialize
- * @param filename config file
- * @return true initialization succeeded
- * @return false initialization failed
- */
 TMB_API bool tmb_logger_init_file(Logger* lgr, const char* filename);
-
-/**
- * @brief Initializes logger with default configuration.
- * 
- * @param lgr Logger to initialize
- * @return true initialization succeeded
- * @return false initialization failed
- */
 TMB_API bool tmb_logger_init_default(Logger* lgr);
-
-/**
- * @brief Deinitializes logger freeing internal managed memory.
- *  Does not free the logger itself.
- * 
- * @param lgr Logger to deinitialize
- * @return true deinitialization succeeded
- * @return false deinitialization failed
- */
 TMB_API bool tmb_logger_deinit(Logger* lgr);
+TMB_API size_t tmb_logger_add_formatter(Logger* lgr, Formatter fmt);
+TMB_API size_t tmb_logger_add_sink(Logger* lgr, Sink sink);
+TMB_API bool tmb_logger_fmt_sink_assign(Logger* lgr,
+                                        size_t formmatter_idx,
+                                        size_t sink_idx);
 
-/**
- * @brief Loggs message with given logger and context.
- * 
- * @param ctx 
- * @param logger 
- * @param message string in printf format. 
- * @param ... 
- */
+/* Format chips functions  */
+TMB_API FormatToken tmb_fmt_chip_const_val_make(const char* value);
+TMB_API FormatToken tmb_fmt_chip_message_make();
+TMB_API FormatToken tmb_fmt_chip_log_level_make(bool use_color);
+TMB_API FormatToken tmb_fmt_chip_filename_make();
+TMB_API FormatToken tmb_fmt_chip_funcname_make();
+TMB_API FormatToken tmb_fmt_chip_date_make();
+
+#define TMB_CHIP_VAL(val)       tmb_fmt_chip_const_val_make(val)
+#define TMB_CHIP_MSG()          tmb_fmt_chip_message_make()
+#define TMB_CHIP_LVL(use_color) tmb_fmt_chip_log_level_make(use_color)
+#define TMB_CHIP_FILE()         tmb_fmt_chip_filename_make()
+#define TMB_CHIP_FUNC()         tmb_fmt_chip_funcname_make()
+#define TMB_CHIP_DATE()         tmb_fmt_chip_date_make()
+
+/* Formatter functions */
+TMB_API void tmb_formatter_add_chip(Formatter* fmt, FormatToken chip);
+TMB_API void tmb_formatter_add_chips(Formatter* fmt, size_t count, ...);
+TMB_API String tmb_formatter_format(Formatter* fmt,
+                                    const LogCtx* ctx,
+                                    const char* msg_fmt,
+                                    va_list msg_arg);
+
+/* Sink functions */
+TMB_API Sink tmb_sink_stderror_make(void);
+TMB_API Sink tmb_sink_file_make(const char* filename);
+TMB_API Sink tmb_sink_rotating_file_make(const char* filename,
+                                         size_t max_size_kb);
+
+/* Logging functions */
 TMB_API void tmb_log(LogCtx ctx, const Logger* logger, const char* message, ...)
         TMB_FMT_CHECK(3, 4);
-
-/**
- * @brief Loggs message with context and default logger.
- * 
- * @param ctx 
- * @param logger 
- * @param message string in printf format. 
- * @param ... 
- */
 TMB_API void tmb_log_default(LogCtx ctx, const char* message, ...)
         TMB_FMT_CHECK(2, 3);
-
-/**
- * @brief prints version string to stdout
- * 
- */
-TMB_API void tmb_print_version(void);
+TMB_API void tmb_log_impl(LogCtx ctx,
+                          const Logger* logger,
+                          const char* message,
+                          va_list args);
 
 #ifndef TMB_MIN_LOG_LEVEL
     #define TMB_MIN_LOG_LEVEL TMB_LEVEL_INFO
@@ -419,11 +393,7 @@ void tmb_log_default(LogCtx ctx, const char* message, ...) {
 }
 
 void tmb_print_version(void) {
-    printf("%s.%s.%s @ HEADER IMPL\nSO Version: %s\n",
-           TMB_PATCH_V,
-           TMB_MINOR_V,
-           TMB_MAJOR_V,
-           TMB_SO_V);
+    printf("HEADER IMPL\n");
 }
 #endif // TMB_LOGGING_IMPLEMENTATION
 

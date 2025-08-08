@@ -1,12 +1,7 @@
 #include <stdarg.h>
 
-#include <format.h>
-#include <sink.h>
 #include <tmb.h>
-#include <tmb_internal.h>
 #include <tmb_lib.h>
-
-
 
 size_t tmb_logger_add_formatter(Logger* lg, Formatter fmt) {
     da_append(&lg->formatters, fmt);
@@ -41,7 +36,7 @@ void tmb_log_impl(LogCtx ctx,
     da_reserve(&formated, logger->formatters.size);
 
     da_for_each(Formatter, fmt, &logger->formatters) {
-        da_append(&formated, fmt_format(fmt, &ctx, message, args));
+        da_append(&formated, tmb_formatter_format(fmt, &ctx, message, args));
     }
 
     for (size_t i = 0; i < logger->sinks.size; i++) {
@@ -60,11 +55,11 @@ bool tmb_logger_init_default(Logger* lg) {
     if (lg == NULL) { return false; }
 
     Formatter fmt = {};
-    da_append(&fmt, tmb_fmt_chip_date());
+    da_append(&fmt, tmb_fmt_chip_date_make());
     da_append(&fmt, tmb_fmt_chip_const_val_make(" - "));
-    da_append(&fmt, tmb_fmt_chip_filename());
+    da_append(&fmt, tmb_fmt_chip_filename_make());
     da_append(&fmt, tmb_fmt_chip_const_val_make(" - "));
-    da_append(&fmt, tmb_fmt_chip_funcname());
+    da_append(&fmt, tmb_fmt_chip_funcname_make());
     da_append(&fmt, tmb_fmt_chip_const_val_make(" - "));
     da_append(&fmt, tmb_fmt_chip_const_val_make("[ "));
     da_append(&fmt, tmb_fmt_chip_log_level_make(true));
@@ -73,7 +68,7 @@ bool tmb_logger_init_default(Logger* lg) {
     da_append(&fmt, tmb_fmt_chip_const_val_make("\n"));
     tmb_logger_add_formatter(lg, fmt);
 
-    tmb_logger_add_sink(lg, stderror_sink_create());
+    tmb_logger_add_sink(lg, tmb_sink_stderror_make());
 
     return true;
 }

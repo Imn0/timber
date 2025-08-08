@@ -17,18 +17,17 @@ if(GIT_FOUND)
     endif()
 endif()
 
-file(READ "${CMAKE_CURRENT_LIST_DIR}/include/tmb.h" VERSION_FILE_CONTENT)
-
-string(REGEX MATCH "TMB_MAJOR_V\\[] = \"([0-9]+)\";" _major_match "${VERSION_FILE_CONTENT}")
+file(READ "${CMAKE_CURRENT_LIST_DIR}/src/tmb.c" VERSION_FILE_CONTENT)
+string(REGEX MATCH "TMB_MAJOR_V\\ *=\\ *\"([0-9]+)\"" _major_match "${VERSION_FILE_CONTENT}")
 set(MAJOR "${CMAKE_MATCH_1}")
 
-string(REGEX MATCH "TMB_MINOR_V\\[] = \"([0-9]+)\";" _minor_match "${VERSION_FILE_CONTENT}")
+string(REGEX MATCH "TMB_MINOR_V\\ *=\\ *\"([0-9]+)\"" _minor_match "${VERSION_FILE_CONTENT}")
 set(MINOR "${CMAKE_MATCH_1}")
 
-string(REGEX MATCH "TMB_PATCH_V\\[] = \"([0-9]+)\";" _patch_match "${VERSION_FILE_CONTENT}")
+string(REGEX MATCH "TMB_PATCH_V\\ *=\\ *\"([0-9]+)\"" _patch_match "${VERSION_FILE_CONTENT}")
 set(PATCH "${CMAKE_MATCH_1}")
 
-string(REGEX MATCH "TMB_SO_V\\[] = \"([0-9]+)\";" _so_match "${VERSION_FILE_CONTENT}")
+string(REGEX MATCH "TMB_SO_V\\ *=\\ *\"([0-9]+)\"" _so_match "${VERSION_FILE_CONTENT}")
 set(SOVERSION "${CMAKE_MATCH_1}")
 
 set(PROJECT_VERSION "${MAJOR}.${MINOR}.${PATCH}")

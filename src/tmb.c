@@ -4,10 +4,12 @@
 #include <stdio.h>
 
 #include <config/lex.h>
-#include <format.h>
-#include <sink.h>
-#include <tmb_internal.h>
 #include <tmb_lib.h>
+
+const char* const TMB_PATCH_V         = "0";
+const char* const TMB_MINOR_V         = "0";
+const char* const TMB_MAJOR_V         = "0";
+const char* const TMB_SO_V            = "0";
 
 const char* const tmb_log_level_str[] = {
     [TMB_LEVEL_FATAL] = "FATAL",     [TMB_LEVEL_ERROR] = "ERROR",
@@ -40,9 +42,24 @@ void tmb_log_default(LogCtx ctx, const char* message, ...) {
 
 void tmb_print_version(void) {
     printf("%s.%s.%s @ %s\nSO Version: %s\n",
-           TMB_PATCH_V,
-           TMB_MINOR_V,
            TMB_MAJOR_V,
+           TMB_MINOR_V,
+           TMB_PATCH_V,
            GIT_REV,
            TMB_SO_V);
+}
+
+const char* tmb_get_version(void) {
+    static StringBuilder sb = { 0 };
+    if (sb.size == 0) {
+        sb_appendf(&sb,
+                   "%s.%s.%s @ %s\nSO Version: %s\n",
+                   TMB_MAJOR_V,
+                   TMB_MINOR_V,
+                   TMB_PATCH_V,
+                   GIT_REV,
+                   TMB_SO_V);
+        sb_to_cstr(&sb);
+    }
+    return sb.items;
 }

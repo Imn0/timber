@@ -1,15 +1,15 @@
-#include <sink.h>
+#include <tmb_lib.h>
 
 // stderror sink
-Sink stderror_sink_create(void) {
-    return (Sink) { .sink_data = NULL,
-                    .sink_log  = stderror_sink,
-                    .free_fn   = do_nothing };
-}
-
 void stderror_sink(const String* msg, void* data) {
     UNUSED data;
     fprintf(stderr, "%.*s", (int)msg->size, msg->items);
+}
+
+Sink tmb_sink_stderror_make(void) {
+    return (Sink) { .sink_data = NULL,
+                    .sink_log  = stderror_sink,
+                    .free_fn   = do_nothing };
 }
 // end stderror sink
 
@@ -24,7 +24,12 @@ void file_sink_data_destroy(void* data) {
     free(data);
 }
 
-Sink file_sink_create(const char* filename) {
+void file_sink(const String* msg, void* data) {
+    FileSinkData* sink_data = (FileSinkData*)data;
+    fprintf(sink_data->fd, "%.*s", (int)msg->size, msg->items);
+}
+
+Sink tmb_sink_file_make(const char* filename) {
     FileSinkData* sink_data = malloc(sizeof(*sink_data));
     sink_data->fd           = fopen(filename, "a");
     if (sink_data->fd == NULL) { perror("cannot open file"); }
@@ -33,11 +38,6 @@ Sink file_sink_create(const char* filename) {
                     .free_fn   = file_sink_data_destroy
 
     };
-}
-
-void file_sink(const String* msg, void* data) {
-    FileSinkData* sink_data = (FileSinkData*)data;
-    fprintf(sink_data->fd, "%.*s", (int)msg->size, msg->items);
 }
 // end file sink
 
@@ -50,20 +50,6 @@ typedef struct {
     FILE* fd;
 
 } RotatingFileSinkData;
-
-Sink rotating_file_sink_create(const char* filename, size_t max_size_kb) {
-    RotatingFileSinkData* data = malloc(sizeof(*data));
-
-    data->base_filename        = filename;
-    data->written              = 0;
-    data->max_size             = max_size_kb;
-    data->fd                   = fopen(filename, "a");
-    data->current_log          = 0;
-
-    return (Sink) { .sink_data = data,
-                    .sink_log  = rotating_file_sink,
-                    .free_fn   = free };
-}
 
 void rotating_file_sink(const String* msg, void* data) {
     RotatingFileSinkData* sink_data = (RotatingFileSinkData*)data;
@@ -81,4 +67,19 @@ void rotating_file_sink(const String* msg, void* data) {
     fprintf(sink_data->fd, "%.*s", (int)msg->size, msg->items);
     sink_data->written += msg->size;
 }
+
+Sink tmb_sink_rotating_file_make(const char* filename, size_t max_size_kb) {
+    RotatingFileSinkData* data = malloc(sizeof(*data));
+
+    data->base_filename        = filename;
+    data->written              = 0;
+    data->max_size             = max_size_kb;
+    data->fd                   = fopen(filename, "a");
+    data->current_log          = 0;
+
+    return (Sink) { .sink_data = data,
+                    .sink_log  = rotating_file_sink,
+                    .free_fn   = free };
+}
+
 // end rotating file sink
