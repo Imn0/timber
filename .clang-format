@@ -42,5 +42,5 @@ AllowShortLoopsOnASingleLine: true
 ReflowComments: false
 SpacesBeforeTrailingComments: 1
 IndentPPDirectives: BeforeHash
-AlignConsecutiveAssignments: AcrossEmptyLines
-AlignConsecutiveMacros: true 
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveMacros: true

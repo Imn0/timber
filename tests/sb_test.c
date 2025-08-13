@@ -3,7 +3,7 @@
 #include <string.h>
 #include <tmb_lib.h>
 
-static void test_sb_anppendv(StringBuilder* sb, char* msg, ...) {
+static void test_sb_anppendv(tmb_string_builder_t* sb, char* msg, ...) {
     va_list args;
     va_start(args, msg);
     sb_appendv(sb, msg, args);
@@ -11,7 +11,7 @@ static void test_sb_anppendv(StringBuilder* sb, char* msg, ...) {
 }
 
 int main(void) {
-    StringBuilder sb = { 0 };
+    tmb_string_builder_t sb = { 0 };
     sb_append_cstr(&sb, "hello");
     sb_append_cstr(&sb, " world");
     assert(sb.size == 11); // no \0 termination

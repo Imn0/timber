@@ -2,14 +2,14 @@
 
 #include <tmb_lib.h>
 
-void sb_appendf(StringBuilder* sb, const char* fmt, ...) {
+void sb_appendf(tmb_string_builder_t* sb, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
     sb_appendv(sb, fmt, args);
     va_end(args);
 }
 
-void sb_appendv(StringBuilder* sb, const char* fmt, va_list args) {
+void sb_appendv(tmb_string_builder_t* sb, const char* fmt, va_list args) {
 
     va_list args1;
     va_copy(args1, args);
