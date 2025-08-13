@@ -1,7 +1,7 @@
 a C logging library
 
 format specification
-    * %m - user message
+    * %m - log message
     * %n - loggers name
     * %l - log level (long)
     * %L - log level (short)

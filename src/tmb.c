@@ -1,12 +1,10 @@
-#define _POSIX_C_SOURCE 199309L
+#include <chips.h>
+#include <tmb_internal.h>
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <time.h>
-
-#include <chips.h>
-#include <tmb_internal.h>
 
 const char* const TMB_PATCH_V = "0";
 const char* const TMB_MINOR_V = "0";
@@ -42,25 +40,41 @@ const char tmb_log_level_char[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_INFO] = 'I',  [TMB_LEVEL_DEBUG] = 'D', [TMB_LEVEL_TRACE] = 'T',
 };
 
+static inline tmb_time_stamp_t tmb_timestamp() {
+    // extern inline tmb_time_stamp_t tmb_timestamp();
+    size_t sec  = 0;
+    size_t nsec = 0;
+
+#if defined(TMB_UNIX)
+    struct timespec ts = { 0 };
+    clock_gettime(CLOCK_REALTIME, &ts);
+    sec  = ts.tv_sec;
+    nsec = ts.tv_nsec;
+#elif defined(TMB_WINDOWS)
+    sec = time(NULL);
+#else
+    sec = time(NULL);
+#endif
+
+    return (tmb_time_stamp_t) { .sec = sec, .nsec = nsec };
+}
+
 static tmb_logger_t default_logger;
 
 static inline tmb_log_ext_ctx_t ext_ctx_from_ctx(
         tmb_log_ctx_t ctx,
         tmb_string_builder_t user_message) {
-    struct timespec ts = { 0 };
-    clock_gettime(CLOCK_REALTIME, &ts);
 
     return (tmb_log_ext_ctx_t) {
-        .log_level     = ctx.log_level,
-        .line_no       = ctx.line_no,
-        .filename      = ctx.filename,
-        .filename_len  = ctx.filename_len,
-        .funcname      = ctx.funcname,
-        .funcname_len  = ctx.funcname_len,
-        .log_timestamp = ctx.log_timestamp,
-        .ts            = ts,
-        .message       = user_message.items,
-        .message_len   = user_message.size,
+        .log_level    = ctx.log_level,
+        .line_no      = ctx.line_no,
+        .filename     = ctx.filename,
+        .filename_len = ctx.filename_len,
+        .funcname     = ctx.funcname,
+        .funcname_len = ctx.funcname_len,
+        .message      = user_message.items,
+        .message_len  = user_message.size,
+        .ts           = tmb_timestamp(),
     };
 }
 
@@ -78,9 +92,9 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
 }
 
 static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
-                  const tmb_logger_t* logger,
-                  const char* message,
-                  va_list args) {
+                                  const tmb_logger_t* logger,
+                                  const char* message,
+                                  va_list args) {
 
     tmb_string_builder_t message_filled = { 0 };
     sb_appendv(&message_filled, message, args);
@@ -201,5 +215,3 @@ void tmb_tee_log(tmb_log_ctx_t ctx,
         tmb_log_impl_ext_ctx__(e_ctx, tee_logger->items[i]);
     }
 }
-
-

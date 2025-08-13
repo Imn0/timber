@@ -20,7 +20,6 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <time.h>
 
 #if defined(_WIN32) && defined(_MSC_VER)
     #ifdef TMB_WIN_USE_STAIC
@@ -103,7 +102,6 @@ typedef struct {
     const size_t filename_len;
     const char* const funcname;
     const size_t funcname_len;
-    const time_t log_timestamp;
 } tmb_log_ctx_t;
 
 typedef struct tmb_logger {
@@ -199,8 +197,7 @@ TMB_API void tmb_tee_log(tmb_log_ctx_t ctx,
         tmb_log_ctx_t _m__ctx = {                                              \
             log_level,        __LINE__,                                        \
             TMB_BASEFILENAME, TMB_CONST_STR_SIZE(TMB_BASEFILENAME),            \
-            __func__,         TMB_CONST_STR_SIZE(__func__),                    \
-            time(NULL)                                                         \
+            __func__,         TMB_CONST_STR_SIZE(__func__)                     \
         };                                                                     \
         TMB_DISPATCH(_m__ctx, logger_or_format __VA_OPT__(, ) __VA_ARGS__);    \
     } while (0)

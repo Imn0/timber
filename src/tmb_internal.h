@@ -4,6 +4,8 @@
 #include <tmb.h>
 #include <tmb_lib.h>
 
+#include <time.h>
+
 typedef void tmb_sink_fn();
 
 typedef struct tmb_sink {
@@ -19,9 +21,9 @@ typedef struct tmb_log_ext_ctx {
     const char* const funcname;
     const size_t funcname_len;
     const time_t log_timestamp;
-    const struct timespec ts;
     const char* const message;
     const size_t message_len;
+    const tmb_time_stamp_t ts;
 } tmb_log_ext_ctx_t;
 
 /* Library functions */

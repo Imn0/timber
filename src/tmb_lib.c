@@ -1,6 +1,6 @@
-#include <stdio.h>
-
 #include <tmb_lib.h>
+
+#include <stdio.h>
 
 void sb_appendf(tmb_string_builder_t* sb, const char* fmt, ...) {
     va_list args;
@@ -66,3 +66,22 @@ error_close:
 error_return_only:
     return NULL;
 }
+
+// inline tmb_time_stamp_t tmb_timestamp() {
+//     size_t sec  = 0;
+//     size_t nsec = 0;
+
+// #if defined(TMB_UNIX)
+//     struct timespec ts = { 0 };
+//     clock_gettime(CLOCK_REALTIME, &ts);
+//     sec  = ts.tv_sec;
+//     nsec = ts.tv_nsec;
+// #elif defined(TMB_WINDOWS)
+//     const time_t ts;
+//     sec = time(NULL);
+// #else
+//     sec = time(NULL);
+// #endif
+
+//     return (tmb_time_stamp_t) { .sec = sec, .nsec = nsec };
+// }

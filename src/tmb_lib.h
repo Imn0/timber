@@ -1,17 +1,26 @@
 #ifndef TMB_LIB_H
 #define TMB_LIB_H
 
+#if defined(_WIN32)
+    #define TMB_WINDOWS
+    #if defined(_MSC_VER)
+        #define TMB_WINDOWS_MSVC
+    #elif defined(__clang__) || (__GNUC__)
+        #define TMB_WINDOWS_GNU
+    #endif
+#elif defined(__unix__)
+    #define TMB_UNIX
+    #define _POSIX_C_SOURCE 199309L
+#else
+    #error "unknown os"
+#endif
+
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef _WIN32
-    #define TMB_NEW_LINE "\n\r"
-#else
-    #define TMB_NEW_LINE "\n"
-#endif
+#include <time.h>
 
 #define ANSI_RESET     "0"
 #define ANSI_BOLD      "1"
@@ -57,7 +66,13 @@
 #define MAKE_ANSI4(a, b, c, d)                              "\x1b[" a ";" b ";" c ";" d "m"
 #define MAKE_ANSI5(a, b, c, d, e)                           "\x1b[" a ";" b ";" c ";" d ";" e "m"
 
-#if !defined(_MSC_VER) || defined(__clang__)
+#ifdef TMB_WINDOWS
+    #define TMB_NEW_LINE "\n\r"
+#else
+    #define TMB_NEW_LINE "\n"
+#endif
+
+#if defined(TMB_UNIX) || defined(TMB_WINDOWS_GNU)
     // https://clang.llvm.org/docs/AttributeReference.html#format
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)                                  \
         __attribute__((format(printf, STR_IDX, ARG_BEGIN)))
@@ -84,6 +99,11 @@ typedef struct tmb_string_view {
     size_t size;
     char* items;
 } tmb_string_view_t;
+
+typedef struct tmb_time_stamp {
+    size_t sec;
+    size_t nsec;
+} tmb_time_stamp_t;
 
 typedef void free_fn_t(void*);
 
