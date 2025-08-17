@@ -171,6 +171,7 @@ static inline tmb_chip_t chip_make(char fmt_opt,
         break;
     default:
         fprintf(stderr, "unknown format %c\n", fmt_opt);
+        break;
     }
     enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
     enum tmb_sb_just_opt just_opt         = JUST_OFF;
@@ -180,7 +181,9 @@ static inline tmb_chip_t chip_make(char fmt_opt,
         break;
     case TRUNCATING_RIGHT_OPT_CHAR:
         truncate_opt = TRUNCATE_RIGHT;
+        break;
     default:
+        break;
     }
 
     switch (just_opt_chr) {
@@ -194,6 +197,7 @@ static inline tmb_chip_t chip_make(char fmt_opt,
         just_opt = JUST_RIGHT;
         break;
     default:
+        break;
     }
     chip.just_amount  = just_amount;
     chip.truncate_opt = truncate_opt;
