@@ -17,6 +17,7 @@
 
 #include <assert.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -66,6 +67,16 @@
 #define MAKE_ANSI4(a, b, c, d)                              "\x1b[" a ";" b ";" c ";" d "m"
 #define MAKE_ANSI5(a, b, c, d, e)                           "\x1b[" a ";" b ";" c ";" d ";" e "m"
 
+typedef int8_t i8;
+typedef uint8_t u8;
+typedef int16_t i16;
+typedef uint16_t u16;
+typedef int32_t i32;
+typedef uint32_t u32;
+typedef int64_t i64;
+typedef uint64_t u64;
+typedef size_t usize;
+
 #ifdef TMB_WINDOWS
     #define TMB_NEW_LINE "\n\r"
 #else
@@ -87,8 +98,8 @@
 #endif
 
 #define _da_header_(T)                                                         \
-    size_t size;                                                               \
-    size_t capacity;                                                           \
+    int size;                                                                  \
+    int capacity;                                                              \
     T items
 
 typedef struct tmb_string_builder {
@@ -96,16 +107,28 @@ typedef struct tmb_string_builder {
 } tmb_string_builder_t;
 
 typedef struct tmb_string_view {
-    size_t size;
+    int size;
     char* items;
 } tmb_string_view_t;
 
 typedef struct tmb_time_stamp {
-    size_t sec;
-    size_t nsec;
+    i64 sec;
+    i64 nsec;
 } tmb_time_stamp_t;
 
 typedef void free_fn_t(void*);
+
+enum tmb_sb_just_opt {
+    JUST_OFF    = 0,
+    JUST_LEFT   = 1,
+    JUST_RIGHT  = 2,
+    JUST_CENTER = 3
+};
+enum tmb_sb_truncate_opt {
+    TRUNCATE_OFF   = 0,
+    TRUNCATE_LEFT  = 1,
+    TRUNCATE_RIGHT = 2
+};
 
 #define UNREACHABLE()                                                          \
     do {                                                                       \
@@ -127,11 +150,6 @@ typedef void free_fn_t(void*);
 #define UNUSED (void)
 
 #define TMB_DA_INIT_CAP 16
-
-#define _da_header_(T)                                                         \
-    size_t size;                                                               \
-    size_t capacity;                                                           \
-    T items
 
 #define da_reserve_name(da, expected_cap, capacity_name, items_name)           \
     do {                                                                       \
@@ -224,6 +242,9 @@ typedef void free_fn_t(void*);
 #define sb_appendn(sb, buff, n) da_appendn(sb, buff, n)
 #define sb_append(sb, chr)      da_append(sb, chr)
 #define sb_free(sb)             da_free(sb)
+#define sb_appendf(sb, fmt, ...)                                               \
+    sb_appendf__(sb, fmt, __VA_OPT__(, ) __VA_ARGS__)
+#define sb_appendv(sb, fmt, args) sb_appendv__(sb, fmt, args)
 
 #define sb_append_cstr(sb, str)                                                \
     do {                                                                       \
@@ -232,10 +253,17 @@ typedef void free_fn_t(void*);
         da_appendn(sb, _m__s, _m__n);                                          \
     } while (0)
 
-void sb_appendf(tmb_string_builder_t* sb, const char* fmt, ...)
+void sb_appendf__(tmb_string_builder_t* sb, const char* fmt, ...)
         TMB_FMT_CHECK(2, 3);
-void sb_appendv(tmb_string_builder_t* sb, const char* fmt, va_list args);
-void do_nothing(void* _data);
+void sb_appendv__(tmb_string_builder_t* sb, const char* fmt, va_list args);
+void do_nothing__(void* _data);
+void tmb_sb_just(tmb_string_builder_t* sb,
+                 enum tmb_sb_just_opt just_setting,
+                 int amount,
+                 char pad_char);
+void tmb_sb_truncate(tmb_string_builder_t* sb,
+                     enum tmb_sb_truncate_opt truncate_setting,
+                     int max_len);
 
 /**
  * @brief Returns heap allocated zero terminated string with contents of the file

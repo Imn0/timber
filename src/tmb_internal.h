@@ -6,6 +6,13 @@
 
 #include <time.h>
 
+#define JUSTING_LEFT_OPT_CHAR   '<'
+#define JUSTING_RIGHT_OPT_CHAR  '>'
+#define JUSTING_CENTER_OPT_CHAR '^'
+
+#define TRUNCATING_LEFT_OPT_CHAR  '['
+#define TRUNCATING_RIGHT_OPT_CHAR ']'
+
 typedef void tmb_sink_fn();
 
 typedef struct tmb_sink {
@@ -15,14 +22,14 @@ typedef struct tmb_sink {
 
 typedef struct tmb_log_ext_ctx {
     const tmb_log_level log_level;
-    const size_t line_no;
+    const int line_no;
     const char* const filename;
-    const size_t filename_len;
+    const int filename_len;
     const char* const funcname;
-    const size_t funcname_len;
+    const int funcname_len;
     const time_t log_timestamp;
     const char* const message;
-    const size_t message_len;
+    const int message_len;
     const tmb_time_stamp_t ts;
 } tmb_log_ext_ctx_t;
 

@@ -9,7 +9,7 @@
 
 struct const_chip_data {
     char* val;
-    size_t val_len;
+    int val_len;
 };
 
 static void const_val(tmb_string_builder_t* sb,
@@ -20,10 +20,10 @@ static void const_val(tmb_string_builder_t* sb,
     sb_appendn(sb, data->val, data->val_len);
 }
 
-tmb_chip_t tmb_chip_const_val_make(const char* val, size_t val_len) {
+tmb_chip_t tmb_chip_const_val_make(const char* val, int val_len) {
     struct const_chip_data* data = malloc(sizeof(*data));
-    data->val                    = malloc(val_len * sizeof(char));
-    memcpy(data->val, val, val_len);
+    data->val                    = malloc((size_t)val_len * sizeof(char));
+    memcpy(data->val, val, (size_t)val_len);
     data->val_len = val_len;
 
     return MAKE_CHIP(const_val, data, free);

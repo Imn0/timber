@@ -1,4 +1,5 @@
 #include <chips.h>
+#include <ctype.h>
 #include <tmb_internal.h>
 
 #include <assert.h>
@@ -42,8 +43,8 @@ const char tmb_log_level_char[TMB_LOG_LEVEL_COUNT] = {
 
 static inline tmb_time_stamp_t tmb_timestamp() {
     // extern inline tmb_time_stamp_t tmb_timestamp();
-    size_t sec  = 0;
-    size_t nsec = 0;
+    long long sec  = 0;
+    long long nsec = 0;
 
 #if defined(TMB_UNIX)
     struct timespec ts = { 0 };
@@ -59,7 +60,8 @@ static inline tmb_time_stamp_t tmb_timestamp() {
     return (tmb_time_stamp_t) { .sec = sec, .nsec = nsec };
 }
 
-static tmb_logger_t default_logger;
+static tmb_logger_t default_logger     = { 0 };
+static bool default_logger_initialized = false;
 
 static inline tmb_log_ext_ctx_t ext_ctx_from_ctx(
         tmb_log_ctx_t ctx,
@@ -82,13 +84,14 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
                                           const tmb_logger_t* logger) {
     tmb_string_builder_t log_message = { 0 };
 
-    for (size_t i = 0; i < logger->chips.size; i++) {
+    for (int i = 0; i < logger->chips.size; i++) {
         logger->chips.items[i].chip_fn(&log_message,
                                        &ext_ctx,
                                        logger->chips.items[i].chip_data);
     }
     sb_to_cstr(&log_message);
     fprintf(stderr, "%s", log_message.items);
+    sb_free(&log_message);
 }
 
 static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
@@ -102,6 +105,7 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
     tmb_log_ext_ctx_t e_ctx = ext_ctx_from_ctx(ctx, message_filled);
 
     tmb_log_impl_ext_ctx__(e_ctx, logger);
+    sb_free(&message_filled);
 }
 
 void tmb_tee_logger_add_logger(tmb_tee_logger_t* tee_logger,
@@ -138,16 +142,64 @@ void tmb_print_version(void) {
 const char* tmb_get_version(void) {
     static tmb_string_builder_t sb = { 0 };
     if (sb.size == 0) {
-        sb_appendf(&sb,
-                   "%s.%s.%s @ %s\nSO Version: %s\n",
-                   TMB_MAJOR_V,
-                   TMB_MINOR_V,
-                   TMB_PATCH_V,
-                   GIT_REV,
-                   TMB_SO_V);
+        sb_appendf__(&sb,
+                     "%s.%s.%s @ %s\nSO Version: %s\n",
+                     TMB_MAJOR_V,
+                     TMB_MINOR_V,
+                     TMB_PATCH_V,
+                     GIT_REV,
+                     TMB_SO_V);
         sb_to_cstr(&sb);
     }
     return sb.items;
+}
+
+static inline tmb_chip_t chip_make(char fmt_opt,
+                                   char truncate_opt_chr,
+                                   char just_opt_chr,
+                                   int just_amount) {
+    tmb_chip_t chip = { 0 };
+    switch (fmt_opt) {
+    case 'm':
+        chip = TMB_CHIP_MESSAGE();
+        break;
+    case 'l':
+        chip = TMB_CHIP_LEVEL_L();
+        break;
+    case 'L':
+        chip = TMB_CHIP_LEVEL_S();
+        break;
+    default:
+        fprintf(stderr, "unknown format %c\n", fmt_opt);
+    }
+    enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
+    enum tmb_sb_just_opt just_opt         = JUST_OFF;
+    switch (truncate_opt_chr) {
+    case TRUNCATING_LEFT_OPT_CHAR:
+        truncate_opt = TRUNCATE_LEFT;
+        break;
+    case TRUNCATING_RIGHT_OPT_CHAR:
+        truncate_opt = TRUNCATE_RIGHT;
+    default:
+    }
+
+    switch (just_opt_chr) {
+    case JUSTING_LEFT_OPT_CHAR:
+        just_opt = JUST_LEFT;
+        break;
+    case JUSTING_CENTER_OPT_CHAR:
+        just_opt = JUST_CENTER;
+        break;
+    case JUSTING_RIGHT_OPT_CHAR:
+        just_opt = JUST_RIGHT;
+        break;
+    default:
+    }
+    chip.just_amount  = just_amount;
+    chip.truncate_opt = truncate_opt;
+    chip.just_opt     = just_opt;
+
+    return chip;
 }
 
 static inline void logger_push_chip(tmb_logger_t* logger, tmb_chip_t chip) {
@@ -157,30 +209,37 @@ static inline void logger_push_chip(tmb_logger_t* logger, tmb_chip_t chip) {
 bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt) {
     UNUSED logger;
     tmb_string_builder_t sb = { 0 };
-    size_t fmt_len          = strlen(fmt);
-    for (size_t i = 0; i < fmt_len; i++) {
+    int fmt_len             = (int)strlen(fmt);
+
+    for (int i = 0; i < fmt_len; i++) {
         if (fmt[i] == '%') {
             if (sb.size > 0) {
                 logger_push_chip(logger, TMB_CHIP_CONST(sb.items, sb.size));
                 sb_free(&sb);
             }
-            char fmt_char = fmt[++i];
-            switch (fmt_char) {
-            case 'm':
-                logger_push_chip(logger, TMB_CHIP_MESSAGE());
-                break;
-            case 'l':
-                logger_push_chip(logger, TMB_CHIP_LEVEL_L());
-                break;
-            case 'L':
-                logger_push_chip(logger, TMB_CHIP_LEVEL_S());
-                break;
-            default:
-                fprintf(stderr, "unknown format %c\n", fmt_char);
-                [[fallthrough]];
-            case '\0':
-                return false;
+            i++;
+            char just_opt     = 0;
+            char truncate_opt = 0;
+            int just_amount   = 0;
+            if (isdigit(fmt[i])) {
+                while (isdigit(fmt[i])) {
+                    just_amount *= 10;
+                    just_amount += (fmt[i] - '0');
+                    i++;
+                }
             }
+            if (fmt[i] == JUSTING_LEFT_OPT_CHAR ||
+                fmt[i] == JUSTING_CENTER_OPT_CHAR ||
+                fmt[i] == JUSTING_RIGHT_OPT_CHAR) {
+                just_opt = fmt[i++];
+            }
+            if (fmt[i] == TRUNCATING_LEFT_OPT_CHAR ||
+                fmt[i] == TRUNCATING_RIGHT_OPT_CHAR) {
+                truncate_opt = fmt[i++];
+            }
+            logger_push_chip(
+                    logger,
+                    chip_make(fmt[i], truncate_opt, just_opt, just_amount));
         } else {
             sb_append(&sb, fmt[i]);
         }
@@ -194,6 +253,10 @@ bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt) {
 }
 
 tmb_logger_t* tmb_get_default_logger() {
+    if (!default_logger_initialized) {
+        tmb_logger_set_format(&default_logger, "%m\n");
+        default_logger_initialized = true;
+    }
     return &default_logger;
 }
 
@@ -211,7 +274,7 @@ void tmb_tee_log(tmb_log_ctx_t ctx,
 
     tmb_log_ext_ctx_t e_ctx = ext_ctx_from_ctx(ctx, message_filled);
 
-    for (size_t i = 0; i < tee_logger->size; i++) {
+    for (int i = 0; i < tee_logger->size; i++) {
         tmb_log_impl_ext_ctx__(e_ctx, tee_logger->items[i]);
     }
 }

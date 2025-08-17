@@ -84,24 +84,24 @@ struct tmb_sink;
 struct tmb_chip;
 
 typedef struct tmb_sinks {
-    size_t size;
-    size_t capacity;
+    int size;
+    int capacity;
     struct tmb_sink* items;
 } tmb_sinks_t;
 
 typedef struct tmb_format_chips {
-    size_t size;
-    size_t capacity;
+    int size;
+    int capacity;
     struct tmb_chip* items;
 } tmb_format_chips_t;
 
 typedef struct {
     const tmb_log_level log_level;
-    const size_t line_no;
+    const int line_no;
     const char* const filename;
-    const size_t filename_len;
+    const int filename_len;
     const char* const funcname;
-    const size_t funcname_len;
+    const int funcname_len;
 } tmb_log_ctx_t;
 
 typedef struct tmb_logger {
@@ -110,8 +110,8 @@ typedef struct tmb_logger {
 } tmb_logger_t;
 
 typedef struct tmb_tee_logger {
-    size_t size;
-    size_t capacity;
+    int size;
+    int capacity;
     tmb_logger_t** items;
 } tmb_tee_logger_t;
 

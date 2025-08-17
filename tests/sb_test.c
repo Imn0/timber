@@ -17,7 +17,7 @@ int main(void) {
     assert(sb.size == 11); // no \0 termination
     assert(strncmp("hello world", sb.items, sb.size) == 0);
 
-    sb_appendf(&sb, "%d", 3);
+    sb_appendf__(&sb, "%d", 3);
     assert(sb.size == 12);
     assert(strncmp("hello world3", sb.items, sb.size) == 0);
 

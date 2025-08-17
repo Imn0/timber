@@ -2,14 +2,14 @@
 
 #include <stdio.h>
 
-void sb_appendf(tmb_string_builder_t* sb, const char* fmt, ...) {
+void sb_appendf__(tmb_string_builder_t* sb, const char* fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    sb_appendv(sb, fmt, args);
+    sb_appendv__(sb, fmt, args);
     va_end(args);
 }
 
-void sb_appendv(tmb_string_builder_t* sb, const char* fmt, va_list args) {
+void sb_appendv__(tmb_string_builder_t* sb, const char* fmt, va_list args) {
 
     va_list args1;
     va_copy(args1, args);
@@ -26,7 +26,7 @@ void sb_appendv(tmb_string_builder_t* sb, const char* fmt, va_list args) {
     sb->size += n;
 }
 
-void do_nothing(void* _data) {
+void do_nothing__(void* _data) {
     UNUSED _data;
 }
 
@@ -46,17 +46,16 @@ char* load_entire_file(const char* file) {
         goto error_close;
         perror("error reading file size");
     }
-    char* file_conents = malloc(sizeof(char) * (buffsize + 1));
+    char* file_conents = malloc(sizeof(char) * ((size_t)buffsize + 1));
     if (fseek(f, 0L, SEEK_SET) != 0) {
         goto error_free;
         perror("error reading file size");
     }
 
-    fread(file_conents, buffsize, 1, f);
+    fread(file_conents, (size_t)buffsize, 1, f);
     file_conents[buffsize] = '\0';
     fclose(f);
 
-    printf(">%s<\n\r", file_conents);
     return file_conents;
 
 error_free:
@@ -67,21 +66,71 @@ error_return_only:
     return NULL;
 }
 
-// inline tmb_time_stamp_t tmb_timestamp() {
-//     size_t sec  = 0;
-//     size_t nsec = 0;
+void tmb_sb_just(tmb_string_builder_t* sb,
+                 enum tmb_sb_just_opt just_setting,
+                 int amount,
+                 char pad_char) {
+    int current_size = sb->size;
+    if (amount <= current_size) { return; }
+    int append_left  = 0;
+    int append_right = 0;
+    switch (just_setting) {
+    case JUST_LEFT:
+        append_right = amount - current_size;
+        break;
+    case JUST_CENTER:
+        int total_pad = amount - current_size;
+        append_left   = (total_pad + 1) / 2;
+        append_right  = total_pad - append_left;
+        break;
+    case JUST_RIGHT:
+        append_left = amount - current_size;
+        break;
+    case JUST_OFF:
+    default:
+        return;
+    }
 
-// #if defined(TMB_UNIX)
-//     struct timespec ts = { 0 };
-//     clock_gettime(CLOCK_REALTIME, &ts);
-//     sec  = ts.tv_sec;
-//     nsec = ts.tv_nsec;
-// #elif defined(TMB_WINDOWS)
-//     const time_t ts;
-//     sec = time(NULL);
-// #else
-//     sec = time(NULL);
-// #endif
+    if (append_left > 0) {
+        tmb_string_builder_t left_pad = { 0 };
+        for (int i = 0; i < append_left; i++) {
+            sb_append(&left_pad, pad_char);
+        }
+        sb_appendn(&left_pad, sb->items, sb->size);
+        sb_free(sb);
+        sb->items    = left_pad.items;
+        sb->capacity = left_pad.capacity;
+        sb->size     = left_pad.size;
+    }
+    if (append_right > 0) {
+        for (int i = 0; i < append_right; i++) { sb_append(sb, pad_char); }
+    }
+}
 
-//     return (tmb_time_stamp_t) { .sec = sec, .nsec = nsec };
-// }
+void tmb_sb_truncate(tmb_string_builder_t* sb,
+                     enum tmb_sb_truncate_opt truncate_setting,
+                     int max_len) {
+    int current_size = sb->size;
+    if (max_len >= current_size) { return; }
+    int start_idx;
+    int append_len;
+    switch (truncate_setting) {
+    case TRUNCATE_LEFT:
+        start_idx  = 0;
+        append_len = max_len;
+        break;
+    case TRUNCATE_RIGHT:
+        start_idx  = current_size - max_len;
+        append_len = max_len;
+        break;
+    case TRUNCATE_OFF:
+    default:
+        return;
+    }
+    tmb_string_builder_t truncated = { 0 };
+    sb_appendn(&truncated, &sb->items[start_idx], append_len);
+    sb_free(sb);
+    sb->items    = truncated.items;
+    sb->size     = truncated.size;
+    sb->capacity = truncated.capacity;
+}

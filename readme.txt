@@ -10,3 +10,12 @@ format specification
     * %# - source line
     * %f - function
     * %t - logger tags
+
+justing
+    * n< - just left to n characters
+    * n> - just right to n characters
+    * n^ - just center to n characters
+
+truncating
+    * n[ - truncate from the left to n characters
+    * n] - truncate from the right to n characters

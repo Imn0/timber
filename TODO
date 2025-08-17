@@ -1,3 +1,4 @@
+- implement justing / truncating in logging
 - tagging
 - python bindings
 - actual log rotation
