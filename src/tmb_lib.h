@@ -140,14 +140,17 @@ enum tmb_hm_key_type__ { KEY_RAW = 1, KEY_STR = 2 };
     _Generic((x), char*: KEY_STR, default: KEY_RAW)
 
 #if defined(TMB_WINDOWS_MSVC)
-    #define TMB_ADDRES_OF(T, x)      &(x)
     #define TMB_TYPEOF(x)            __typeof__(x)
     #define TMB_OFFSETOF(var, field) offsetof(__typeof__(*(var)), field)
 #else
     #define TMB_TYPEOF(x)            typeof(x)
-    #define TMB_ADDRES_OF(T, x)      &((typeof(T)[1]) { x })
     #define TMB_OFFSETOF(var, field) offsetof(typeof(*(var)), field)
 #endif
+
+#define TMB_ADDRES_OF(T, x)                                                    \
+    &(struct { TMB_TYPEOF(T) a; }) {                                           \
+        x                                                                      \
+    }
 #define TMB_OFFSETOF_DEREF(__var, __field1, __field2)                          \
     ((size_t)&(((TMB_TYPEOF(*((TMB_TYPEOF(__var)*)0)->__field1)*)0)->__field2))
 
