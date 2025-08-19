@@ -17,6 +17,7 @@
 
 #include <assert.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -137,7 +138,17 @@ enum tmb_hm_key_type__ { KEY_RAW = 1, KEY_STR = 2 };
 
 #define TMB_DISTINGUISH_HM_TYPE(x)                                             \
     _Generic((x), char*: KEY_STR, default: KEY_RAW)
-#define TMB_ADDRES_OF(T, x)       ((typeof(T)[1]) { x })
+
+#if defined(TMB_WINDOWS_MSVC)
+    #define TMB_ADDRES_OF(T, x) &(x)
+    #define TMB_TYPEOF(x)       __typeof__(x)
+#else
+    #define TMB_TYPEOF(x)       typeof(x)
+    #define TMB_ADDRES_OF(T, x) &((typeof(T)[1]) { x })
+#endif
+
+#define TMB_OFFSETOF(var, field) ((u8*)(var)->field - (u8*)(var))
+
 #define TMB_HM_DEFAULT_START_SIZE 8
 #define _hm_header_(K, V)                                                      \
     int capacity;                                                              \
@@ -292,7 +303,7 @@ void tmb_hm_get_wrapper(void* user_hm,
 #define hm_put(hm, new_key, new_value)                                         \
     do { /*TODO move this ifs to wrapper*/                                     \
         if ((hm)->key_type == 0) {                                             \
-            typeof((hm)->tmp->key) a__m;                                       \
+            TMB_TYPEOF((hm)->tmp->key) a__m;                                       \
             (hm)->key_type = TMB_DISTINGUISH_HM_TYPE(a__m);                    \
         }                                                                      \
         if ((hm)->buckets == NULL) {                                           \
@@ -300,15 +311,15 @@ void tmb_hm_get_wrapper(void* user_hm,
                                    sizeof(*(hm)->buckets));                   \
             (hm)->capacity = TMB_HM_DEFAULT_START_SIZE;                        \
         }                                                                      \
-        typeof((hm)->tmp->key) m__key     = new_key;                           \
-        typeof((hm)->tmp->value) m__value = new_value;                         \
+        TMB_TYPEOF((hm)->tmp->key) m__key     = new_key;                           \
+        TMB_TYPEOF((hm)->tmp->value) m__value = new_value;                         \
         tmb_hm_get_wrapper(hm,                                                 \
                            sizeof(*(hm)->buckets),                             \
-                           offsetof(typeof(*(hm)), buckets),                   \
+                           TMB_OFFSETOF((hm), buckets),                        \
                            (void*)&(m__key),                                   \
                            sizeof(m__key),                                     \
-                           offsetof(typeof(*(hm)->tmp), key),                  \
-                           offsetof(typeof(*(hm)->tmp), occupied));            \
+                           TMB_OFFSETOF((hm)->tmp, key),                       \
+                           TMB_OFFSETOF((hm)->tmp, occupied));                 \
         (hm)->tmp->key      = m__key;                                          \
         (hm)->tmp->value    = m__value;                                        \
         (hm)->tmp->occupied = true;                                            \
@@ -318,21 +329,21 @@ void tmb_hm_get_wrapper(void* user_hm,
 #define hm_get(hm, new_key)                                                    \
     (tmb_hm_get_wrapper(hm,                                                    \
                         sizeof(*(hm)->buckets),                                \
-                        offsetof(typeof(*(hm)), buckets),                      \
-                        (void*)&TMB_ADDRES_OF((hm)->tmp->key, new_key),        \
-                        sizeof(typeof((hm)->tmp->key)),                        \
-                        offsetof(typeof(*(hm)->tmp), key),                     \
-                        offsetof(typeof(*(hm)->tmp), occupied)),               \
+                        TMB_OFFSETOF((hm), buckets),                           \
+                        (void*)TMB_ADDRES_OF((hm)->tmp->key, new_key),         \
+                        sizeof(TMB_TYPEOF((hm)->tmp->key)),                        \
+                        TMB_OFFSETOF((hm)->tmp, key),                          \
+                        TMB_OFFSETOF((hm)->tmp, occupied)),                    \
      (hm)->tmp->value)
 
 #define hm_exists(hm, new_key)                                                 \
     (tmb_hm_get_wrapper(hm,                                                    \
                         sizeof(*(hm)->buckets),                                \
-                        offsetof(typeof(*(hm)), buckets),                      \
-                        (void*)&TMB_ADDRES_OF((hm)->tmp->key, new_key),        \
-                        sizeof(typeof((hm)->tmp->key)),                        \
-                        offsetof(typeof(*(hm)->tmp), key),                     \
-                        offsetof(typeof(*(hm)->tmp), occupied)),               \
+                        TMB_OFFSETOF((hm), buckets),                           \
+                        (void*)TMB_ADDRES_OF((hm)->tmp->key, new_key),         \
+                        sizeof(TMB_TYPEOF((hm)->tmp->key)),                        \
+                        TMB_OFFSETOF((hm)->tmp, key),                          \
+                        TMB_OFFSETOF((hm)->tmp, occupied)),                    \
      (hm)->tmp->occupied)
 
 void sb_appendf__(tmb_string_builder_t* sb, const char* fmt, ...)
