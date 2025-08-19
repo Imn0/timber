@@ -1,12 +1,12 @@
-#ifndef TMB_LIB_H
-#define TMB_LIB_H
+#ifndef TMB_LIB_H_
+#define TMB_LIB_H_
 
 #if defined(_WIN32)
     #define TMB_WINDOWS
-    #if defined(_MSC_VER)
-        #define TMB_WINDOWS_MSVC
-    #elif defined(__clang__) || (__GNUC__)
+    #if defined(__clang__) || (__GNUC__)
         #define TMB_WINDOWS_GNU
+    #elif defined(_MSC_VER)
+        #define TMB_WINDOWS_MSVC
     #endif
 #elif defined(__unix__)
     #define TMB_UNIX
@@ -371,4 +371,4 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
  */
 char* load_entire_file(const char* file);
 
-#endif //TMB_LIB_H
+#endif //TMB_LIB_H_

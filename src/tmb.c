@@ -1,8 +1,9 @@
 #include <chips.h>
-#include <ctype.h>
+#include <sink.h>
 #include <tmb_internal.h>
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -108,7 +109,11 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
         }
     }
     sb_to_cstr(&log_message);
-    fprintf(stderr, "%s", log_message.items);
+    for (int i = 0; i < logger->sinks.size; i++) {
+        logger->sinks.items[i].sink_fn(log_message.items,
+                                       log_message.size,
+                                       logger->sinks.items[i].sink_data);
+    }
     sb_free(&log_message);
 }
 
@@ -228,6 +233,10 @@ static inline void logger_push_chip(tmb_logger_t* logger, tmb_chip_t chip) {
     da_append(&logger->chips, chip);
 }
 
+void tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
+    da_append(&logger->sinks, sink);
+}
+
 bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt) {
     UNUSED logger;
     tmb_string_builder_t sb = { 0 };
@@ -277,6 +286,7 @@ bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt) {
 tmb_logger_t* tmb_get_default_logger() {
     if (!default_logger_initialized) {
         tmb_logger_set_format(&default_logger, "[%7^l] %m\n");
+        tmb_logger_add_sink(&default_logger, TMB_SINK_STDERR());
         default_logger_initialized = true;
     }
     return &default_logger;

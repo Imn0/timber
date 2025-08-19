@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#if defined(_WIN32) && defined(_MSC_VER)
+#if defined(_WIN32) && defined(_MSC_VER) && !(defined(__clang__) || defined(__GNUC__))
     #ifdef TMB_WIN_USE_STAIC
         #define TMB_API
     #elif defined(TMB_BUILD_DLL)

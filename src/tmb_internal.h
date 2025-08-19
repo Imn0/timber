@@ -13,13 +13,6 @@
 #define TRUNCATING_LEFT_OPT_CHAR  '['
 #define TRUNCATING_RIGHT_OPT_CHAR ']'
 
-typedef void tmb_sink_fn();
-
-typedef struct tmb_sink {
-    tmb_sink_fn* fn;
-    void* sink_data;
-} tmb_sink_t;
-
 typedef struct tmb_log_ext_ctx {
     const tmb_log_level log_level;
     const int line_no;
