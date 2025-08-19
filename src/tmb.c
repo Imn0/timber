@@ -85,9 +85,27 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
     tmb_string_builder_t log_message = { 0 };
 
     for (int i = 0; i < logger->chips.size; i++) {
-        logger->chips.items[i].chip_fn(&log_message,
-                                       &ext_ctx,
-                                       logger->chips.items[i].chip_data);
+        tmb_chip_t* current_chip = &logger->chips.items[i];
+        if (current_chip->just_amount > 0) {
+            tmb_string_builder_t sb = { 0 };
+            current_chip->chip_fn(&sb, &ext_ctx, current_chip->chip_data);
+            if (sb.size < current_chip->just_amount) {
+                tmb_sb_just(&sb,
+                            current_chip->just_opt,
+                            current_chip->just_amount,
+                            ' ');
+            } else if (sb.size > current_chip->just_amount) {
+                tmb_sb_truncate(&sb,
+                                current_chip->truncate_opt,
+                                current_chip->just_amount);
+            }
+            sb_appendn(&log_message, sb.items, sb.size);
+            sb_free(&sb);
+        } else {
+            current_chip->chip_fn(&log_message,
+                                  &ext_ctx,
+                                  current_chip->chip_data);
+        }
     }
     sb_to_cstr(&log_message);
     fprintf(stderr, "%s", log_message.items);
@@ -258,7 +276,7 @@ bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt) {
 
 tmb_logger_t* tmb_get_default_logger() {
     if (!default_logger_initialized) {
-        tmb_logger_set_format(&default_logger, "%m\n");
+        tmb_logger_set_format(&default_logger, "[%7^l] %m\n");
         default_logger_initialized = true;
     }
     return &default_logger;

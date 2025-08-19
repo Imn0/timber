@@ -134,3 +134,33 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
     sb->size     = truncated.size;
     sb->capacity = truncated.capacity;
 }
+
+int hm_cmp(void* key1,
+           void* key2,
+           size_t key_size,
+           enum tmb_hm_key_type__ key_type) {
+    if (key_type == KEY_RAW) { return memcmp(key1, key2, key_size); }
+    if (key_type == KEY_STR) { return strcmp(key1, key2); }
+    return 0;
+}
+
+void tmb_hm_get_wrapper(void* user_hm,
+                        size_t bucket_size,
+                        size_t buckets_offset,
+                        void* key,
+                        size_t key_size,
+                        size_t key_offset,
+                        size_t occupied_offset) {
+    tmb_hash_map_internal* hm = user_hm;
+    u8* buckets               = *(u8**)(void*)((u8*)hm + buckets_offset);
+    for (int i = 0; i < hm->occupied; i++) {
+        u8* bucket_base = (u8*)(buckets + (size_t)i * bucket_size);
+        u8* key2        = bucket_base + key_offset;
+        bool occupied   = *(bool*)(bucket_base + occupied_offset);
+        if (occupied && hm_cmp(key, key2, key_size, hm->key_type) == 0) {
+            hm->tmp = (void*)(buckets + ((size_t)i * bucket_size));
+            return;
+        }
+    }
+    hm->tmp = (void*)(buckets + (size_t)((size_t)hm->occupied * bucket_size));
+}
