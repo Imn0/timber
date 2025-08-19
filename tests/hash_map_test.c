@@ -8,12 +8,12 @@ typedef struct {
 int main() {
     hash_map hm = { 0 };
 
+
     hm_put(&hm, 5, 123);
     hm_put(&hm, 3, 12);
     hm_put(&hm, 5, 33);
-    int v1 =3;
-    int a  = hm_get(&hm, v1);
-    bool e = hm_exists(&hm, v1);
+    int a  = hm_get(&hm, 3);
+    bool e = hm_exists(&hm, 5);
     assert(a == 12);
     assert(e == true);
 }

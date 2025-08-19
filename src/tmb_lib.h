@@ -142,12 +142,14 @@ enum tmb_hm_key_type__ { KEY_RAW = 1, KEY_STR = 2 };
 #if defined(TMB_WINDOWS_MSVC)
     #define TMB_ADDRES_OF(T, x)      &(x)
     #define TMB_TYPEOF(x)            __typeof__(x)
-    #define TMB_OFFSETOF(var, field) ((u8*)(var)->field - (u8*)(var))
+    #define TMB_OFFSETOF(var, field) offsetof(__typeof__(*(var)), field)
 #else
     #define TMB_TYPEOF(x)            typeof(x)
     #define TMB_ADDRES_OF(T, x)      &((typeof(T)[1]) { x })
     #define TMB_OFFSETOF(var, field) offsetof(typeof(*(var)), field)
 #endif
+#define TMB_OFFSETOF_DEREF(__var, __field1, __field2)                          \
+    ((size_t)&(((TMB_TYPEOF(*((TMB_TYPEOF(__var)*)0)->__field1)*)0)->__field2))
 
 #define TMB_HM_DEFAULT_START_SIZE 8
 #define _hm_header_(K, V)                                                      \
@@ -318,8 +320,8 @@ void tmb_hm_get_wrapper(void* user_hm,
                            TMB_OFFSETOF((hm), buckets),                        \
                            (void*)&(m__key),                                   \
                            sizeof(m__key),                                     \
-                           TMB_OFFSETOF((hm)->tmp, key),                       \
-                           TMB_OFFSETOF((hm)->tmp, occupied));                 \
+                           TMB_OFFSETOF_DEREF(*(hm), tmp, key),                \
+                           TMB_OFFSETOF_DEREF(*(hm), tmp, occupied));          \
         (hm)->tmp->key      = m__key;                                          \
         (hm)->tmp->value    = m__value;                                        \
         (hm)->tmp->occupied = true;                                            \
@@ -332,8 +334,8 @@ void tmb_hm_get_wrapper(void* user_hm,
                         TMB_OFFSETOF((hm), buckets),                           \
                         (void*)TMB_ADDRES_OF((hm)->tmp->key, new_key),         \
                         sizeof(TMB_TYPEOF((hm)->tmp->key)),                    \
-                        TMB_OFFSETOF((hm)->tmp, key),                          \
-                        TMB_OFFSETOF((hm)->tmp, occupied)),                    \
+                        TMB_OFFSETOF_DEREF(*(hm), tmp, key),                   \
+                        TMB_OFFSETOF_DEREF(*(hm), tmp, occupied)),             \
      (hm)->tmp->value)
 
 #define hm_exists(hm, new_key)                                                 \
@@ -342,8 +344,8 @@ void tmb_hm_get_wrapper(void* user_hm,
                         TMB_OFFSETOF((hm), buckets),                           \
                         (void*)TMB_ADDRES_OF((hm)->tmp->key, new_key),         \
                         sizeof(TMB_TYPEOF((hm)->tmp->key)),                    \
-                        TMB_OFFSETOF((hm)->tmp, key),                          \
-                        TMB_OFFSETOF((hm)->tmp, occupied)),                    \
+                        TMB_OFFSETOF_DEREF(*(hm), tmp, key),                   \
+                        TMB_OFFSETOF_DEREF(*(hm), tmp, occupied)),             \
      (hm)->tmp->occupied)
 
 void sb_appendf__(tmb_string_builder_t* sb, const char* fmt, ...)

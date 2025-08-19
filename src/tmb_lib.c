@@ -162,5 +162,5 @@ void tmb_hm_get_wrapper(void* user_hm,
             return;
         }
     }
-    hm->tmp = (void*)(buckets + (size_t)((size_t)hm->occupied * bucket_size));
+    hm->tmp = (void*)(buckets + ((size_t)hm->occupied * bucket_size));
 }
