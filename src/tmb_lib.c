@@ -17,13 +17,13 @@ void sb_appendv__(tmb_string_builder_t* sb, const char* fmt, va_list args) {
     int n = vsnprintf(NULL, 0, fmt, args1);
     va_end(args1);
 
-    da_reserve(sb, sb->size + n + 1);
+    da_reserve(sb, sb->length + n + 1);
 
     va_copy(args1, args);
-    vsnprintf(sb->items + sb->size, (unsigned long)n + 1, fmt, args1);
+    vsnprintf(sb->items + sb->length, (unsigned long)n + 1, fmt, args1);
     va_end(args1);
 
-    sb->size += n;
+    sb->length += n;
 }
 
 void do_nothing__(void* _data) {
@@ -70,7 +70,7 @@ void tmb_sb_just(tmb_string_builder_t* sb,
                  enum tmb_sb_just_opt just_setting,
                  int amount,
                  char pad_char) {
-    int current_size = sb->size;
+    int current_size = sb->length;
     if (amount <= current_size) { return; }
     int append_left  = 0;
     int append_right = 0;
@@ -96,11 +96,11 @@ void tmb_sb_just(tmb_string_builder_t* sb,
         for (int i = 0; i < append_left; i++) {
             sb_append(&left_pad, pad_char);
         }
-        sb_appendn(&left_pad, sb->items, sb->size);
+        sb_appendn(&left_pad, sb->items, sb->length);
         sb_free(sb);
         sb->items    = left_pad.items;
         sb->capacity = left_pad.capacity;
-        sb->size     = left_pad.size;
+        sb->length   = left_pad.length;
     }
     if (append_right > 0) {
         for (int i = 0; i < append_right; i++) { sb_append(sb, pad_char); }
@@ -110,7 +110,7 @@ void tmb_sb_just(tmb_string_builder_t* sb,
 void tmb_sb_truncate(tmb_string_builder_t* sb,
                      enum tmb_sb_truncate_opt truncate_setting,
                      int max_len) {
-    int current_size = sb->size;
+    int current_size = sb->length;
     if (max_len >= current_size) { return; }
     int start_idx;
     int append_len;
@@ -131,36 +131,126 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
     sb_appendn(&truncated, &sb->items[start_idx], append_len);
     sb_free(sb);
     sb->items    = truncated.items;
-    sb->size     = truncated.size;
+    sb->length   = truncated.length;
     sb->capacity = truncated.capacity;
 }
 
+u64 hash_djb2(void* addr_of_key, size_t key_size) {
+    u8* a    = addr_of_key;
+    u64 hash = 5381;
+    for (size_t i = 0; i < key_size; i++) {
+        hash = ((hash << 5) + hash) + a[i];
+    }
+    return hash;
+}
+
+/**
+ * @brief Compares two keys with eachother, if key_type is KEY_RAW then value refference by pointers will be compared,
+ * if it's KEY_STR then value will be derefferenced and compared using strcmp
+ * 
+ * @param key1 
+ * @param key2 
+ * @param key_size 
+ * @param key_type 
+ * @return int 
+ */
 int hm_cmp(void* key1,
            void* key2,
            size_t key_size,
            enum tmb_hm_key_type__ key_type) {
     if (key_type == KEY_RAW) { return memcmp(key1, key2, key_size); }
-    if (key_type == KEY_STR) { return strcmp(key1, key2); }
+    if (key_type == KEY_STR) { return strcmp(*(char**)key1, *(char**)key2); }
     return 0;
 }
 
-void tmb_hm_get_wrapper(void* user_hm,
+void tmb_hm_grow(void* user_hm,
+                 size_t bucket_size,
+                 size_t buckets_offset,
+                 size_t key_size,
+                 size_t key_offset) {
+    tmb_hash_map_internal* hm = user_hm;
+    UNUSED buckets_offset;
+    u8* buckets               = (u8*)hm->buckets;
+    int new_capacity          = hm->capacity * 2;
+    u8* new_buckets           = malloc((size_t)new_capacity * bucket_size);
+
+    for (int i = 0; i < hm->occupied; i++) {
+        u8* bucket_base          = (u8*)(buckets + (size_t)i * bucket_size);
+        u8* addr_of_existing_key = (bucket_base + key_offset);
+        u64 hash                 = hash_djb2(addr_of_existing_key, key_size);
+        UNUSED hash;
+        memcpy(new_buckets + (size_t)i * bucket_size, bucket_base, bucket_size);
+    }
+    free(hm->buckets);
+    hm->buckets  = (void*)new_buckets;
+    hm->capacity = new_capacity;
+}
+
+void tmb_hm_set_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
                         void* key,
                         size_t key_size,
                         size_t key_offset,
+                        void* value,
+                        size_t value_size,
+                        size_t value_offset,
                         size_t occupied_offset) {
     tmb_hash_map_internal* hm = user_hm;
-    u8* buckets               = *(u8**)(void*)((u8*)hm + buckets_offset);
+
+    if (hm->capacity > 2 && hm->capacity - hm->occupied <= 2) {
+        tmb_hm_grow(user_hm, bucket_size, buckets_offset, key_size, key_offset);
+    }
+
+    tmb_hm_get_wrapper(user_hm,
+                       bucket_size,
+                       buckets_offset,
+                       key,
+                       key_size,
+                       key_offset,
+                       occupied_offset);
+    void* key_addr      = (u8*)hm->tmp + key_offset;
+    void* val_addr      = (u8*)hm->tmp + value_offset;
+    bool* occupied_addr = (bool*)((u8*)hm->tmp + occupied_offset);
+
+    if (!*occupied_addr) {
+        if (hm->key_type == KEY_STR) {
+            *(char**)key_addr = strdup(*(char**)key);
+        } else {
+            memcpy(key_addr, key, key_size);
+        }
+        *occupied_addr = true;
+        hm->occupied++;
+    }
+    memcpy(val_addr, value, value_size);
+}
+
+void tmb_hm_get_wrapper(void* user_hm,
+                        size_t bucket_size,
+                        size_t buckets_offset,
+                        void* addr_of_new_key,
+                        size_t key_size,
+                        size_t key_offset,
+                        size_t occupied_offset) {
+    UNUSED buckets_offset;
+    tmb_hash_map_internal* hm = user_hm;
+    u8* buckets               = (u8*)hm->buckets;
+    hm->tmp                   = NULL;
     for (int i = 0; i < hm->occupied; i++) {
-        u8* bucket_base = (u8*)(buckets + (size_t)i * bucket_size);
-        u8* key2        = bucket_base + key_offset;
-        bool occupied   = *(bool*)(bucket_base + occupied_offset);
-        if (occupied && hm_cmp(key, key2, key_size, hm->key_type) == 0) {
+        u8* bucket_base          = (u8*)(buckets + (size_t)i * bucket_size);
+        u8* addr_of_existing_key = (bucket_base + key_offset);
+        bool occupied            = *(bool*)(bucket_base + occupied_offset);
+        if (occupied && hm_cmp(addr_of_new_key,
+                               addr_of_existing_key,
+                               key_size,
+                               hm->key_type) == 0) {
             hm->tmp = (void*)(buckets + ((size_t)i * bucket_size));
             return;
         }
     }
     hm->tmp = (void*)(buckets + ((size_t)hm->occupied * bucket_size));
+    assert(((size_t)hm->tmp >= (size_t)hm->buckets &&
+            (size_t)hm->tmp <
+                    (size_t)hm->buckets + (size_t)hm->capacity * bucket_size) ||
+           hm->tmp == NULL);
 }

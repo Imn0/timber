@@ -99,7 +99,7 @@ typedef size_t usize;
 #endif
 
 #define _da_header_(T)                                                         \
-    int size;                                                                  \
+    int length;                                                                \
     int capacity;                                                              \
     T items
 
@@ -108,7 +108,7 @@ typedef struct tmb_string_builder {
 } tmb_string_builder_t;
 
 typedef struct tmb_string_view {
-    int size;
+    int length;
     char* items;
 } tmb_string_view_t;
 
@@ -220,35 +220,35 @@ typedef struct {
 
 #define da_append(da, item)                                                    \
     do {                                                                       \
-        da_reserve(da, (da)->size + 1);                                        \
-        (da)->items[(da)->size++] = (item);                                    \
+        da_reserve(da, (da)->length + 1);                                      \
+        (da)->items[(da)->length++] = (item);                                  \
     } while (0)
 
-#define da_append_name(da, item, size_name, capacity_name, items_name)         \
+#define da_append_name(da, item, length_name, capacity_name, items_name)       \
     do {                                                                       \
-        da_reserve_name(da, (da)->size_name + 1, capacity_name, items_name);   \
-        (da)->items_name[(da)->size_name++] = (item);                          \
+        da_reserve_name(da, (da)->length_name + 1, capacity_name, items_name); \
+        (da)->items_name[(da)->length_name++] = (item);                        \
     } while (0)
 
-#define da_appendn(da, new_items, new_items_size)                              \
+#define da_appendn(da, new_items, new_items_length)                            \
     do {                                                                       \
-        da_reserve((da), (da)->size + (new_items_size));                       \
-        memcpy((da)->items + (da)->size,                                       \
+        da_reserve((da), (da)->length + (new_items_length));                   \
+        memcpy((da)->items + (da)->length,                                     \
                (new_items),                                                    \
-               (unsigned long)(new_items_size) * sizeof(*(da)->items));        \
-        (da)->size += (new_items_size);                                        \
+               (unsigned long)(new_items_length) * sizeof(*(da)->items));      \
+        (da)->length += (new_items_length);                                    \
     } while (0)
 
-#define da_last(da) (da)->items[ASSERT((da)->size > 0), (da)->size - 1]
+#define da_last(da) (da)->items[ASSERT((da)->length > 0), (da)->length - 1]
 
 #define da_for_each(T, it, da)                                                 \
-    for (T * (it) = (da)->items; (it) < (da)->items + (da)->size; (it)++)
+    for (T * (it) = (da)->items; (it) < (da)->items + (da)->length; (it)++)
 
 #define da_remove(da, idx)                                                     \
     do {                                                                       \
         size_t _m__i = (idx);                                                  \
-        ASSERT(_m__i < (da)->size);                                            \
-        (da)->items[j] = (da)->items[(da)->items[--(da)->size]]                \
+        ASSERT(_m__i < (da)->length);                                          \
+        (da)->items[j] = (da)->items[(da)->items[--(da)->length]]              \
     } while (0)
 
 #define da_free(da)                                                            \
@@ -256,7 +256,7 @@ typedef struct {
         if ((da)->capacity) {                                                  \
             free((da)->items);                                                 \
             (da)->capacity = 0;                                                \
-            (da)->size     = 0;                                                \
+            (da)->length   = 0;                                                \
             (da)->items    = NULL;                                             \
         }                                                                      \
     } while (0);
@@ -264,20 +264,20 @@ typedef struct {
 #define da_free_memb_fn(da, memb_data, memb_free_fn)                           \
     do {                                                                       \
         if ((da)->capacity) {                                                  \
-            for (size_t i__m_ = 0; i__m_ < (da)->size; i__m_++) {              \
+            for (size_t i__m_ = 0; i__m_ < (da)->length; i__m_++) {            \
                 (da)->items[i__m_].memb_free_fn((da)->items[i__m_].memb_data); \
             }                                                                  \
             free((da)->items);                                                 \
             (da)->capacity = 0;                                                \
-            (da)->size     = 0;                                                \
+            (da)->length   = 0;                                                \
         }                                                                      \
     } while (0);
 
 #define string_free(str)                                                       \
     do {                                                                       \
-        if ((str)->size) {                                                     \
+        if ((str)->length) {                                                   \
             free((str)->items);                                                \
-            (str)->size = 0;                                                   \
+            (str)->length = 0;                                                 \
         }                                                                      \
     } while (0);
 
@@ -300,9 +300,20 @@ typedef struct {
 void tmb_hm_get_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
-                        void* key,
+                        void* addr_of_new_key,
                         size_t key_size,
                         size_t key_offset,
+                        size_t occupied_offset);
+
+void tmb_hm_set_wrapper(void* user_hm,
+                        size_t bucket_size,
+                        size_t buckets_offset,
+                        void* addr_of_new_key,
+                        size_t key_size,
+                        size_t key_offset,
+                        void* value,
+                        size_t value_size,
+                        size_t value_offset,
                         size_t occupied_offset);
 #define hm_init(hm, opt)
 #define hm_put(hm, new_key, new_value)                                         \
@@ -316,19 +327,16 @@ void tmb_hm_get_wrapper(void* user_hm,
                                    sizeof(*(hm)->buckets));                   \
             (hm)->capacity = TMB_HM_DEFAULT_START_SIZE;                        \
         }                                                                      \
-        TMB_TYPEOF((hm)->tmp->key) m__key     = new_key;                       \
-        TMB_TYPEOF((hm)->tmp->value) m__value = new_value;                     \
-        tmb_hm_get_wrapper(hm,                                                 \
+        tmb_hm_set_wrapper(hm,                                                 \
                            sizeof(*(hm)->buckets),                             \
                            TMB_OFFSETOF((hm), buckets),                        \
-                           (void*)&(m__key),                                   \
-                           sizeof(m__key),                                     \
+                           (void*)TMB_ADDRES_OF((hm)->tmp->key, new_key),      \
+                           sizeof(TMB_TYPEOF((hm)->tmp->key)),                 \
                            TMB_OFFSETOF_DEREF(*(hm), tmp, key),                \
+                           (void*)TMB_ADDRES_OF((hm)->tmp->value, new_value),  \
+                           sizeof(TMB_TYPEOF((hm)->tmp->value)),               \
+                           TMB_OFFSETOF_DEREF(*(hm), tmp, value),              \
                            TMB_OFFSETOF_DEREF(*(hm), tmp, occupied));          \
-        (hm)->tmp->key      = m__key;                                          \
-        (hm)->tmp->value    = m__value;                                        \
-        (hm)->tmp->occupied = true;                                            \
-        (hm)->occupied++;                                                      \
     } while (0)
 
 #define hm_get(hm, new_key)                                                    \

@@ -76,7 +76,7 @@ static inline tmb_log_ext_ctx_t ext_ctx_from_ctx(
         .funcname     = ctx.funcname,
         .funcname_len = ctx.funcname_len,
         .message      = user_message.items,
-        .message_len  = user_message.size,
+        .message_len  = user_message.length,
         .ts           = tmb_timestamp(),
     };
 }
@@ -85,22 +85,22 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
                                           const tmb_logger_t* logger) {
     tmb_string_builder_t log_message = { 0 };
 
-    for (int i = 0; i < logger->chips.size; i++) {
+    for (int i = 0; i < logger->chips.length; i++) {
         tmb_chip_t* current_chip = &logger->chips.items[i];
         if (current_chip->just_amount > 0) {
             tmb_string_builder_t sb = { 0 };
             current_chip->chip_fn(&sb, &ext_ctx, current_chip->chip_data);
-            if (sb.size < current_chip->just_amount) {
+            if (sb.length < current_chip->just_amount) {
                 tmb_sb_just(&sb,
                             current_chip->just_opt,
                             current_chip->just_amount,
                             ' ');
-            } else if (sb.size > current_chip->just_amount) {
+            } else if (sb.length > current_chip->just_amount) {
                 tmb_sb_truncate(&sb,
                                 current_chip->truncate_opt,
                                 current_chip->just_amount);
             }
-            sb_appendn(&log_message, sb.items, sb.size);
+            sb_appendn(&log_message, sb.items, sb.length);
             sb_free(&sb);
         } else {
             current_chip->chip_fn(&log_message,
@@ -109,9 +109,9 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
         }
     }
     sb_to_cstr(&log_message);
-    for (int i = 0; i < logger->sinks.size; i++) {
+    for (int i = 0; i < logger->sinks.length; i++) {
         logger->sinks.items[i].sink_fn(log_message.items,
-                                       log_message.size,
+                                       log_message.length,
                                        logger->sinks.items[i].sink_data);
     }
     sb_free(&log_message);
@@ -164,7 +164,7 @@ void tmb_print_version(void) {
 
 const char* tmb_get_version(void) {
     static tmb_string_builder_t sb = { 0 };
-    if (sb.size == 0) {
+    if (sb.length == 0) {
         sb_appendf__(&sb,
                      "%s.%s.%s @ %s\nSO Version: %s\n",
                      TMB_MAJOR_V,
@@ -244,8 +244,8 @@ bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt) {
 
     for (int i = 0; i < fmt_len; i++) {
         if (fmt[i] == '%') {
-            if (sb.size > 0) {
-                logger_push_chip(logger, TMB_CHIP_CONST(sb.items, sb.size));
+            if (sb.length > 0) {
+                logger_push_chip(logger, TMB_CHIP_CONST(sb.items, sb.length));
                 sb_free(&sb);
             }
             i++;
@@ -275,8 +275,8 @@ bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt) {
             sb_append(&sb, fmt[i]);
         }
     }
-    if (sb.size > 0) {
-        logger_push_chip(logger, TMB_CHIP_CONST(sb.items, sb.size));
+    if (sb.length > 0) {
+        logger_push_chip(logger, TMB_CHIP_CONST(sb.items, sb.length));
         sb_free(&sb);
     }
 
@@ -306,7 +306,7 @@ void tmb_tee_log(tmb_log_ctx_t ctx,
 
     tmb_log_ext_ctx_t e_ctx = ext_ctx_from_ctx(ctx, message_filled);
 
-    for (int i = 0; i < tee_logger->size; i++) {
+    for (int i = 0; i < tee_logger->length; i++) {
         tmb_log_impl_ext_ctx__(e_ctx, tee_logger->items[i]);
     }
 }

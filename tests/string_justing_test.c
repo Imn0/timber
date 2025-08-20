@@ -20,7 +20,7 @@ void test_just(const char* file,
             printf("%s:%d\n", file, line_no);                                  \
             printf("expected: >%s<\ngot: >%.*s<\n\tamount:%d\n\thow:%d\n",     \
                    expected,                                                   \
-                   sb.size,                                                    \
+                   sb.length,                                                    \
                    sb.items,                                                   \
                    amount,                                                     \
                    how);                                                       \
@@ -32,7 +32,7 @@ void test_just(const char* file,
     sb_append_cstr(&sb, what);
     tmb_sb_truncate(&sb, how, amount);
 
-    CHECK(strncmp(expected, sb.items, sb.size) == 0);
+    CHECK(strncmp(expected, sb.items, sb.length) == 0);
 }
 
 int main(void) {

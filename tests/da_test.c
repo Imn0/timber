@@ -11,23 +11,23 @@ int main(void) {
 
     da_append(&da, 1);
     assert(da.items[0] == 1);
-    assert(da.size == 1);
+    assert(da.length == 1);
 
     da_append(&da, 2);
     assert(da.items[1] == 2);
-    assert(da.size == 2);
+    assert(da.length == 2);
 
     da_append(&da, 3);
     assert(da.items[2] == 3);
-    assert(da.size == 3); //
+    assert(da.length == 3); //
 
     da_append(&da, 4);
     assert(da.items[3] == 4);
-    assert(da.size == 4);
+    assert(da.length == 4);
 
     int a[] = { 1, 2, 3, 4 };
     da_appendn(&da, a, 4);
-    assert(da.size == 8);
+    assert(da.length == 8);
     assert(da.items[4] == 1);
     assert(da.items[5] == 2);
     assert(da.items[6] == 3);

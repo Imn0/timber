@@ -21,7 +21,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#if defined(_WIN32) && defined(_MSC_VER) && !(defined(__clang__) || defined(__GNUC__))
+#if defined(_WIN32) && defined(_MSC_VER) &&                                    \
+        !(defined(__clang__) || defined(__GNUC__))
     #ifdef TMB_WIN_USE_STAIC
         #define TMB_API
     #elif defined(TMB_BUILD_DLL)
@@ -84,13 +85,13 @@ struct tmb_sink;
 struct tmb_chip;
 
 typedef struct tmb_sinks {
-    int size;
+    int length;
     int capacity;
     struct tmb_sink* items;
 } tmb_sinks_t;
 
 typedef struct tmb_format_chips {
-    int size;
+    int length;
     int capacity;
     struct tmb_chip* items;
 } tmb_format_chips_t;
@@ -110,7 +111,7 @@ typedef struct tmb_logger {
 } tmb_logger_t;
 
 typedef struct tmb_tee_logger {
-    int size;
+    int length;
     int capacity;
     tmb_logger_t** items;
 } tmb_tee_logger_t;
