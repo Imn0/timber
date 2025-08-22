@@ -52,7 +52,13 @@ char* load_entire_file(const char* file) {
         perror("error reading file size");
     }
 
-    fread(file_conents, (size_t)buffsize, 1, f);
+    size_t read = fread(file_conents, (size_t)buffsize, 1, f);
+    if (read != (size_t)buffsize) {
+        fprintf(stderr,
+                "error reading file, read %lu bytes, expected %lu",
+                read,
+                buffsize);
+    }
     file_conents[buffsize] = '\0';
     fclose(f);
 
