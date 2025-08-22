@@ -12,5 +12,6 @@ int main() {
         assert(hm.occupied == i);
         assert(hm_get(&hm, i) == 21);
     }
+    for (int i = 1; i < 10000; i++) { assert(hm_get(&hm, i) == 21); }
     assert(hm_get(&hm, 3) == 21);
 }

@@ -15,7 +15,6 @@ else()
 endif()
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-set(CMAKE_BUILD_TYPE Debug)
 
 
 file(GLOB_RECURSE LIB_SOURCES "src/*.c")
