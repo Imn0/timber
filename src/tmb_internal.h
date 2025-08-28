@@ -1,7 +1,7 @@
 #ifndef TMB_INTERNAL_H_
 #define TMB_INTERNAL_H_
 
-#include <tmb.h>
+#include <tmb/tmb.h>
 #include <tmb_lib.h>
 
 #include <time.h>

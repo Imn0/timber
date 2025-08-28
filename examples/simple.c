@@ -1,5 +1,5 @@
 #define TMB_MIN_LOG_LEVEL 7
-#include <tmb.h>
+#include <tmb/tmb.h>
 
 int main(void) {
     LOG_FATAL("message %d", 3);

@@ -15,60 +15,18 @@ else()
 endif()
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-
-file(GLOB_RECURSE LIB_SOURCES "src/*.c")
-set(public_headers include/tmb.h)
 
 option(BUILD_SHARED_LIBS "Build shared libraries, builds static when off, can be overwriten with BUILD_SHARED_AND_STATIC_LIBS" ON)
 option(BUILD_SHARED_AND_STATIC_LIBS "Build both shared and static libraries" OFF)
-
-
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_PYTHON_BINDINGS "" OFF)
 
-function(setup_shared_lib)
+file(GLOB_RECURSE LIB_SOURCES "src/*.c" ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 
-    add_library(${PROJECT_NAME} SHARED)
-
-    target_compile_definitions(${PROJECT_NAME} PRIVATE TMB_BUILD_DLL=1)
-    target_compile_definitions(${PROJECT_NAME}-objects PRIVATE TMB_BUILD_DLL=1)
-
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_NAME}-objects)
-    set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ${public_headers})
-    install(TARGETS ${PROJECT_NAME}
-        EXPORT ${PROJECT_NAME}Targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    )
-    install(EXPORT ${PROJECT_NAME}Targets
-        FILE ${PROJECT_NAME}Targets.cmake
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-    )
-
-endfunction(setup_shared_lib)
-
-function(setup_static_lib)
-    add_library(${PROJECT_NAME}-static STATIC)
-    if(WIN32)
-        set_target_properties(${PROJECT_NAME}-static PROPERTIES
-            OUTPUT_NAME ${PROJECT_NAME}_static
-        )
-    else()
-        set_target_properties(${PROJECT_NAME}-static PROPERTIES
-            OUTPUT_NAME ${PROJECT_NAME}
-        )
-    endif()
-    target_link_libraries(${PROJECT_NAME}-static PRIVATE ${PROJECT_NAME}-objects)
-endfunction(setup_static_lib)
-
-
-add_library(${PROJECT_NAME}-objects OBJECT ${LIB_SOURCES} ${CMAKE_CURRENT_BINARY_DIR}/version.c)
+add_library(${PROJECT_NAME}-objects OBJECT ${LIB_SOURCES})
 target_include_directories(${PROJECT_NAME}-objects
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -81,13 +39,61 @@ target_compile_options(${PROJECT_NAME}-objects PRIVATE
     -Wall -Wextra -pedantic -Wshadow -Werror -Wno-gnu-zero-variadic-macro-arguments -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
     $<$<C_COMPILER_ID:MSVC>:
     /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
+target_compile_definitions(${PROJECT_NAME}-objects PRIVATE TMB_BUILD_DLL=1)
 set_target_properties(${PROJECT_NAME}-objects PROPERTIES
     POSITION_INDEPENDENT_CODE ON)
-install(TARGETS ${PROJECT_NAME}-objects
-    EXPORT ${PROJECT_NAME}Targets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+
+function(setup_shared_lib)
+    add_library(${PROJECT_NAME}-shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}-objects>)
+    add_library(${PROJECT_NAME}::shared ALIAS ${PROJECT_NAME}-shared)
+
+    set_target_properties(${PROJECT_NAME}-shared PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${soversion}
+    )
+    target_include_directories(${PROJECT_NAME}-shared
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+    target_compile_definitions(${PROJECT_NAME}-shared PRIVATE TMB_BUILD_DLL=1)
+
+    install(TARGETS ${PROJECT_NAME}-shared
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+
+endfunction(setup_shared_lib)
+
+function(setup_static_lib)
+    add_library(${PROJECT_NAME}-static STATIC $<TARGET_OBJECTS:${PROJECT_NAME}-objects>)
+    add_library(${PROJECT_NAME}::static ALIAS ${PROJECT_NAME}-static)
+
+
+    target_include_directories(${PROJECT_NAME}-static
+        PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
+
+    if(WIN32)
+        set_target_properties(${PROJECT_NAME}-static PROPERTIES
+            OUTPUT_NAME ${PROJECT_NAME}_static
+        )
+    else()
+        set_target_properties(${PROJECT_NAME}-static PROPERTIES
+            OUTPUT_NAME ${PROJECT_NAME}
+        )
+    endif()
+    install(TARGETS ${PROJECT_NAME}-static
+        EXPORT ${PROJECT_NAME}Targets
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+endfunction(setup_static_lib)
 
 add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/version.c ${CMAKE_CURRENT_BINARY_DIR}/_version.c
@@ -102,41 +108,16 @@ add_custom_target(FORCE_REBUILD_DUMMY)
 if(BUILD_SHARED_AND_STATIC_LIBS)
     setup_shared_lib()
     setup_static_lib()
-    install(TARGETS ${PROJECT_NAME}-static
-        EXPORT ${PROJECT_NAME}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}
-    )
+    add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME}-shared)
 elseif(BUILD_SHARED_LIBS)
-    if(BUILD_TESTS OR BUILD_EXAMPLES)
-        setup_static_lib()
-    endif()
     setup_shared_lib()
+    add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME}-shared)
 else()
     setup_static_lib()
-    install(TARGETS ${PROJECT_NAME}-static
-        EXPORT ${PROJECT_NAME}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_FULL_INCLUDEDIR}
-    )
-    set_target_properties(${PROJECT_NAME}-static PROPERTIES PUBLIC_HEADER "${public_headers}")
-    install(TARGETS ${PROJECT_NAME}-static
-        EXPORT ${PROJECT_NAME}Targets
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    )
-    install(EXPORT ${PROJECT_NAME}Targets
-        FILE ${PROJECT_NAME}Targets.cmake
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-    )
+    add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME}-static)
 endif()
 
 
-option(BUILD_PYTHON_BINDINGS "" OFF)
 if(BUILD_PYTHON_BINDINGS)
     set(Python_ADDITIONAL_VERSIONS 3)
     find_package(PythonLibs REQUIRED)
@@ -166,9 +147,21 @@ install(FILES
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/library_config/libtmb.pc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/libtmb.pc @ONLY)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libtmb.pc DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/library_config/libtimber.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/libtimber.pc @ONLY)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libtimber.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+)
+install(EXPORT ${PROJECT_NAME}Targets
+    FILE ${PROJECT_NAME}Targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
 
 if(BUILD_TESTS)
     enable_testing()

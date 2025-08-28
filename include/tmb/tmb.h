@@ -70,6 +70,9 @@ extern const char* const GIT_REV;
 #define TMB_LEVEL_TRACE   5
 #define TMB_LEVEL_ALL     5
 
+typedef void tmb_free_fn_t(void*);
+typedef void tmb_sink_fn_t(const char*, int, void*);
+
 typedef enum {
     TMB_LOG_LEVEL_FATAL   = TMB_LEVEL_FATAL,
     TMB_LOG_LEVEL_ERROR   = TMB_LEVEL_ERROR,
@@ -81,7 +84,12 @@ typedef enum {
     TMB_LOG_LEVEL_COUNT
 } tmb_log_level;
 
-struct tmb_sink;
+typedef struct tmb_sink {
+    tmb_sink_fn_t* sink_fn;
+    tmb_free_fn_t* free_fn;
+    void* sink_data;
+} tmb_sink_t;
+
 struct tmb_chip;
 
 typedef struct tmb_sinks {
@@ -107,7 +115,16 @@ typedef struct {
 
 typedef struct tmb_logger {
     tmb_sinks_t sinks;
-    tmb_format_chips_t chips;
+    struct {
+        int length;
+        int capacity;
+        tmb_format_chips_t* items;
+    } formatters;
+    struct {
+        int length;
+        int capacity;
+        int* items;
+    } sink_formatter_map;
 } tmb_logger_t;
 
 typedef struct tmb_tee_logger {
@@ -120,15 +137,25 @@ typedef struct tmb_tee_logger {
 TMB_API void tmb_print_version(void);
 TMB_API const char* tmb_get_version(void);
 
-/* Logger functions*/
+/* Logger functions */
 TMB_API tmb_logger_t* tmb_get_default_logger();
-TMB_API bool tmb_logger_set_format(tmb_logger_t* logger, const char* fmt);
+TMB_API bool tmb_logger_set_default_format(tmb_logger_t* logger,
+                                           const char* fmt);
+TMB_API int tmb_logger_add_format(tmb_logger_t* lgr, const char* fmt);
+TMB_API int tmb_logger_add_sink(tmb_logger_t* lgr, tmb_sink_t);
+TMB_API int tmb_logger_assign_format(tmb_logger_t* lgr,
+                                     int sink_idx,
+                                     int fmt_idx);
+TMB_API int tmb_logger_set_format(tmb_logger_t* lgr,
+                                  int sink_idx,
+                                  const char* fmt);
+
 TMB_API void tmb_tee_logger_add_logger(tmb_tee_logger_t* tee_logger,
                                        tmb_logger_t* lgr);
 
 /* Logging functions */
 TMB_API void tmb_log(tmb_log_ctx_t ctx,
-                     const tmb_logger_t* logger,
+                     tmb_logger_t* logger,
                      const char* message,
                      ...) TMB_FMT_CHECK(3, 4);
 TMB_API void tmb_log_default(tmb_log_ctx_t ctx, const char* message, ...)

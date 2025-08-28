@@ -117,8 +117,6 @@ typedef struct tmb_time_stamp {
     i64 nsec;
 } tmb_time_stamp_t;
 
-typedef void free_fn_t(void*);
-
 enum tmb_sb_just_opt {
     JUST_OFF    = 0,
     JUST_LEFT   = 1,
@@ -264,8 +262,8 @@ typedef struct {
 #define da_free_memb_fn(da, memb_data, memb_free_fn)                           \
     do {                                                                       \
         if ((da)->capacity) {                                                  \
-            for (size_t i__m_ = 0; i__m_ < (da)->length; i__m_++) {            \
-                (da)->items[i__m_].memb_free_fn((da)->items[i__m_].memb_data); \
+            for (int i__m_ = 0; i__m_ < (da)->length; i__m_++) {            \
+                memb_free_fn((da)->items[i__m_].memb_data); \
             }                                                                  \
             free((da)->items);                                                 \
             (da)->capacity = 0;                                                \
@@ -298,6 +296,14 @@ typedef struct {
     } while (0)
 
 void tmb_hm_get_wrapper(void* user_hm,
+                        size_t bucket_size,
+                        size_t buckets_offset,
+                        void* addr_of_new_key,
+                        size_t key_size,
+                        size_t key_offset,
+                        size_t occupied_offset);
+
+void tmb_hm_del_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
                         void* addr_of_new_key,
@@ -339,25 +345,34 @@ void tmb_hm_set_wrapper(void* user_hm,
                            TMB_OFFSETOF_DEREF(*(hm), tmp, occupied));          \
     } while (0)
 
-#define hm_get(hm, new_key)                                                    \
+#define hm_get(hm, _key)                                                       \
     (tmb_hm_get_wrapper(hm,                                                    \
                         sizeof(*(hm)->buckets),                                \
                         TMB_OFFSETOF((hm), buckets),                           \
-                        (void*)TMB_ADDRES_OF((hm)->tmp->key, new_key),         \
+                        (void*)TMB_ADDRES_OF((hm)->tmp->key, _key),            \
                         sizeof(TMB_TYPEOF((hm)->tmp->key)),                    \
                         TMB_OFFSETOF_DEREF(*(hm), tmp, key),                   \
                         TMB_OFFSETOF_DEREF(*(hm), tmp, occupied)),             \
      (hm)->tmp->value)
 
-#define hm_exists(hm, new_key)                                                 \
+#define hm_exists(hm, _key)                                                    \
     (tmb_hm_get_wrapper(hm,                                                    \
                         sizeof(*(hm)->buckets),                                \
                         TMB_OFFSETOF((hm), buckets),                           \
-                        (void*)TMB_ADDRES_OF((hm)->tmp->key, new_key),         \
+                        (void*)TMB_ADDRES_OF((hm)->tmp->key, _key),            \
                         sizeof(TMB_TYPEOF((hm)->tmp->key)),                    \
                         TMB_OFFSETOF_DEREF(*(hm), tmp, key),                   \
                         TMB_OFFSETOF_DEREF(*(hm), tmp, occupied)),             \
      (hm)->tmp->occupied)
+
+#define hm_del(hm, _key)                                                       \
+    tmb_hm_del_wrapper(hm,                                                     \
+                       sizeof(*(hm)->buckets),                                 \
+                       TMB_OFFSETOF((hm), buckets),                            \
+                       (void*)TMB_ADDRES_OF((hm)->tmp->key, _key),             \
+                       sizeof(TMB_TYPEOF((hm)->tmp->key)),                     \
+                       TMB_OFFSETOF_DEREF(*(hm), tmp, key),                    \
+                       TMB_OFFSETOF_DEREF(*(hm), tmp, occupied))
 
 void sb_appendf__(tmb_string_builder_t* sb, const char* fmt, ...)
         TMB_FMT_CHECK(2, 3);

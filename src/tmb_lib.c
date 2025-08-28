@@ -176,8 +176,8 @@ void tmb_hm_grow(void* user_hm,
                  size_t key_offset,
                  size_t occupied_offset) {
     tmb_hash_map_internal* hm = user_hm;
-    UNUSED buckets_offset;
-    u8* buckets      = (u8*)hm->buckets;
+    u8* buckets               = *(u8**)(void*)((u8*)user_hm + buckets_offset);
+
     int new_capacity = hm->capacity * 2;
     u8* new_buckets  = calloc((size_t)new_capacity, bucket_size);
 
@@ -259,6 +259,27 @@ void tmb_hm_set_wrapper(void* user_hm,
     memcpy(val_addr, value, value_size);
 }
 
+void tmb_hm_del_wrapper(void* user_hm,
+                        size_t bucket_size,
+                        size_t buckets_offset,
+                        void* addr_of_new_key,
+                        size_t key_size,
+                        size_t key_offset,
+                        size_t occupied_offset) {
+    tmb_hash_map_internal* hm = user_hm;
+
+    tmb_hm_get_wrapper(user_hm,
+                       bucket_size,
+                       buckets_offset,
+                       addr_of_new_key,
+                       key_size,
+                       key_offset,
+                       occupied_offset);
+    if (hm->tmp->occupied != true) { return; }
+    if (hm->key_type == KEY_STR) { free(hm->tmp->key); }
+    hm->tmp->occupied = false;
+}
+
 void tmb_hm_get_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
@@ -266,9 +287,8 @@ void tmb_hm_get_wrapper(void* user_hm,
                         size_t key_size,
                         size_t key_offset,
                         size_t occupied_offset) {
-    UNUSED buckets_offset;
     tmb_hash_map_internal* hm = user_hm;
-    u8* buckets               = (u8*)hm->buckets;
+    u8* buckets               = *(void**)(void*)((u8*)user_hm + buckets_offset);
     hm->tmp                   = NULL;
     u32 hash;
     if (hm->key_type == KEY_STR) {

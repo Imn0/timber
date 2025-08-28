@@ -5,5 +5,5 @@ Name: libtmb
 Version: @PROJECT_VERSION@
 Description: C logging library
 URL: https://github.com/Imn0/timber
-Libs: -L${libdir} -ltmb
-Cflags: -I${includedir} -I${includedir}/cjson
+Libs: -L${libdir} -ltimber
+Cflags: -I${includedir}

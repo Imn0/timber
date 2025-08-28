@@ -1,6 +1,6 @@
 #define TMB_LOGGING_IMPLEMENTATION
 #define TMB_MIN_LOG_LEVEL 5
-#include <tmb.h>
+#include <tmb/tmb.h>
 
 int main(void) {
     // LOG_FATAL("message %d", 3);

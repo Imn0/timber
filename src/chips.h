@@ -8,7 +8,7 @@ typedef void tmb_chip_fn_t(tmb_string_builder_t* sb,
 
 typedef struct tmb_chip {
     void* chip_data;
-    free_fn_t* free_fn;
+    tmb_free_fn_t* free_fn;
     tmb_chip_fn_t* chip_fn;
     int just_amount;
     enum tmb_sb_just_opt just_opt;
