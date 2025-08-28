@@ -28,7 +28,7 @@ string(REGEX MATCH "TMB_PATCH_V\\ *=\\ *\"([0-9]+)\"" _patch_match "${VERSION_FI
 set(PATCH "${CMAKE_MATCH_1}")
 
 string(REGEX MATCH "TMB_SO_V\\ *=\\ *\"([0-9]+)\"" _so_match "${VERSION_FILE_CONTENT}")
-set(SOVERSION "${CMAKE_MATCH_1}")
+set(GIT_SOVERSION "${CMAKE_MATCH_1}")
 
 set(PROJECT_VERSION "${MAJOR}.${MINOR}.${PATCH}")
 message(STATUS "Parsed version: ${PROJECT_VERSION}")
@@ -36,7 +36,7 @@ message(STATUS "Parsed version: ${PROJECT_VERSION}")
 
 if(NOT (GIT_OK))
     set(PROJECT_VERSION "0.0.0")
-    set(SOVERSION "0")
+    set(GIT_SOVERSION "0")
     set(GIT_REV "N/A")
     set(GIT_DIFF "")
 else()
