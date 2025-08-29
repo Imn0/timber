@@ -14,27 +14,30 @@ const char* const TMB_MAJOR_V = "0";
 const char* const TMB_SO_V    = "0";
 
 const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT] = {
-    [TMB_LEVEL_FATAL] = "FATAL",     [TMB_LEVEL_ERROR] = "ERROR",
-    [TMB_LEVEL_WARNING] = "WARNING", [TMB_LEVEL_INFO] = "INFO",
-    [TMB_LEVEL_DEBUG] = "DEBUG",     [TMB_LEVEL_TRACE] = "TRACE",
+    [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_STR,
+    [TMB_LEVEL_ERROR]   = TMB_LEVEL_ERROR_STR,
+    [TMB_LEVEL_WARNING] = TMB_LEVEL_WARNING_STR,
+    [TMB_LEVEL_INFO]    = TMB_LEVEL_INFO_STR,
+    [TMB_LEVEL_DEBUG]   = TMB_LEVEL_DEBUG_STR,
+    [TMB_LEVEL_TRACE]   = TMB_LEVEL_TRACE_STR,
 };
 
 const char* const tmb_log_level_color[TMB_LOG_LEVEL_COUNT] = {
-    [TMB_LEVEL_FATAL]   = MAKE_ANSI(ANSI_RED, ANSI_BOLD),
-    [TMB_LEVEL_ERROR]   = MAKE_ANSI(ANSI_RED),
-    [TMB_LEVEL_WARNING] = MAKE_ANSI(ANSI_YELLOW),
-    [TMB_LEVEL_INFO]    = MAKE_ANSI(ANSI_GREEN),
-    [TMB_LEVEL_DEBUG]   = MAKE_ANSI(ANSI_BLUE),
-    [TMB_LEVEL_TRACE]   = MAKE_ANSI(ANSI_BLACK, ANSI_ITALIC),
+    [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_COLOR,
+    [TMB_LEVEL_ERROR]   = TMB_LEVEL_ERROR_COLOR,
+    [TMB_LEVEL_WARNING] = TMB_LEVEL_WARNING_COLOR,
+    [TMB_LEVEL_INFO]    = TMB_LEVEL_INFO_COLOR,
+    [TMB_LEVEL_DEBUG]   = TMB_LEVEL_DEBUG_COLOR,
+    [TMB_LEVEL_TRACE]   = TMB_LEVEL_TRACE_COLOR,
 };
 
 const int tmb_log_level_str_len[TMB_LOG_LEVEL_COUNT] = {
-    [TMB_LEVEL_FATAL]   = TMB_CONST_STR_SIZE("FATAL"),
-    [TMB_LEVEL_ERROR]   = TMB_CONST_STR_SIZE("ERROR"),
-    [TMB_LEVEL_WARNING] = TMB_CONST_STR_SIZE("WARNING"),
-    [TMB_LEVEL_INFO]    = TMB_CONST_STR_SIZE("INFO"),
-    [TMB_LEVEL_DEBUG]   = TMB_CONST_STR_SIZE("DEBUG"),
-    [TMB_LEVEL_TRACE]   = TMB_CONST_STR_SIZE("TRACE"),
+    [TMB_LEVEL_FATAL]   = TMB_CONST_STR_SIZE(TMB_LEVEL_FATAL_STR),
+    [TMB_LEVEL_ERROR]   = TMB_CONST_STR_SIZE(TMB_LEVEL_ERROR_STR),
+    [TMB_LEVEL_WARNING] = TMB_CONST_STR_SIZE(TMB_LEVEL_WARNING_STR),
+    [TMB_LEVEL_INFO]    = TMB_CONST_STR_SIZE(TMB_LEVEL_INFO_STR),
+    [TMB_LEVEL_DEBUG]   = TMB_CONST_STR_SIZE(TMB_LEVEL_DEBUG_STR),
+    [TMB_LEVEL_TRACE]   = TMB_CONST_STR_SIZE(TMB_LEVEL_TRACE_STR),
 };
 
 const char tmb_log_level_char[TMB_LOG_LEVEL_COUNT] = {
@@ -69,15 +72,17 @@ static inline tmb_log_ext_ctx_t ext_ctx_from_ctx(
         tmb_string_builder_t user_message) {
 
     return (tmb_log_ext_ctx_t) {
-        .log_level    = ctx.log_level,
-        .line_no      = ctx.line_no,
-        .filename     = ctx.filename,
-        .filename_len = ctx.filename_len,
-        .funcname     = ctx.funcname,
-        .funcname_len = ctx.funcname_len,
-        .message      = user_message.items,
-        .message_len  = user_message.length,
-        .ts           = tmb_timestamp(),
+        .log_level         = ctx.log_level,
+        .line_no           = ctx.line_no,
+        .filename          = ctx.filename,
+        .filename_len      = ctx.filename_len,
+        .filename_base     = ctx.filename_base,
+        .filename_base_len = ctx.filename_base_len,
+        .funcname          = ctx.funcname,
+        .funcname_len      = ctx.funcname_len,
+        .message           = user_message.items,
+        .message_len       = user_message.length,
+        .ts                = tmb_timestamp(),
     };
 }
 
@@ -91,7 +96,7 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
     } formatted_messages = { 0 };
 
     for (int j = 0; j < logger->formatters.length; j++) {
-        tmb_format_chips_t* chips = &logger->formatters.items[j];
+        tmb_formater_t* chips = &logger->formatters.items[j];
         da_append(&formatted_messages, (tmb_string_builder_t) { 0 });
 
         for (int i = 0; i < chips->length; i++) {
@@ -152,6 +157,7 @@ void tmb_log(tmb_log_ctx_t ctx,
              tmb_logger_t* logger,
              const char* message,
              ...) {
+    if (ctx.log_level > logger->log_level) { return; }
     va_list args;
     va_start(args, message);
     tmb_log_impl__(ctx, logger, message, args);
@@ -189,23 +195,27 @@ const char* tmb_get_version(void) {
     return sb.items;
 }
 
-static inline tmb_chip_t chip_make(char fmt_opt,
-                                   char truncate_opt_chr,
-                                   char just_opt_chr,
-                                   int just_amount) {
-    tmb_chip_t chip = { 0 };
+static inline bool chip_init(tmb_chip_t* chip,
+                             char fmt_opt,
+                             char truncate_opt_chr,
+                             char just_opt_chr,
+                             int just_amount) {
+#define CASE(c, fn)                                                            \
+    case c:                                                                    \
+        *chip = fn();                                                          \
+        break
+
     switch (fmt_opt) {
-    case 'm':
-        chip = TMB_CHIP_MESSAGE();
-        break;
-    case 'l':
-        chip = TMB_CHIP_LEVEL_L();
-        break;
-    case 'L':
-        chip = TMB_CHIP_LEVEL_S();
-        break;
+        CASE('$', TMB_CHIP_MESSAGE);
+        CASE('l', TMB_CHIP_LEVEL_L);
+        CASE('L', TMB_CHIP_LEVEL_S);
+        CASE('@', TMB_CHIP_BASEFILE);
+        CASE('s', TMB_CHIP_FILE);
+        CASE('#', TMB_CHIP_LINE);
+        CASE('f', TMB_CHIP_FUNC);
     default:
         fprintf(stderr, "unknown format %c\n", fmt_opt);
+        return false;
         break;
     }
     enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
@@ -234,11 +244,10 @@ static inline tmb_chip_t chip_make(char fmt_opt,
     default:
         break;
     }
-    chip.just_amount  = just_amount;
-    chip.truncate_opt = truncate_opt;
-    chip.just_opt     = just_opt;
-
-    return chip;
+    chip->just_amount  = just_amount;
+    chip->truncate_opt = truncate_opt;
+    chip->just_opt     = just_opt;
+    return true;
 }
 
 int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
@@ -247,7 +256,7 @@ int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
     return logger->sinks.length - 1;
 }
 
-static void tmb_format_init(tmb_format_chips_t* format, const char* fmt) {
+bool tmb_format_init(tmb_formater_t* format, const char* fmt) {
     tmb_string_builder_t sb = { 0 };
     int fmt_len             = (int)strlen(fmt);
 
@@ -277,8 +286,14 @@ static void tmb_format_init(tmb_format_chips_t* format, const char* fmt) {
                 fmt[i] == TRUNCATING_RIGHT_OPT_CHAR) {
                 truncate_opt = fmt[i++];
             }
-            da_append(format,
-                      chip_make(fmt[i], truncate_opt, just_opt, just_amount));
+            da_append(format, (tmb_chip_t) { 0 });
+            if (!chip_init(&format->items[format->length - 1],
+                           fmt[i],
+                           truncate_opt,
+                           just_opt,
+                           just_amount)) {
+                return false;
+            }
         } else {
             sb_append(&sb, fmt[i]);
         }
@@ -287,42 +302,61 @@ static void tmb_format_init(tmb_format_chips_t* format, const char* fmt) {
         da_append(format, TMB_CHIP_CONST(sb.items, sb.length));
         sb_free(&sb);
     }
+    return true;
+}
+
+int tmb_logger_add_formater(tmb_logger_t* lgr, tmb_formater_t formater) {
+    da_append(&lgr->formatters, formater);
+    return lgr->formatters.length - 1;
 }
 
 int tmb_logger_add_format(tmb_logger_t* lgr, const char* fmt) {
-    UNUSED lgr;
-    UNUSED fmt;
-    return -1;
+    tmb_formater_t format_chips = { 0 };
+    if (tmb_format_init(&format_chips, fmt)) {
+        da_append(&lgr->formatters, format_chips);
+        return lgr->formatters.length - 1;
+    } else {
+        da_free(&format_chips);
+        return -1;
+    }
 }
 
 int tmb_logger_assign_format(tmb_logger_t* lgr, int sink_idx, int fmt_idx) {
-    UNUSED lgr;
-    UNUSED sink_idx;
-    UNUSED fmt_idx;
-    return -1;
+    if (sink_idx >= lgr->sinks.length ||
+        sink_idx >= lgr->sink_formatter_map.length) {
+        return -1;
+    }
+    if (fmt_idx >= lgr->formatters.length) { return -2; }
+    lgr->sink_formatter_map.items[sink_idx] = fmt_idx;
+    return 1;
 }
 
 int tmb_logger_set_format(tmb_logger_t* lgr, int sink_idx, const char* fmt) {
-    UNUSED lgr;
-    UNUSED sink_idx;
-    UNUSED fmt;
+    if (sink_idx >= lgr->sinks.length ||
+        sink_idx >= lgr->sink_formatter_map.length) {
+        return -1;
+    }
+    tmb_formater_t format = { 0 };
+    if (!tmb_format_init(&format, fmt)) { return -2; }
+    da_append(&lgr->formatters, format);
+    lgr->sink_formatter_map.items[sink_idx] = lgr->formatters.length - 1;
     return -1;
 }
 
 bool tmb_logger_set_default_format(tmb_logger_t* logger, const char* fmt) {
     if (logger->formatters.length == 0) {
-        da_append(&logger->formatters, (tmb_format_chips_t) { 0 });
+        da_append(&logger->formatters, (tmb_formater_t) { 0 });
     } else {
         da_free(&logger->formatters.items[0]);
     }
-    tmb_format_init(&logger->formatters.items[0], fmt);
-    return true;
+    return tmb_format_init(&logger->formatters.items[0], fmt);
 }
 
 tmb_logger_t* tmb_get_default_logger() {
     if (!default_logger_initialized) {
-        tmb_logger_set_default_format(&default_logger, "[%7^l] %m\n");
+        tmb_logger_set_default_format(&default_logger, TMB_DEFAULT_FORMAT);
         tmb_logger_add_sink(&default_logger, TMB_SINK_STDERR());
+        default_logger.log_level   = TMB_LOG_LEVEL_INFO;
         default_logger_initialized = true;
     }
     return &default_logger;

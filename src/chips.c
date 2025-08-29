@@ -66,3 +66,47 @@ static void level_long(tmb_string_builder_t* sb,
 tmb_chip_t tmb_chip_log_level_long_make() {
     return MAKE_CHIP(level_long, NULL, NULL);
 }
+
+static void line_number(tmb_string_builder_t* sb,
+                        const tmb_log_ext_ctx_t* ctx,
+                        void* chip_data) {
+    UNUSED chip_data;
+    int line_number = ctx->line_no;
+    while (line_number > 0) {
+        sb_append(sb, (char)((line_number % 10) + '0'));
+        line_number /= 10;
+    }
+}
+tmb_chip_t tmb_chip_line_number_make() {
+    return MAKE_CHIP(line_number, NULL, NULL);
+}
+
+static void filename(tmb_string_builder_t* sb,
+                     const tmb_log_ext_ctx_t* ctx,
+                     void* chip_data) {
+    UNUSED chip_data;
+    sb_appendn(sb, ctx->filename, ctx->filename_len);
+}
+tmb_chip_t tmb_chip_filename_make() {
+    return MAKE_CHIP(filename, NULL, NULL);
+}
+
+static void base_filename(tmb_string_builder_t* sb,
+                          const tmb_log_ext_ctx_t* ctx,
+                          void* chip_data) {
+    UNUSED chip_data;
+    sb_appendn(sb, ctx->filename_base, ctx->filename_base_len);
+}
+tmb_chip_t tmb_chip_base_filename_make() {
+    return MAKE_CHIP(base_filename, NULL, NULL);
+}
+
+static void function_name(tmb_string_builder_t* sb,
+                          const tmb_log_ext_ctx_t* ctx,
+                          void* chip_data) {
+    UNUSED chip_data;
+    sb_appendn(sb, ctx->funcname, ctx->filename_len);
+}
+tmb_chip_t tmb_chip_function_name_make() {
+    return MAKE_CHIP(function_name, NULL, NULL);
+}

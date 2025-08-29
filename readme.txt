@@ -1,12 +1,12 @@
 a C logging library
 
 format specification
-    * %m - log message
+    * %$ - log message
     * %n - loggers name
     * %l - log level (long)
     * %L - log level (short)
-    * %s - basename source file (like main.c)
-    * %@ - source file (like /src/main.c)
+    * %s - source file (like /src/main.c)
+    * %@ - basename source file (like main.c)
     * %# - source line
     * %f - function
     * %t - logger tags

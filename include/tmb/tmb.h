@@ -42,16 +42,9 @@
     // https://clang.llvm.org/docs/AttributeReference.html#format
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)                                  \
         __attribute__((format(printf, STR_IDX, ARG_BEGIN)))
-
-    //https://clang.llvm.org/docs/AttributeReference.html#constructor-destructor
-    #define TMB_INIT   __attribute__((constructor))
-    #define TMB_DEINIT __attribute__((destructor))
-
     #define TMB_BASEFILENAME __FILE_NAME__
 #else // not supported on MSVC
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)
-    #define TMB_INIT
-    #define TMB_DEINIT
     #define TMB_BASEFILENAME __FILE__
 #endif
 
@@ -98,27 +91,30 @@ typedef struct tmb_sinks {
     struct tmb_sink* items;
 } tmb_sinks_t;
 
-typedef struct tmb_format_chips {
+typedef struct tmb_formater {
     int length;
     int capacity;
     struct tmb_chip* items;
-} tmb_format_chips_t;
+} tmb_formater_t;
 
 typedef struct {
     const tmb_log_level log_level;
     const int line_no;
     const char* const filename;
     const int filename_len;
+    const char* const filename_base;
+    const int filename_base_len;
     const char* const funcname;
     const int funcname_len;
 } tmb_log_ctx_t;
 
 typedef struct tmb_logger {
     tmb_sinks_t sinks;
+    tmb_log_level log_level;
     struct {
         int length;
         int capacity;
-        tmb_format_chips_t* items;
+        tmb_formater_t* items;
     } formatters;
     struct {
         int length;
@@ -152,6 +148,8 @@ TMB_API int tmb_logger_set_format(tmb_logger_t* lgr,
 
 TMB_API void tmb_tee_logger_add_logger(tmb_tee_logger_t* tee_logger,
                                        tmb_logger_t* lgr);
+
+TMB_API int tmb_logger_add_formater(tmb_logger_t* lgr, tmb_formater_t formater);
 
 /* Logging functions */
 TMB_API void tmb_log(tmb_log_ctx_t ctx,
@@ -224,6 +222,7 @@ TMB_API void tmb_tee_log(tmb_log_ctx_t ctx,
     do {                                                                       \
         tmb_log_ctx_t _m__ctx = {                                              \
             log_level,        __LINE__,                                        \
+            __FILE__,         TMB_CONST_STR_SIZE(__FILE__),                    \
             TMB_BASEFILENAME, TMB_CONST_STR_SIZE(TMB_BASEFILENAME),            \
             __func__,         TMB_CONST_STR_SIZE(__func__)                     \
         };                                                                     \
