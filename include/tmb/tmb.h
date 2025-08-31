@@ -149,7 +149,9 @@ TMB_API int tmb_logger_set_format(tmb_logger_t* lgr,
 TMB_API void tmb_tee_logger_add_logger(tmb_tee_logger_t* tee_logger,
                                        tmb_logger_t* lgr);
 
-TMB_API int tmb_logger_add_formater(tmb_logger_t* lgr, tmb_formater_t formater);
+TMB_API void tmb_register_logger(const char* name, tmb_logger_t* logger);
+TMB_API tmb_logger_t* tmb_get_logger(const char* name);
+TMB_API tmb_logger_t* tmb_get_logger_or_default(const char* name);
 
 /* Logging functions */
 TMB_API void tmb_log(tmb_log_ctx_t ctx,

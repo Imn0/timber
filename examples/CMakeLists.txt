@@ -9,8 +9,9 @@ if(BUILD_EXAMPLES)
     endfunction(add_example example_name)
 
     add_example(01-default_logger)
-    add_example(02-simple-logger)
+    add_example(02-simple_logger)
     add_example(03-custom_sink)
+    add_example(03-logger_registry)
     add_example(04-custom_sink_w_data)
 
     set(EXAMPLE_NAME header_only)

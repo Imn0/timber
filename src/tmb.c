@@ -13,6 +13,8 @@ const char* const TMB_MINOR_V = "0";
 const char* const TMB_MAJOR_V = "0";
 const char* const TMB_SO_V    = "0";
 
+tmb_logger_registry_t tmb_logger_registry = { 0 };
+
 const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_STR,
     [TMB_LEVEL_ERROR]   = TMB_LEVEL_ERROR_STR,
@@ -379,4 +381,18 @@ void tmb_tee_log(tmb_log_ctx_t ctx,
     for (int i = 0; i < tee_logger->length; i++) {
         tmb_log_impl_ext_ctx__(e_ctx, tee_logger->items[i]);
     }
+}
+
+void tmb_register_logger(const char* name, tmb_logger_t* logger) {
+    hm_put(&tmb_logger_registry, name, logger);
+}
+
+tmb_logger_t* tmb_get_logger(const char* name) {
+    return hm_get(&tmb_logger_registry, name);
+}
+
+tmb_logger_t* tmb_get_logger_or_default(const char* name) {
+    tmb_logger_t* lgr = hm_get(&tmb_logger_registry, name);
+    if (lgr == NULL) { lgr = tmb_get_default_logger(); }
+    return lgr;
 }

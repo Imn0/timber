@@ -47,15 +47,16 @@ static void token_init(Token* tok,
 }
 
 static void read_string(Lexer* lex, Token* tok) {
-    int start_line        = lex->line;
-    int start_column      = lex->column;
-    const char* start     = lex->input + lex->pos + 1; // skip opening quote
-    size_t content_length = 0;
+    int start_line         = lex->line;
+    int start_column       = lex->column;
+    const char string_char = *(lex->input + lex->pos);
+    const char* start      = lex->input + lex->pos + 1; // skip opening quote
+    size_t content_length  = 0;
 
     // skip opening quote
     advance(lex);
 
-    while (lex->current_char && lex->current_char != '\'') {
+    while (lex->current_char && lex->current_char != string_char) {
         if (lex->current_char == '\n') {
             // unterminated string
             token_init(tok,
@@ -71,7 +72,7 @@ static void read_string(Lexer* lex, Token* tok) {
         }
     }
 
-    if (lex->current_char != '\'') {
+    if (lex->current_char != string_char) {
         token_init(tok,
                    TOK_ERROR,
                    lex->input + lex->pos,
@@ -171,7 +172,7 @@ void lexer_lex(Lexer* lex, Token* tok) {
             return;
         }
 
-        if (lex->current_char == '\'') {
+        if (lex->current_char == '\'' || lex->current_char == '"') {
             read_string(lex, tok);
             return;
         }

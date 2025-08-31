@@ -135,7 +135,7 @@ typedef struct tmb_hm_opt {
 enum tmb_hm_key_type__ { KEY_RAW = 1, KEY_STR = 2 };
 
 #define TMB_DISTINGUISH_HM_TYPE(x)                                             \
-    _Generic((x), char*: KEY_STR, default: KEY_RAW)
+    _Generic((x), char*: KEY_STR, const char*: KEY_STR, default: KEY_RAW)
 
 #if defined(TMB_WINDOWS_MSVC)
     #define TMB_TYPEOF(x)            __typeof__(x)
@@ -187,7 +187,12 @@ typedef struct {
         exit(1);                                                               \
     } while (0)
 
-#define ASSERT assert
+#define ASSERT(expr)                                                           \
+    do {                                                                       \
+        if (!(expr)) {                                                         \
+            UNUSED fprintf(stderr, "assertion failed at %s:%d", __FILE__, __LINE__);  \
+        }                                                                      \
+    } while (0)
 
 #define UNUSED (void)
 
@@ -262,8 +267,8 @@ typedef struct {
 #define da_free_memb_fn(da, memb_data, memb_free_fn)                           \
     do {                                                                       \
         if ((da)->capacity) {                                                  \
-            for (int i__m_ = 0; i__m_ < (da)->length; i__m_++) {            \
-                memb_free_fn((da)->items[i__m_].memb_data); \
+            for (int i__m_ = 0; i__m_ < (da)->length; i__m_++) {               \
+                memb_free_fn((da)->items[i__m_].memb_data);                    \
             }                                                                  \
             free((da)->items);                                                 \
             (da)->capacity = 0;                                                \
@@ -298,7 +303,7 @@ typedef struct {
 void tmb_hm_get_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
-                        void* addr_of_new_key,
+                        const void* addr_of_new_key,
                         size_t key_size,
                         size_t key_offset,
                         size_t occupied_offset);
@@ -306,7 +311,7 @@ void tmb_hm_get_wrapper(void* user_hm,
 void tmb_hm_del_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
-                        void* addr_of_new_key,
+                        const void* addr_of_new_key,
                         size_t key_size,
                         size_t key_offset,
                         size_t occupied_offset);
@@ -314,7 +319,7 @@ void tmb_hm_del_wrapper(void* user_hm,
 void tmb_hm_set_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
-                        void* addr_of_new_key,
+                        const void* addr_of_new_key,
                         size_t key_size,
                         size_t key_offset,
                         void* value,

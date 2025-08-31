@@ -70,6 +70,11 @@ typedef struct tmb_log_ext_ctx {
     const tmb_time_stamp_t ts;
 } tmb_log_ext_ctx_t;
 
+typedef struct tmb_logger_registry {
+    _hm_header_(const char*, tmb_logger_t*);
+} tmb_logger_registry_t;
+
+extern tmb_logger_registry_t tmb_logger_registry;
 extern const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT];
 extern const char* const tmb_log_level_color[TMB_LOG_LEVEL_COUNT];
 extern int const tmb_log_level_str_len[TMB_LOG_LEVEL_COUNT];

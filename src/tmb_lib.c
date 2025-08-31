@@ -141,9 +141,9 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
     sb->capacity = truncated.capacity;
 }
 
-u64 hash_djb2(void* addr_of_key, size_t key_size) {
-    u8* a    = addr_of_key;
-    u64 hash = 5381;
+u64 hash_djb2(const void* addr_of_key, size_t key_size) {
+    const u8* a = addr_of_key;
+    u64 hash    = 5381;
     for (size_t i = 0; i < key_size; i++) {
         hash = ((hash << 5) + hash) + a[i];
     }
@@ -160,8 +160,8 @@ u64 hash_djb2(void* addr_of_key, size_t key_size) {
  * @param key_type 
  * @return int 
  */
-int hm_cmp(void* key1,
-           void* key2,
+int hm_cmp(const void* key1,
+           const void* key2,
            size_t key_size,
            enum tmb_hm_key_type__ key_type) {
     if (key_type == KEY_RAW) { return memcmp(key1, key2, key_size); }
@@ -217,7 +217,7 @@ void tmb_hm_grow(void* user_hm,
 void tmb_hm_set_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
-                        void* key,
+                        const void* key,
                         size_t key_size,
                         size_t key_offset,
                         void* value,
@@ -262,7 +262,7 @@ void tmb_hm_set_wrapper(void* user_hm,
 void tmb_hm_del_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
-                        void* addr_of_new_key,
+                        const void* addr_of_new_key,
                         size_t key_size,
                         size_t key_offset,
                         size_t occupied_offset) {
@@ -283,7 +283,7 @@ void tmb_hm_del_wrapper(void* user_hm,
 void tmb_hm_get_wrapper(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
-                        void* addr_of_new_key,
+                        const void* addr_of_new_key,
                         size_t key_size,
                         size_t key_offset,
                         size_t occupied_offset) {
