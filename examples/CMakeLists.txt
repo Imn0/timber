@@ -13,6 +13,7 @@ if(BUILD_EXAMPLES)
     add_example(03-custom_sink)
     add_example(03-logger_registry)
     add_example(04-custom_sink_w_data)
+    add_example(05-custom-formatter)
 
     set(EXAMPLE_NAME header_only)
     add_executable(${EXAMPLE_NAME} ${EXAMPLE_NAME}.c)

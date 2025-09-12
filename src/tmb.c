@@ -1,12 +1,12 @@
-#include <chips.h>
-#include <tmb/sink.h>
 #include <tmb_internal.h>
 
+#include <tmb/sink.h>
+
 #include <assert.h>
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <time.h>
 
 const char* const TMB_PATCH_V = "0";
 const char* const TMB_MINOR_V = "0";
@@ -69,62 +69,28 @@ static inline tmb_time_stamp_t tmb_timestamp() {
 static tmb_logger_t default_logger     = { 0 };
 static bool default_logger_initialized = false;
 
-static inline tmb_log_ext_ctx_t ext_ctx_from_ctx(
-        tmb_log_ctx_t ctx,
-        tmb_string_builder_t user_message) {
+static inline void fill_ctx(tmb_log_ctx_t* ctx,
+                            tmb_string_builder_t user_message,
+                            tmb_time_stamp_t ts) {
 
-    return (tmb_log_ext_ctx_t) {
-        .log_level         = ctx.log_level,
-        .line_no           = ctx.line_no,
-        .filename          = ctx.filename,
-        .filename_len      = ctx.filename_len,
-        .filename_base     = ctx.filename_base,
-        .filename_base_len = ctx.filename_base_len,
-        .funcname          = ctx.funcname,
-        .funcname_len      = ctx.funcname_len,
-        .message           = user_message.items,
-        .message_len       = user_message.length,
-        .ts                = tmb_timestamp(),
-    };
+    ctx->message     = user_message.items;
+    ctx->message_len = user_message.length;
+    ctx->ts_nsec     = ts.nsec;
+    ctx->ts_sec      = ts.sec;
 }
 
-static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
+static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                           tmb_logger_t* logger) {
     if (logger->formatters.length < 1) {
-        tmb_logger_set_default_format(logger, "%v");
+        tmb_logger_set_default_format(logger, "%$\n");
     }
     struct {
-        _da_header_(tmb_string_builder_t*);
+        _da_header_(tmb_formatted_msg_t*);
     } formatted_messages = { 0 };
 
     for (int j = 0; j < logger->formatters.length; j++) {
-        tmb_formater_t* chips = &logger->formatters.items[j];
-        da_append(&formatted_messages, (tmb_string_builder_t) { 0 });
-
-        for (int i = 0; i < chips->length; i++) {
-            tmb_chip_t* current_chip = &chips->items[i];
-            if (current_chip->just_amount > 0) {
-                tmb_string_builder_t sb = { 0 };
-                current_chip->chip_fn(&sb, &ext_ctx, current_chip->chip_data);
-                if (sb.length < current_chip->just_amount) {
-                    tmb_sb_just(&sb,
-                                current_chip->just_opt,
-                                current_chip->just_amount,
-                                ' ');
-                } else if (sb.length > current_chip->just_amount) {
-                    tmb_sb_truncate(&sb,
-                                    current_chip->truncate_opt,
-                                    current_chip->just_amount);
-                }
-                sb_appendn(&formatted_messages.items[j], sb.items, sb.length);
-                sb_free(&sb);
-            } else {
-                current_chip->chip_fn(&formatted_messages.items[j],
-                                      &ext_ctx,
-                                      current_chip->chip_data);
-            }
-        }
-        sb_to_cstr(&formatted_messages.items[j]);
+        tmb_formatter_t* formatter = &logger->formatters.items[j];
+        da_append(&formatted_messages, formatter->format_fn(formatter, &ctx));
     }
 
     for (int i = 0; i < logger->sinks.length; i++) {
@@ -133,20 +99,25 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ext_ctx_t ext_ctx,
                                        formatted_messages.items[fmt_idx].length,
                                        logger->sinks.items[i].sink_data);
     }
-    da_free_memb_fn(&formatted_messages, items, free);
+    for (int j = 0; j < logger->formatters.length; j++) {
+        tmb_formatter_t* formatter = &logger->formatters.items[j];
+        formatter->formated_free_fn(formatted_messages.items[j].message);
+    }
+    da_free(&formatted_messages);
 }
 
 static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
                                   tmb_logger_t* logger,
                                   const char* message,
                                   va_list args) {
+    tmb_time_stamp_t ts = tmb_timestamp();
 
     tmb_string_builder_t message_filled = { 0 };
     sb_appendv(&message_filled, message, args);
 
-    tmb_log_ext_ctx_t e_ctx = ext_ctx_from_ctx(ctx, message_filled);
+    fill_ctx(&ctx, message_filled, ts);
 
-    tmb_log_impl_ext_ctx__(e_ctx, logger);
+    tmb_log_impl_ext_ctx__(ctx, logger);
     sb_free(&message_filled);
 }
 
@@ -197,128 +168,24 @@ const char* tmb_get_version(void) {
     return sb.items;
 }
 
-static inline bool chip_init(tmb_chip_t* chip,
-                             char fmt_opt,
-                             char truncate_opt_chr,
-                             char just_opt_chr,
-                             int just_amount) {
-#define CASE(c, fn)                                                            \
-    case c:                                                                    \
-        *chip = fn();                                                          \
-        break
-
-    switch (fmt_opt) {
-        CASE('$', TMB_CHIP_MESSAGE);
-        CASE('l', TMB_CHIP_LEVEL_L);
-        CASE('L', TMB_CHIP_LEVEL_S);
-        CASE('@', TMB_CHIP_BASEFILE);
-        CASE('s', TMB_CHIP_FILE);
-        CASE('#', TMB_CHIP_LINE);
-        CASE('f', TMB_CHIP_FUNC);
-    default:
-        fprintf(stderr, "unknown format %c\n", fmt_opt);
-        return false;
-        break;
-    }
-    enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
-    enum tmb_sb_just_opt just_opt         = JUST_OFF;
-    switch (truncate_opt_chr) {
-    case TRUNCATING_LEFT_OPT_CHAR:
-        truncate_opt = TRUNCATE_LEFT;
-        break;
-    case TRUNCATING_RIGHT_OPT_CHAR:
-        truncate_opt = TRUNCATE_RIGHT;
-        break;
-    default:
-        break;
-    }
-
-    switch (just_opt_chr) {
-    case JUSTING_LEFT_OPT_CHAR:
-        just_opt = JUST_LEFT;
-        break;
-    case JUSTING_CENTER_OPT_CHAR:
-        just_opt = JUST_CENTER;
-        break;
-    case JUSTING_RIGHT_OPT_CHAR:
-        just_opt = JUST_RIGHT;
-        break;
-    default:
-        break;
-    }
-    chip->just_amount  = just_amount;
-    chip->truncate_opt = truncate_opt;
-    chip->just_opt     = just_opt;
-    return true;
-}
-
 int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
     da_append(&logger->sinks, sink);
     da_append(&logger->sink_formatter_map, 0);
     return logger->sinks.length - 1;
 }
 
-bool tmb_format_init(tmb_formater_t* format, const char* fmt) {
-    tmb_string_builder_t sb = { 0 };
-    int fmt_len             = (int)strlen(fmt);
-
-    for (int i = 0; i < fmt_len; i++) {
-        if (fmt[i] == '%') {
-            if (sb.length > 0) {
-                da_append(format, TMB_CHIP_CONST(sb.items, sb.length));
-                sb_free(&sb);
-            }
-            i++;
-            char just_opt     = 0;
-            char truncate_opt = 0;
-            int just_amount   = 0;
-            if (isdigit(fmt[i])) {
-                while (isdigit(fmt[i])) {
-                    just_amount *= 10;
-                    just_amount += (fmt[i] - '0');
-                    i++;
-                }
-            }
-            if (fmt[i] == JUSTING_LEFT_OPT_CHAR ||
-                fmt[i] == JUSTING_CENTER_OPT_CHAR ||
-                fmt[i] == JUSTING_RIGHT_OPT_CHAR) {
-                just_opt = fmt[i++];
-            }
-            if (fmt[i] == TRUNCATING_LEFT_OPT_CHAR ||
-                fmt[i] == TRUNCATING_RIGHT_OPT_CHAR) {
-                truncate_opt = fmt[i++];
-            }
-            da_append(format, (tmb_chip_t) { 0 });
-            if (!chip_init(&format->items[format->length - 1],
-                           fmt[i],
-                           truncate_opt,
-                           just_opt,
-                           just_amount)) {
-                return false;
-            }
-        } else {
-            sb_append(&sb, fmt[i]);
-        }
-    }
-    if (sb.length > 0) {
-        da_append(format, TMB_CHIP_CONST(sb.items, sb.length));
-        sb_free(&sb);
-    }
-    return true;
-}
-
-int tmb_logger_add_formater(tmb_logger_t* lgr, tmb_formater_t formater) {
-    da_append(&lgr->formatters, formater);
+int tmb_logger_add_formatter(tmb_logger_t* lgr, tmb_formatter_t formatter) {
+    da_append(&lgr->formatters, formatter);
     return lgr->formatters.length - 1;
 }
 
 int tmb_logger_add_format(tmb_logger_t* lgr, const char* fmt) {
-    tmb_formater_t format_chips = { 0 };
-    if (tmb_format_init(&format_chips, fmt)) {
-        da_append(&lgr->formatters, format_chips);
+    tmb_formatter_t formatter = { 0 };
+    if (tmb_formatter_init(&formatter, fmt)) {
+        da_append(&lgr->formatters, formatter);
         return lgr->formatters.length - 1;
     } else {
-        da_free(&format_chips);
+        da_free(&formatter);
         return -1;
     }
 }
@@ -338,20 +205,20 @@ int tmb_logger_set_format(tmb_logger_t* lgr, int sink_idx, const char* fmt) {
         sink_idx >= lgr->sink_formatter_map.length) {
         return -1;
     }
-    tmb_formater_t format = { 0 };
-    if (!tmb_format_init(&format, fmt)) { return -2; }
-    da_append(&lgr->formatters, format);
+    tmb_formatter_t formatter = { 0 };
+    if (!tmb_formatter_init(&formatter, fmt)) { return -2; }
+    da_append(&lgr->formatters, formatter);
     lgr->sink_formatter_map.items[sink_idx] = lgr->formatters.length - 1;
     return -1;
 }
 
 bool tmb_logger_set_default_format(tmb_logger_t* logger, const char* fmt) {
     if (logger->formatters.length == 0) {
-        da_append(&logger->formatters, (tmb_formater_t) { 0 });
+        da_append(&logger->formatters, (tmb_formatter_t) { 0 });
     } else {
         da_free(&logger->formatters.items[0]);
     }
-    return tmb_format_init(&logger->formatters.items[0], fmt);
+    return tmb_formatter_init(&logger->formatters.items[0], fmt);
 }
 
 tmb_logger_t* tmb_get_default_logger() {
@@ -368,6 +235,7 @@ void tmb_tee_log(tmb_log_ctx_t ctx,
                  const tmb_tee_logger_t* tee_logger,
                  const char* message,
                  ...) {
+    tmb_time_stamp_t ts = tmb_timestamp();
 
     tmb_string_builder_t message_filled = { 0 };
 
@@ -376,10 +244,10 @@ void tmb_tee_log(tmb_log_ctx_t ctx,
     sb_appendv(&message_filled, message, args);
     va_end(args);
 
-    tmb_log_ext_ctx_t e_ctx = ext_ctx_from_ctx(ctx, message_filled);
+    fill_ctx(&ctx, message_filled, ts);
 
     for (int i = 0; i < tee_logger->length; i++) {
-        tmb_log_impl_ext_ctx__(e_ctx, tee_logger->items[i]);
+        tmb_log_impl_ext_ctx__(ctx, tee_logger->items[i]);
     }
 }
 

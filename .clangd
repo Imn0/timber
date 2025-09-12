@@ -24,7 +24,6 @@ CompileFlags:
     - -Wreserved-identifier
     - -Wno-empty-translation-unit
     - -Wno-unused-const-variable
-    - -Wno-missing-prototypes
 
 Completion:
   HeaderInsertion: Never

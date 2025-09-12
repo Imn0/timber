@@ -63,8 +63,22 @@ extern const char* const GIT_REV;
 #define TMB_LEVEL_TRACE   5
 #define TMB_LEVEL_ALL     5
 
+struct tmb_formatter;
+struct tmb_log_ctx;
+
+typedef struct tmb_formatted_msg {
+    int length;
+    union {
+        char* items;
+        char* message;
+    };
+} tmb_formatted_msg_t;
+
 typedef void tmb_free_fn_t(void*);
 typedef void tmb_sink_fn_t(const char*, int, void*);
+typedef tmb_formatted_msg_t tmb_format_fn_t(
+        struct tmb_formatter* formatter,
+        const struct tmb_log_ctx* const ctx);
 
 typedef enum {
     TMB_LOG_LEVEL_FATAL   = TMB_LEVEL_FATAL,
@@ -91,13 +105,23 @@ typedef struct tmb_sinks {
     struct tmb_sink* items;
 } tmb_sinks_t;
 
-typedef struct tmb_formater {
+typedef struct tmb_formatter {
     int length;
     int capacity;
     struct tmb_chip* items;
-} tmb_formater_t;
+    void* data;
+    tmb_format_fn_t* format_fn;
+    tmb_free_fn_t* formated_free_fn;
+    tmb_free_fn_t* data_free_fn;
+} tmb_formatter_t;
 
-typedef struct {
+typedef struct tmb_formatters {
+    int length;
+    int capacity;
+    struct tmb_formatter* items;
+} tmb_formatters_t;
+
+typedef struct tmb_log_ctx {
     const tmb_log_level log_level;
     const int line_no;
     const char* const filename;
@@ -106,16 +130,16 @@ typedef struct {
     const int filename_base_len;
     const char* const funcname;
     const int funcname_len;
+    char* message;
+    int message_len;
+    long long ts_sec;
+    long long ts_nsec;
 } tmb_log_ctx_t;
 
 typedef struct tmb_logger {
-    tmb_sinks_t sinks;
     tmb_log_level log_level;
-    struct {
-        int length;
-        int capacity;
-        tmb_formater_t* items;
-    } formatters;
+    tmb_sinks_t sinks;
+    tmb_formatters_t formatters;
     struct {
         int length;
         int capacity;
@@ -137,6 +161,8 @@ TMB_API const char* tmb_get_version(void);
 TMB_API tmb_logger_t* tmb_get_default_logger();
 TMB_API bool tmb_logger_set_default_format(tmb_logger_t* logger,
                                            const char* fmt);
+TMB_API int tmb_logger_add_formatter(tmb_logger_t* lgr,
+                                     tmb_formatter_t formatter);
 TMB_API int tmb_logger_add_format(tmb_logger_t* lgr, const char* fmt);
 TMB_API int tmb_logger_add_sink(tmb_logger_t* lgr, tmb_sink_t);
 TMB_API int tmb_logger_assign_format(tmb_logger_t* lgr,
@@ -220,13 +246,17 @@ TMB_API void tmb_tee_log(tmb_log_ctx_t ctx,
              ctx,                                                              \
              logger_or_format __VA_OPT__(, ) __VA_ARGS__)
 
-#define TMB_LOG(log_level, logger_or_format, ...)                              \
+#define TMB_LOG(_log_level, logger_or_format, ...)                             \
     do {                                                                       \
         tmb_log_ctx_t _m__ctx = {                                              \
-            log_level,        __LINE__,                                        \
-            __FILE__,         TMB_CONST_STR_SIZE(__FILE__),                    \
-            TMB_BASEFILENAME, TMB_CONST_STR_SIZE(TMB_BASEFILENAME),            \
-            __func__,         TMB_CONST_STR_SIZE(__func__)                     \
+            .log_level         = _log_level,                                   \
+            .line_no           = __LINE__,                                     \
+            .filename          = __FILE__,                                     \
+            .filename_len      = TMB_CONST_STR_SIZE(__FILE__),                 \
+            .filename_base     = TMB_BASEFILENAME,                             \
+            .filename_base_len = TMB_CONST_STR_SIZE(TMB_BASEFILENAME),         \
+            .funcname          = __func__,                                     \
+            .funcname_len      = TMB_CONST_STR_SIZE(__func__)                  \
         };                                                                     \
         TMB_DISPATCH(_m__ctx, logger_or_format __VA_OPT__(, ) __VA_ARGS__);    \
     } while (0)

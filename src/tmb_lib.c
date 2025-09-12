@@ -113,6 +113,14 @@ void tmb_sb_just(tmb_string_builder_t* sb,
     }
 }
 
+tmb_string_view_t sv_from_sb(tmb_string_builder_t* sb) {
+    tmb_string_view_t sv = { .items = sb->items, .length = sb->length };
+    sb->items            = NULL;
+    sb->length           = 0;
+    sb->capacity         = 0;
+    return sv;
+}
+
 void tmb_sb_truncate(tmb_string_builder_t* sb,
                      enum tmb_sb_truncate_opt truncate_setting,
                      int max_len) {
@@ -141,7 +149,7 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
     sb->capacity = truncated.capacity;
 }
 
-u64 hash_djb2(const void* addr_of_key, size_t key_size) {
+static u64 hash_djb2(const void* addr_of_key, size_t key_size) {
     const u8* a = addr_of_key;
     u64 hash    = 5381;
     for (size_t i = 0; i < key_size; i++) {
@@ -160,7 +168,7 @@ u64 hash_djb2(const void* addr_of_key, size_t key_size) {
  * @param key_type 
  * @return int 
  */
-int hm_cmp(const void* key1,
+static int hm_cmp(const void* key1,
            const void* key2,
            size_t key_size,
            enum tmb_hm_key_type__ key_type) {
@@ -169,7 +177,7 @@ int hm_cmp(const void* key1,
     return 0;
 }
 
-void tmb_hm_grow(void* user_hm,
+static void tmb_hm_grow(void* user_hm,
                  size_t bucket_size,
                  size_t buckets_offset,
                  size_t key_size,
@@ -312,4 +320,36 @@ void tmb_hm_get_wrapper(void* user_hm,
         }
         i = (i + 1) % (u32)hm->capacity;
     }
+}
+
+// tmb_fabsf and tmb_fabs impl from MUSL
+static float tmb_fabsf(float x) {
+    union {
+        float f;
+        uint32_t i;
+    } u = { x };
+    u.i &= 0x7fffffff;
+    return u.f;
+}
+
+// static double tmb_fabs(double x) {
+//     union {
+//         double f;
+//         uint64_t i;
+//     } u = { x };
+//     u.i &= -1ULL / 2;
+//     return u.f;
+// }
+
+f32 tmb_stopwatch(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2) {
+    f32 d = 0;
+    d += (f32)(ts1.nsec - ts2.nsec);
+    d /= NSEC_IN_SEC;
+    d += (f32)(ts1.sec - ts2.sec);
+
+    return d;
+}
+
+bool tmb_cmp_flt_impl(f32 a, f32 b, struct tmb_cmp_flt_opt opt) {
+    return tmb_fabsf(a - b) < opt.eps;
 }

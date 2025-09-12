@@ -76,6 +76,8 @@ typedef int32_t i32;
 typedef uint32_t u32;
 typedef int64_t i64;
 typedef uint64_t u64;
+typedef float f32;
+typedef double f64;
 typedef size_t usize;
 
 #ifdef TMB_WINDOWS
@@ -112,10 +114,26 @@ typedef struct tmb_string_view {
     char* items;
 } tmb_string_view_t;
 
+#define NSEC_IN_SEC  1000000000
+#define NSEC_IN_MSEC 1000000
+
+#define MSEC_TO_NSEC(msec) ((msec) * NSEC_IN_MSEC)
+
 typedef struct tmb_time_stamp {
     i64 sec;
     i64 nsec;
 } tmb_time_stamp_t;
+
+f32 tmb_stopwatch(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2);
+
+struct tmb_cmp_flt_opt {
+    f32 eps;
+};
+bool tmb_cmp_flt_impl(f32 a, f32 b, struct tmb_cmp_flt_opt);
+#define tmb_cmp_flt(a, b, ...)                                                 \
+    tmb_cmp_flt_impl((a),                                                      \
+                     (b),                                                      \
+                     (struct tmb_cmp_flt_opt) { .eps = 1e-9, __VA_ARGS__ })
 
 enum tmb_sb_just_opt {
     JUST_OFF    = 0,
@@ -190,7 +208,8 @@ typedef struct {
 #define ASSERT(expr)                                                           \
     do {                                                                       \
         if (!(expr)) {                                                         \
-            UNUSED fprintf(stderr, "assertion failed at %s:%d", __FILE__, __LINE__);  \
+            UNUSED fprintf(                                                    \
+                    stderr, "assertion failed at %s:%d", __FILE__, __LINE__);  \
         }                                                                      \
     } while (0)
 
@@ -276,21 +295,13 @@ typedef struct {
         }                                                                      \
     } while (0);
 
-#define string_free(str)                                                       \
-    do {                                                                       \
-        if ((str)->length) {                                                   \
-            free((str)->items);                                                \
-            (str)->length = 0;                                                 \
-        }                                                                      \
-    } while (0);
-
 #define sb_to_cstr(sb) da_append(sb, 0)
 
 #define sb_appendn(sb, buff, n) da_appendn(sb, buff, n)
 #define sb_append(sb, chr)      da_append(sb, chr)
 #define sb_free(sb)             da_free(sb)
 #define sb_appendf(sb, fmt, ...)                                               \
-    sb_appendf__(sb, fmt, __VA_OPT__(, ) __VA_ARGS__)
+    sb_appendf__(sb, fmt __VA_OPT__(, ) __VA_ARGS__)
 #define sb_appendv(sb, fmt, args) sb_appendv__(sb, fmt, args)
 
 #define sb_append_cstr(sb, str)                                                \
@@ -299,6 +310,8 @@ typedef struct {
         int _m__n         = (int)strlen(_m__s);                                \
         da_appendn(sb, _m__s, _m__n);                                          \
     } while (0)
+
+tmb_string_view_t sv_from_sb(tmb_string_builder_t* sb);
 
 void tmb_hm_get_wrapper(void* user_hm,
                         size_t bucket_size,

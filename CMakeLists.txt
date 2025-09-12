@@ -17,6 +17,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
 
 option(BUILD_SHARED_LIBS "Build shared libraries, builds static when off, can be overwriten with BUILD_SHARED_AND_STATIC_LIBS" ON)
 option(BUILD_SHARED_AND_STATIC_LIBS "Build both shared and static libraries" OFF)
@@ -36,7 +39,7 @@ target_include_directories(${PROJECT_NAME}-objects
 )
 target_compile_options(${PROJECT_NAME}-objects PRIVATE
     $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-    -Wall -Wextra -pedantic -Wshadow -Werror -Wno-gnu-zero-variadic-macro-arguments -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
+    -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
     $<$<C_COMPILER_ID:MSVC>:
     /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
 target_compile_definitions(${PROJECT_NAME}-objects PRIVATE TMB_BUILD_DLL=1)
