@@ -2,7 +2,7 @@
 #include <tmb/sink.h>
 #include <tmb/tmb.h>
 
-static void pass(void*) {}
+static void pass(void* thing) {}
 
 static tmb_formatted_msg_t format(tmb_formatter_t* formatter,
                                   const tmb_log_ctx_t* const ctx) {
