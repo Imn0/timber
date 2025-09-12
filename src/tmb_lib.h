@@ -60,8 +60,10 @@
                      MAKE_ANSI4,                                               \
                      MAKE_ANSI3,                                               \
                      MAKE_ANSI2,                                               \
-                     MAKE_ANSI1)(__VA_ARGS__)
+                     MAKE_ANSI1,                                               \
+                     MAKE_ANSI0)(__VA_ARGS__)
 #define MAKE_ANSI_SELECT(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
+#define MAKE_ANSI0()                                        ""
 #define MAKE_ANSI1(a)                                       "\x1b[" a "m"
 #define MAKE_ANSI2(a, b)                                    "\x1b[" a ";" b "m"
 #define MAKE_ANSI3(a, b, c)                                 "\x1b[" a ";" b ";" c "m"
