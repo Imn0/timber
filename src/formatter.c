@@ -23,8 +23,8 @@ typedef struct tmb_chip {
 } tmb_chip_t;
 
 static inline void tmb_chip_format(tmb_chip_t* chip,
-                        tmb_string_builder_t* target,
-                        const tmb_log_ctx_t* const ctx) {
+                                   tmb_string_builder_t* target,
+                                   const tmb_log_ctx_t* const ctx) {
     tmb_string_builder_t buff = { 0 };
     switch (chip->type) {
     case CHIP_MESSAGE:
@@ -56,15 +56,20 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
     default:
         break;
     }
+    if (buff.length < chip->just_amount) {
+        tmb_sb_just(&buff, chip->just_opt, chip->just_amount, ' ');
+    } else if (buff.length > chip->just_amount) {
+        tmb_sb_truncate(&buff, chip->truncate_opt, chip->just_amount);
+    }
     sb_appendn(target, buff.items, buff.length);
     sb_free(&buff);
 }
 
 static bool tmb_chip_init_from_opt(tmb_chip_t* chip,
-                               char fmt_opt,
-                               char truncate_opt_chr,
-                               char just_opt_chr,
-                               int just_amount) {
+                                   char fmt_opt,
+                                   char truncate_opt_chr,
+                                   char just_opt_chr,
+                                   int just_amount) {
 #define CASE(c, new_type)                                                      \
     case c:                                                                    \
         chip->type = new_type;                                                 \
@@ -115,7 +120,9 @@ static bool tmb_chip_init_from_opt(tmb_chip_t* chip,
     return true;
 }
 
-static bool tmb_chip_init_const(tmb_chip_t* chip, const char* val, int val_len) {
+static bool tmb_chip_init_const(tmb_chip_t* chip,
+                                const char* val,
+                                int val_len) {
     chip->type        = CHIP_CONST_VAL;
     chip->just_amount = JUST_OFF;
 
@@ -127,7 +134,7 @@ static bool tmb_chip_init_const(tmb_chip_t* chip, const char* val, int val_len) 
 }
 
 static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
-                                  const tmb_log_ctx_t* const ctx) {
+                                      const tmb_log_ctx_t* const ctx) {
     tmb_string_builder_t message = { 0 };
     for (int i = 0; i < formatter->length; i++) {
         tmb_chip_t* current_chip = &formatter->items[i];
@@ -147,8 +154,8 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
             if (sb.length > 0) {
                 da_append(formatter, (tmb_chip_t) { 0 });
                 tmb_chip_init_const(&formatter->items[formatter->length - 1],
-                                sb.items,
-                                sb.length);
+                                    sb.items,
+                                    sb.length);
                 sb_free(&sb);
             }
             i++;
@@ -172,11 +179,12 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
                 truncate_opt = fmt[i++];
             }
             da_append(formatter, (tmb_chip_t) { 0 });
-            if (!tmb_chip_init_from_opt(&formatter->items[formatter->length - 1],
-                                    fmt[i],
-                                    truncate_opt,
-                                    just_opt,
-                                    just_amount)) {
+            if (!tmb_chip_init_from_opt(
+                        &formatter->items[formatter->length - 1],
+                        fmt[i],
+                        truncate_opt,
+                        just_opt,
+                        just_amount)) {
                 return false;
             }
         } else {
@@ -186,8 +194,8 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
     if (sb.length > 0) {
         da_append(formatter, (tmb_chip_t) { 0 });
         tmb_chip_init_const(&formatter->items[formatter->length - 1],
-                        sb.items,
-                        sb.length);
+                            sb.items,
+                            sb.length);
         sb_free(&sb);
     }
 
