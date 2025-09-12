@@ -82,7 +82,7 @@ static inline void fill_ctx(tmb_log_ctx_t* ctx,
 static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                           tmb_logger_t* logger) {
     if (logger->formatters.length < 1) {
-        tmb_logger_set_default_format(logger, "%$\n");
+        tmb_logger_set_default_format(logger, TMB_DEFAULT_FORMAT);
     }
     struct {
         _da_header_(tmb_formatted_msg_t*);
