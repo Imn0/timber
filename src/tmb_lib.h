@@ -93,7 +93,7 @@ typedef size_t usize;
     #define TMB_FMT_CHECK(STR_IDX, ARG_BEGIN)                                  \
         __attribute__((format(printf, STR_IDX, ARG_BEGIN)))
 
-    //https://clang.llvm.org/docs/AttributeReference.html#constructor-destructor
+    // https://clang.llvm.org/docs/AttributeReference.html#constructor-destructor
     #define TMB_INIT   __attribute__((constructor))
     #define TMB_DEINIT __attribute__((destructor))
 #else // not supported on MSVC
@@ -133,9 +133,8 @@ struct tmb_cmp_flt_opt {
 };
 bool tmb_cmp_flt_impl(f32 a, f32 b, struct tmb_cmp_flt_opt);
 #define tmb_cmp_flt(a, b, ...)                                                 \
-    tmb_cmp_flt_impl((a),                                                      \
-                     (b),                                                      \
-                     (struct tmb_cmp_flt_opt) { .eps = 1e-9, __VA_ARGS__ })
+    tmb_cmp_flt_impl(                                                          \
+            (a), (b), (struct tmb_cmp_flt_opt) { .eps = 1e-9, __VA_ARGS__ })
 
 enum tmb_sb_just_opt {
     JUST_OFF    = 0,
@@ -407,11 +406,12 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
                      int max_len);
 
 /**
- * @brief Returns heap allocated zero terminated string with contents of the file
+ * @brief Returns heap allocated zero terminated string with contents of the
+ * file
  *
  * @param file
  * @return char*
  */
 char* load_entire_file(const char* file);
 
-#endif //TMB_LIB_H_
+#endif // TMB_LIB_H_

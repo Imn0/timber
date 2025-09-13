@@ -3,7 +3,7 @@
 
 int main(void) {
 
-    tmb_logger_t logger = { .log_level = TMB_LOG_LEVEL_INFO };
+    tmb_logger_t logger = { .min_log_level = LOG_LEVEL_INFO };
     tmb_logger_add_sink(&logger, TMB_SINK_STDERR());
     tmb_logger_set_default_format(&logger, "%$\n");
 

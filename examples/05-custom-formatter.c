@@ -2,10 +2,11 @@
 #include <tmb/sink.h>
 #include <tmb/tmb.h>
 
-static void pass(void* thing) {}
+void pass(void* thing) {}
 
-static tmb_formatted_msg_t format(tmb_formatter_t* formatter,
-                                  const tmb_log_ctx_t* const ctx) {
+tmb_formatted_msg_t format(tmb_formatter_t* formatter,
+                           const tmb_log_ctx_t* const ctx,
+                           tmb_format_opt_t opt) {
     static char buff[1024];
     snprintf(buff, 1024, "message -> %s\n", ctx->message);
 
@@ -13,7 +14,7 @@ static tmb_formatted_msg_t format(tmb_formatter_t* formatter,
 }
 
 int main(void) {
-    tmb_logger_t lgr = { .log_level = TMB_LOG_LEVEL_INFO };
+    tmb_logger_t lgr = { .min_log_level = LOG_LEVEL_INFO };
 
     tmb_formatter_t formatter = { .format_fn        = format,
                                   .formated_free_fn = pass,

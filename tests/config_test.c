@@ -2,18 +2,18 @@
 #include <string.h>
 
 int main() {
-    Lexer lex       = { 0 };
-    const char* cfg = "[loggers]\nhello = \"fiwsrhoighio%$\"";
-    lexer_init(&lex, cfg, strlen(cfg));
+    tmb_cfg_lexer_t lex = { 0 };
+    const char* cfg     = "[loggers]\nhello = \"aaa%d%$\"";
+    tmb_lex(&lex, cfg, strlen(cfg));
 
-    Token tok = {0};
-    while (true) {
-        lexer_lex(&lex, &tok);
-        if(tok.type == TOK_EOF){
-            break;
-        }
-        else {
-            token_print(&tok);
-        }
+    for (int i = 0; i < lex.length; i++) { tmb_token_print(&lex.items[i]); }
+    if (tmb_lex_expect(
+                &lex,
+                2,
+                (tmb_cfg_tok_type[]) { TMB_TOK_SECTION, TMB_TOK_NEWLINE })) {
+        tmb_cfg_tok_t tok = tmb_lex_get_and_advance(&lex);
+        tmb_token_print(&tok);
+    } else {
+        ASSERT(0);
     }
 }

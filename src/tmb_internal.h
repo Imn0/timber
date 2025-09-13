@@ -43,7 +43,7 @@
 #endif
 
 #ifndef TMB_DEFAULT_FORMAT
-    #define TMB_DEFAULT_FORMAT "%@:%# [%7^l] %$\n"
+    #define TMB_DEFAULT_FORMAT "[%7^l] %20>@:%4<# %$\n"
 #endif
 
 #define JUSTING_LEFT_OPT_CHAR   '<'
@@ -58,10 +58,11 @@ typedef struct tmb_logger_registry {
 } tmb_logger_registry_t;
 
 extern tmb_logger_registry_t tmb_logger_registry;
-extern const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT];
-extern const char* const tmb_log_level_color[TMB_LOG_LEVEL_COUNT];
-extern int const tmb_log_level_str_len[TMB_LOG_LEVEL_COUNT];
-extern const char tmb_log_level_char[TMB_LOG_LEVEL_COUNT];
+extern const char* const tmb_log_level_str[LOG_LEVEL_COUNT];
+extern int const tmb_log_level_str_len[LOG_LEVEL_COUNT];
+extern const char* const tmb_log_level_color[LOG_LEVEL_COUNT];
+extern int const tmb_log_level_color_len[LOG_LEVEL_COUNT];
+extern const char tmb_log_level_char[LOG_LEVEL_COUNT];
 
 bool tmb_formatter_init(tmb_formatter_t* format, const char* fmt);
 

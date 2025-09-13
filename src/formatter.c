@@ -24,8 +24,10 @@ typedef struct tmb_chip {
 
 static inline void tmb_chip_format(tmb_chip_t* chip,
                                    tmb_string_builder_t* target,
-                                   const tmb_log_ctx_t* const ctx) {
-    tmb_string_builder_t buff = { 0 };
+                                   const tmb_log_ctx_t* const ctx,
+                                   bool use_color) {
+    tmb_string_builder_t buff       = { 0 };
+    tmb_string_builder_t color_buff = { 0 };
     switch (chip->type) {
     case CHIP_MESSAGE:
         sb_appendn(&buff, ctx->message, ctx->message_len);
@@ -34,11 +36,21 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
         sb_appendn(&buff, chip->const_val.items, chip->const_val.length);
         break;
     case CHIP_LEVEL_L:
+        if (use_color) {
+            sb_appendn(&color_buff,
+                       tmb_log_level_color[ctx->log_level],
+                       tmb_log_level_color_len[ctx->log_level]);
+        }
         sb_appendn(&buff,
                    tmb_log_level_str[ctx->log_level],
                    tmb_log_level_str_len[ctx->log_level]);
         break;
     case CHIP_LEVEL_S:
+        if (use_color) {
+            sb_appendn(&color_buff,
+                       tmb_log_level_color[ctx->log_level],
+                       tmb_log_level_color_len[ctx->log_level]);
+        }
         sb_append(&buff, tmb_log_level_char[ctx->log_level]);
         break;
     case CHIP_BASEFILE:
@@ -61,7 +73,17 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
     } else if (buff.length > chip->just_amount) {
         tmb_sb_truncate(&buff, chip->truncate_opt, chip->just_amount);
     }
-    sb_appendn(target, buff.items, buff.length);
+    if (use_color) {
+        sb_appendn(&color_buff, buff.items, buff.length);
+        sb_appendn(&color_buff,
+                   MAKE_ANSI(ANSI_RESET),
+                   (int)TMB_CONST_STR_SIZE(MAKE_ANSI(ANSI_RESET)));
+        sb_appendn(target, color_buff.items, color_buff.length);
+        sb_free(&buff);
+        sb_free(&color_buff);
+    } else {
+        sb_appendn(target, buff.items, buff.length);
+    }
     sb_free(&buff);
 }
 
@@ -134,11 +156,12 @@ static bool tmb_chip_init_const(tmb_chip_t* chip,
 }
 
 static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
-                                      const tmb_log_ctx_t* const ctx) {
+                                      const tmb_log_ctx_t* const ctx,
+                                      tmb_format_opt_t opt) {
     tmb_string_builder_t message = { 0 };
     for (int i = 0; i < formatter->length; i++) {
         tmb_chip_t* current_chip = &formatter->items[i];
-        tmb_chip_format(current_chip, &message, ctx);
+        tmb_chip_format(current_chip, &message, ctx, opt.use_color);
     }
     sb_to_cstr(&message);
     return (tmb_formatted_msg_t) { .items  = message.items,
@@ -193,9 +216,8 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
     }
     if (sb.length > 0) {
         da_append(formatter, (tmb_chip_t) { 0 });
-        tmb_chip_init_const(&formatter->items[formatter->length - 1],
-                            sb.items,
-                            sb.length);
+        tmb_chip_init_const(
+                &formatter->items[formatter->length - 1], sb.items, sb.length);
         sb_free(&sb);
     }
 

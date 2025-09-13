@@ -2,16 +2,16 @@
 #include <ctype.h>
 #include <stdio.h>
 
-void lexer_init(Lexer* lex, const char* input, size_t input_size) {
-    lex->input        = input;
-    lex->length       = input_size;
-    lex->pos          = 0;
-    lex->line         = 1;
-    lex->column       = 1;
-    lex->current_char = (char)(lex->length > 0 ? lex->input[0] : '\0');
-}
+typedef struct tmb_cfg_lexer_impl {
+    const char* input;
+    size_t pos;
+    size_t length;
+    int line;
+    int column;
+    char current_char;
+} tmb_cfg_lexer_impl_t;
 
-static void advance(Lexer* t) {
+static void advance(tmb_cfg_lexer_impl_t* t) {
     if (t->pos < t->length) {
         if (t->current_char == '\n') {
             t->line++;
@@ -26,27 +26,27 @@ static void advance(Lexer* t) {
 }
 
 // skips non newline whitespace
-static void skip_whitespace(Lexer* lex) {
+static void skip_whitespace(tmb_cfg_lexer_impl_t* lex) {
     while (lex->current_char && isspace(lex->current_char) &&
            lex->current_char != '\n') {
         advance(lex);
     }
 }
 
-static void token_init(Token* tok,
-                       TokenType type,
+static void token_init(tmb_cfg_tok_t* tok,
+                       tmb_cfg_tok_type type,
                        const char* start,
                        size_t length,
                        int line,
                        int column) {
-    tok->type      = type;
-    tok->data      = start;
-    tok->data_size = length;
-    tok->line      = line;
-    tok->column    = column;
+    tok->type   = type;
+    tok->items  = start;
+    tok->length = length;
+    tok->line   = line;
+    tok->column = column;
 }
 
-static void read_string(Lexer* lex, Token* tok) {
+static void read_string(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
     int start_line         = lex->line;
     int start_column       = lex->column;
     const char string_char = *(lex->input + lex->pos);
@@ -60,7 +60,7 @@ static void read_string(Lexer* lex, Token* tok) {
         if (lex->current_char == '\n') {
             // unterminated string
             token_init(tok,
-                       TOK_ERROR,
+                       TMB_TOK_ERROR,
                        lex->input + lex->pos,
                        1,
                        start_line,
@@ -74,7 +74,7 @@ static void read_string(Lexer* lex, Token* tok) {
 
     if (lex->current_char != string_char) {
         token_init(tok,
-                   TOK_ERROR,
+                   TMB_TOK_ERROR,
                    lex->input + lex->pos,
                    1,
                    start_line,
@@ -85,12 +85,16 @@ static void read_string(Lexer* lex, Token* tok) {
     // skip closing quote
     advance(lex);
 
-    token_init(
-            tok, TOK_STRING, start, content_length, start_line, start_column);
+    token_init(tok,
+               TMB_TOK_STRING,
+               start,
+               content_length,
+               start_line,
+               start_column);
     return;
 }
 
-static void read_identifier(Lexer* lex, Token* tok) {
+static void read_identifier(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
     int start_line    = lex->line;
     int start_column  = lex->column;
     const char* start = lex->input + lex->pos;
@@ -102,17 +106,17 @@ static void read_identifier(Lexer* lex, Token* tok) {
         length++;
     }
 
-    token_init(tok, TOK_IDENT, start, length, start_line, start_column);
+    token_init(tok, TMB_TOK_IDENT, start, length, start_line, start_column);
     return;
 }
 
-static void skip_comment(Lexer* t) {
+static void skip_comment(tmb_cfg_lexer_impl_t* t) {
     advance(t);
     while (t->current_char && t->current_char == ' ') { advance(t); }
     while (t->current_char && t->current_char != '\n') { advance(t); }
 }
 
-static void read_section(Lexer* t, Token* tok) {
+static void read_section(tmb_cfg_lexer_impl_t* t, tmb_cfg_tok_t* tok) {
     int start_line   = t->line;
     int start_column = t->column;
 
@@ -126,7 +130,7 @@ static void read_section(Lexer* t, Token* tok) {
         if (t->current_char == '\n') {
             // unterminated section
             token_init(tok,
-                       TOK_ERROR,
+                       TMB_TOK_ERROR,
                        t->input + t->pos,
                        1,
                        start_line,
@@ -138,19 +142,23 @@ static void read_section(Lexer* t, Token* tok) {
     }
 
     if (t->current_char != ']') {
-        token_init(
-                tok, TOK_ERROR, t->input + t->pos, 1, start_line, start_column);
+        token_init(tok,
+                   TMB_TOK_ERROR,
+                   t->input + t->pos,
+                   1,
+                   start_line,
+                   start_column);
         return;
     }
 
     // skip closing bracket
     advance(t);
 
-    token_init(tok, TOK_SECTION, start, length, start_line, start_column);
+    token_init(tok, TMB_TOK_SECTION, start, length, start_line, start_column);
     return;
 }
 
-void lexer_lex(Lexer* lex, Token* tok) {
+static void lexer_lex(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
     while (lex->current_char) {
         int line   = lex->line;
         int column = lex->column;
@@ -163,7 +171,7 @@ void lexer_lex(Lexer* lex, Token* tok) {
         if (lex->current_char == '\n') {
             const char* start = lex->input + lex->pos;
             advance(lex);
-            token_init(tok, TOK_NEWLINE, start, 1, line, column);
+            token_init(tok, TMB_TOK_NEWLINE, start, 1, line, column);
             return;
         }
 
@@ -180,7 +188,7 @@ void lexer_lex(Lexer* lex, Token* tok) {
         if (lex->current_char == '=') {
             const char* start = lex->input + lex->pos;
             advance(lex);
-            token_init(tok, TOK_EQUALS, start, 1, line, column);
+            token_init(tok, TMB_TOK_EQUALS, start, 1, line, column);
             return;
         }
 
@@ -197,28 +205,71 @@ void lexer_lex(Lexer* lex, Token* tok) {
         // unknown character
         const char* start = lex->input + lex->pos;
         advance(lex);
-        token_init(tok, TOK_ERROR, start, 1, line, column);
+        token_init(tok, TMB_TOK_ERROR, start, 1, line, column);
         return;
     }
 
-    token_init(tok, TOK_EOF, NULL, 0, lex->line, lex->column);
+    token_init(tok, TMB_TOK_EOF, NULL, 0, lex->line, lex->column);
     return;
 }
 
-static void print_token_value(Token* token) {
-    if (token->type == TOK_NEWLINE) {
+static void print_token_value(tmb_cfg_tok_t* token) {
+    if (token->type == TMB_TOK_NEWLINE) {
         printf("'\\n'");
-    } else if (token->data && token->data_size > 0) {
-        printf("'%.*s'", (int)token->data_size, token->data);
+    } else if (token->items && token->length > 0) {
+        printf("'%.*s'", (int)token->length, token->items);
     } else {
         printf("(empty)");
     }
 }
 
-void token_print(Token* token) {
+void tmb_lex(tmb_cfg_lexer_t* lex, const char* input, size_t input_size) {
+    tmb_cfg_lexer_impl_t lex_impl = {
+        .input        = input,
+        .length       = input_size,
+        .pos          = 0,
+        .line         = 1,
+        .column       = 1,
+        .current_char = (char)(lex_impl.length > 0 ? lex_impl.input[0] : '\0')
+    };
+    tmb_cfg_tok_t tok = { 0 };
+    while (true) {
+        lexer_lex(&lex_impl, &tok);
+        da_append(lex, tok);
+        if (tok.type == TMB_TOK_EOF) { break; }
+    }
+}
+
+bool tmb_lex_expect(tmb_cfg_lexer_t* lex,
+                    int n,
+                    tmb_cfg_tok_type toks[static n]) {
+    if (lex->current_tok_idx + n > lex->length) { return false; }
+
+    int j = 0;
+    for (int i = lex->current_tok_idx; i < lex->length && j < n; (i++, j++)) {
+        if (lex->items[i].type != toks[j]) { return false; }
+    }
+    return true;
+}
+
+void tmb_lex_advance(tmb_cfg_lexer_t* lex) {
+    if (lex->current_tok_idx < lex->length) { lex->current_tok_idx++; }
+}
+
+tmb_cfg_tok_t tmb_lex_get(tmb_cfg_lexer_t* lex) {
+    return lex->items[lex->current_tok_idx];
+}
+
+tmb_cfg_tok_t tmb_lex_get_and_advance(tmb_cfg_lexer_t* lex) {
+    tmb_cfg_tok_t tok = tmb_lex_get(lex);
+    tmb_lex_advance(lex);
+    return tok;
+}
+
+void tmb_token_print(tmb_cfg_tok_t* token) {
     printf("Token: %-12s ", TokenTypeStr[token->type]);
     printf(" L: %3d, C: %3d", token->line, token->column);
-    if (token->data || token->data_size > 0) {
+    if (token->items || token->length > 0) {
         printf(" Value: ");
         print_token_value(token);
     }
