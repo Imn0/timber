@@ -1,26 +1,5 @@
 #include <ctype.h>
-#include <tmb_internal.h>
-
-enum CHIP_TYPE {
-    CHIP_MESSAGE,
-    CHIP_CONST_VAL,
-    CHIP_LEVEL_L,
-    CHIP_LEVEL_S,
-    CHIP_BASEFILE,
-    CHIP_FILE,
-    CHIP_LINE,
-    CHIP_FUNC,
-};
-
-typedef struct tmb_chip {
-    enum CHIP_TYPE type;
-    union {
-        tmb_string_view_t const_val;
-    };
-    int just_amount;
-    enum tmb_sb_just_opt just_opt;
-    enum tmb_sb_truncate_opt truncate_opt;
-} tmb_chip_t;
+#include <formatter.h>
 
 static inline void tmb_chip_format(tmb_chip_t* chip,
                                    tmb_string_builder_t* target,
@@ -28,42 +7,51 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
                                    bool use_color) {
     tmb_string_builder_t buff       = { 0 };
     tmb_string_builder_t color_buff = { 0 };
+    bool color_used                 = false;
     switch (chip->type) {
-    case CHIP_MESSAGE:
-        sb_appendn(&buff, ctx->message, ctx->message_len);
+    case CHIP_TYPE_UNKNOWN:
+        printf("ERROR CHIP\n");
         break;
-    case CHIP_CONST_VAL:
-        sb_appendn(&buff, chip->const_val.items, chip->const_val.length);
+    case CHIP_TYPE_MESSAGE:
+        sb_appendn(&buff, ctx->message_len, ctx->message);
         break;
-    case CHIP_LEVEL_L:
+    case CHIP_TYPE_CONST_VAL:
+        sb_appendn(&buff, chip->const_val.length, chip->const_val.items);
+        break;
+    case CHIP_TYPE_LEVEL_L:
         if (use_color) {
             sb_appendn(&color_buff,
-                       tmb_log_level_color[ctx->log_level],
-                       tmb_log_level_color_len[ctx->log_level]);
+                       tmb_log_level_color_len[ctx->log_level],
+                       tmb_log_level_color[ctx->log_level]);
+            color_used = true;
         }
         sb_appendn(&buff,
-                   tmb_log_level_str[ctx->log_level],
-                   tmb_log_level_str_len[ctx->log_level]);
+                   tmb_log_level_str_len[ctx->log_level],
+                   tmb_log_level_str[ctx->log_level]);
         break;
-    case CHIP_LEVEL_S:
+    case CHIP_TYPE_LEVEL_S:
         if (use_color) {
             sb_appendn(&color_buff,
-                       tmb_log_level_color[ctx->log_level],
-                       tmb_log_level_color_len[ctx->log_level]);
+                       tmb_log_level_color_len[ctx->log_level],
+                       tmb_log_level_color[ctx->log_level]);
+            color_used = true;
         }
         sb_append(&buff, tmb_log_level_char[ctx->log_level]);
         break;
-    case CHIP_BASEFILE:
-        sb_appendf(&buff, "%.*s", ctx->filename_base_len, ctx->filename_base);
+    case CHIP_TYPE_BASEFILE:
+        sb_appendn(&buff, ctx->filename_base_len, ctx->filename_base);
         break;
-    case CHIP_FILE:
-        sb_appendf(&buff, "%.*s", ctx->filename_len, ctx->filename);
+    case CHIP_TYPE_FILE:
+        sb_appendn(&buff, ctx->filename_len, ctx->filename);
         break;
-    case CHIP_LINE:
+    case CHIP_TYPE_LINE:
         sb_appendf(&buff, "%d", ctx->line_no);
         break;
-    case CHIP_FUNC:
-        sb_appendf(&buff, "%.*s", ctx->funcname_len, ctx->funcname);
+    case CHIP_TYPE_FUNC:
+        sb_appendn(&buff, ctx->funcname_len, ctx->funcname);
+        break;
+    case CHIP_TYPE_COLOR:
+        // todo
         break;
     default:
         break;
@@ -73,86 +61,18 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
     } else if (buff.length > chip->just_amount) {
         tmb_sb_truncate(&buff, chip->truncate_opt, chip->just_amount);
     }
-    if (use_color) {
-        sb_appendn(&color_buff, buff.items, buff.length);
+    if (color_used) {
+        sb_appendn(&color_buff, buff.length, buff.items);
         sb_appendn(&color_buff,
-                   MAKE_ANSI(ANSI_RESET),
-                   (int)TMB_CONST_STR_SIZE(MAKE_ANSI(ANSI_RESET)));
-        sb_appendn(target, color_buff.items, color_buff.length);
+                   (int)TMB_CONST_STR_SIZE(MAKE_ANSI(ANSI_RESET)),
+                   MAKE_ANSI(ANSI_RESET));
+        sb_appendn(target, color_buff.length, color_buff.items);
         sb_free(&buff);
         sb_free(&color_buff);
     } else {
-        sb_appendn(target, buff.items, buff.length);
+        sb_appendn(target, buff.length, buff.items);
     }
     sb_free(&buff);
-}
-
-static bool tmb_chip_init_from_opt(tmb_chip_t* chip,
-                                   char fmt_opt,
-                                   char truncate_opt_chr,
-                                   char just_opt_chr,
-                                   int just_amount) {
-#define CASE(c, new_type)                                                      \
-    case c:                                                                    \
-        chip->type = new_type;                                                 \
-        break
-
-    switch (fmt_opt) {
-        CASE('$', CHIP_MESSAGE);
-        CASE('l', CHIP_LEVEL_L);
-        CASE('L', CHIP_LEVEL_S);
-        CASE('@', CHIP_BASEFILE);
-        CASE('s', CHIP_FILE);
-        CASE('#', CHIP_LINE);
-        CASE('f', CHIP_FUNC);
-    default:
-        UNUSED fprintf(stderr, "unknown format %c\n", fmt_opt);
-        return false;
-        break;
-    }
-    enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
-    enum tmb_sb_just_opt just_opt         = JUST_OFF;
-    switch (truncate_opt_chr) {
-    case TRUNCATING_LEFT_OPT_CHAR:
-        truncate_opt = TRUNCATE_LEFT;
-        break;
-    case TRUNCATING_RIGHT_OPT_CHAR:
-        truncate_opt = TRUNCATE_RIGHT;
-        break;
-    default:
-        break;
-    }
-
-    switch (just_opt_chr) {
-    case JUSTING_LEFT_OPT_CHAR:
-        just_opt = JUST_LEFT;
-        break;
-    case JUSTING_CENTER_OPT_CHAR:
-        just_opt = JUST_CENTER;
-        break;
-    case JUSTING_RIGHT_OPT_CHAR:
-        just_opt = JUST_RIGHT;
-        break;
-    default:
-        break;
-    }
-    chip->just_amount  = just_amount;
-    chip->truncate_opt = truncate_opt;
-    chip->just_opt     = just_opt;
-    return true;
-}
-
-static bool tmb_chip_init_const(tmb_chip_t* chip,
-                                const char* val,
-                                int val_len) {
-    chip->type        = CHIP_CONST_VAL;
-    chip->just_amount = JUST_OFF;
-
-    tmb_string_builder_t sb = { 0 };
-    sb_appendn(&sb, val, val_len);
-
-    chip->const_val = sv_from_sb(&sb);
-    return true;
 }
 
 static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
@@ -168,63 +88,206 @@ static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
                                    .length = message.length };
 }
 
-bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
-    tmb_string_builder_t sb = { 0 };
-    int fmt_len             = (int)strlen(fmt);
+typedef struct tmb_chip_opts {
+    _da_header_(tmb_string_view_t*);
+} tmb_chip_opts_t;
 
-    for (int i = 0; i < fmt_len; i++) {
-        if (fmt[i] == '%') {
-            if (sb.length > 0) {
-                da_append(formatter, (tmb_chip_t) { 0 });
-                tmb_chip_init_const(&formatter->items[formatter->length - 1],
-                                    sb.items,
-                                    sb.length);
-                sb_free(&sb);
-            }
-            i++;
-            char just_opt     = 0;
-            char truncate_opt = 0;
-            int just_amount   = 0;
-            if (isdigit(fmt[i])) {
-                while (isdigit(fmt[i])) {
-                    just_amount *= 10;
-                    just_amount += (fmt[i] - '0');
-                    i++;
+static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
+                                            tmb_string_view_t* chip_type,
+                                            tmb_chip_opts_t* opts) {
+    tmb_chip_t chip = { 0 };
+
+    UNUSED opts;
+#define CASE(c, new_type)                                                      \
+    case c:                                                                    \
+        chip.type = new_type;                                                  \
+        break
+    bool only_opts = false;
+    bool do_color  = false;
+
+    if (chip_type->length > 1) { return false; }
+    if (chip_type->length > 0) {
+        switch (chip_type->items[0]) {
+            CASE('$', CHIP_TYPE_MESSAGE);
+            CASE('l', CHIP_TYPE_LEVEL_L);
+            CASE('L', CHIP_TYPE_LEVEL_S);
+            CASE('@', CHIP_TYPE_BASEFILE);
+            CASE('s', CHIP_TYPE_FILE);
+            CASE('#', CHIP_TYPE_LINE);
+            CASE('f', CHIP_TYPE_FUNC);
+        default:
+            UNUSED fprintf(stderr, "unknown format %c\n", chip_type->items[0]);
+            return false;
+            break;
+        }
+    } else {
+        only_opts = true;
+        chip.type = CHIP_TYPE_COLOR;
+    }
+
+    enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
+    enum tmb_sb_just_opt just_opt         = JUST_OFF;
+    int just_amount                       = 0;
+
+    for (int i = 0; i < opts->length; i++) {
+        tmb_string_view_t* current_opt = &opts->items[i];
+        if (current_opt->length <= 0) { continue; }
+        if (current_opt->items[0] == '$') {
+            tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
+            da_append(formatter, color_chip);
+            continue;
+        }
+        // we are left with just justing options []<>^ and a number
+        int j = 0;
+        while (j < current_opt->length) {
+            char current_opt_char = current_opt->items[j];
+            if (current_opt_char == JUSTING_LEFT_OPT_CHAR ||
+                current_opt_char == JUSTING_CENTER_OPT_CHAR ||
+                current_opt_char == JUSTING_RIGHT_OPT_CHAR) {
+                switch (current_opt_char) {
+                case JUSTING_LEFT_OPT_CHAR:
+                    just_opt = JUST_LEFT;
+                    break;
+                case JUSTING_CENTER_OPT_CHAR:
+                    just_opt = JUST_CENTER;
+                    break;
+                case JUSTING_RIGHT_OPT_CHAR:
+                    just_opt = JUST_RIGHT;
+                    break;
+                default:
+                    unreachable();
+                    break;
                 }
             }
-            if (fmt[i] == JUSTING_LEFT_OPT_CHAR ||
-                fmt[i] == JUSTING_CENTER_OPT_CHAR ||
-                fmt[i] == JUSTING_RIGHT_OPT_CHAR) {
-                just_opt = fmt[i++];
+            if (current_opt_char == TRUNCATING_LEFT_OPT_CHAR ||
+                current_opt_char == TRUNCATING_RIGHT_OPT_CHAR) {
+                switch (current_opt_char) {
+                case TRUNCATING_LEFT_OPT_CHAR:
+                    truncate_opt = TRUNCATE_LEFT;
+                    break;
+                case TRUNCATING_RIGHT_OPT_CHAR:
+                    truncate_opt = TRUNCATE_RIGHT;
+                    break;
+                default:
+                    unreachable();
+                    break;
+                }
             }
-            if (fmt[i] == TRUNCATING_LEFT_OPT_CHAR ||
-                fmt[i] == TRUNCATING_RIGHT_OPT_CHAR) {
-                truncate_opt = fmt[i++];
+            if (isdigit(current_opt_char)) {
+                just_amount *= 10;
+                just_amount += (current_opt_char - '0');
             }
-            da_append(formatter, (tmb_chip_t) { 0 });
-            if (!tmb_chip_init_from_opt(
-                        &formatter->items[formatter->length - 1],
-                        fmt[i],
-                        truncate_opt,
-                        just_opt,
-                        just_amount)) {
-                return false;
-            }
-        } else {
-            sb_append(&sb, fmt[i]);
+
+            j++;
         }
     }
-    if (sb.length > 0) {
-        da_append(formatter, (tmb_chip_t) { 0 });
-        tmb_chip_init_const(
-                &formatter->items[formatter->length - 1], sb.items, sb.length);
-        sb_free(&sb);
+
+    if (do_color && !only_opts) {
+        tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
+        da_append(formatter, color_chip);
     }
 
+    chip.just_amount  = just_amount;
+    chip.truncate_opt = truncate_opt;
+    chip.just_opt     = just_opt;
+    da_append(formatter, chip);
+    return true;
+}
+
+static bool tmb_formatter_add_const_chip(tmb_formatter_t* formatter,
+                                         const char* val,
+                                         int val_len) {
+    tmb_chip_t chip  = { 0 };
+    chip.type        = CHIP_TYPE_CONST_VAL;
+    chip.just_amount = JUST_OFF;
+
+    tmb_string_builder_t sb = { 0 };
+    sb_appendn(&sb, val_len, val);
+
+    chip.const_val = sv_from_sb(&sb);
+    da_append(formatter, chip);
+    return true;
+}
+
+static void sv_init_or_extend(tmb_string_view_t* sv,
+                              const tmb_string_view_t* const sv_of_what,
+                              int idx) {
+    if (sv->items == NULL) {
+        sv->items  = sv_of_what->items + idx;
+        sv->length = 1;
+    } else {
+        sv->length++;
+    }
+}
+
+static void sv_reset(tmb_string_view_t* sv) {
+    sv->items  = NULL;
+    sv->length = 0;
+}
+
+bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
+    const tmb_string_view_t sv = { .items = fmt, .length = (int)strlen(fmt) };
+    tmb_string_view_t buff     = { 0 };
+
+    tmb_chip_opts_t opts = { 0 };
+
+    for (int i = 0; i < sv.length; i++) {
+        // handle lone '}' for consistency with {{ -> {
+        if (sv.items[i] == '}' && sv.items[i + 1] != '}') {
+            printf("BROKEN FMT next chip is %c\n", sv.items[i + 1]);
+            return false;
+        } else if (sv.items[i] == '}' && sv.items[i + 1] == '}') {
+            i++;
+            tmb_formatter_add_const_chip(formatter, sv.items + i, 1);
+            continue;
+        }
+        if (sv.items[i] == '{' && sv.items[i + 1] == '{') {
+            i++;
+            tmb_formatter_add_const_chip(formatter, sv.items + i, 1);
+            continue;
+        }
+        if (sv.items[i] == '{') {
+            if (buff.length > 0) {
+                tmb_formatter_add_const_chip(
+                        formatter, buff.items, buff.length);
+                sv_reset(&buff);
+            }
+            i++;
+
+            while (sv.items[i] != '}') {
+                if (i >= sv.length) {
+                    printf("BROKEN FMT\n");
+                    return false;
+                }
+                if (sv.items[i] == ':') {
+                    tmb_string_view_t c = { .items  = buff.items,
+                                            .length = buff.length };
+                    da_append(&opts, c);
+                    sv_reset(&buff);
+                } else {
+                    sv_init_or_extend(&buff, &sv, i);
+                }
+                i++;
+            }
+            if (!tmb_formatter_add_chip_from_opt(formatter, &buff, &opts)) {
+                printf("BROKEN FMT\n");
+                return false;
+            }
+            da_free(&opts);
+            opts = (tmb_chip_opts_t) { 0 };
+            sv_reset(&buff);
+
+        } else {
+            sv_init_or_extend(&buff, &sv, i);
+        }
+    }
+    if (buff.length > 0) {
+        tmb_formatter_add_const_chip(formatter, buff.items, buff.length);
+    }
     formatter->data_free_fn     = do_nothing__;
     formatter->formated_free_fn = free;
     formatter->format_fn        = tmb_format;
     formatter->data             = NULL;
-
+    da_free(&opts);
     return true;
 }

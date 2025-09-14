@@ -1,3 +1,4 @@
+#include <formatter.h>
 #include <tmb_internal.h>
 
 #include <tmb/sink.h>
@@ -15,7 +16,7 @@ const char* const TMB_SO_V    = "0";
 
 tmb_logger_registry_t tmb_logger_registry = { 0 };
 const tmb_cfg_t tmb_default_cfg           = { .enable_colors = true,
-                                              .min_log_level = LOG_LEVEL_INFO };
+                                              .max_log_level = LOG_LEVEL_INFO };
 tmb_cfg_t tmb_cfg                         = tmb_default_cfg;
 
 const char* const tmb_log_level_str[LOG_LEVEL_COUNT] = {
@@ -176,10 +177,54 @@ tmb_logger_t* tmb_get_default_logger() {
     if (!default_logger_initialized) {
         tmb_logger_set_default_format(&default_logger, TMB_DEFAULT_FORMAT);
         tmb_logger_add_sink(&default_logger, TMB_SINK_STDERR());
-        default_logger.min_log_level = LOG_LEVEL_INFO;
+        default_logger.max_log_level = LOG_LEVEL_INFO;
         default_logger_initialized   = true;
     }
     return &default_logger;
+}
+
+tmb_logger_t* tmb_logger_create(const char* logger_name) {
+    tmb_logger_t* lgr = malloc(sizeof(*lgr));
+    memset(lgr, 0, sizeof(*lgr));
+
+    lgr->max_log_level  = LOG_LEVEL_INFO;
+    int logger_name_len = (int)strlen(logger_name);
+    int len_to_cpy      = 0;
+    if (logger_name_len > MAX_LOGGER_NAME_LEN) {
+        len_to_cpy = MAX_LOGGER_NAME_LEN;
+    } else {
+        len_to_cpy = logger_name_len;
+    }
+
+    for (int i = 0; i < len_to_cpy; i++) { lgr->name[i] = logger_name[i]; }
+
+    return lgr;
+}
+
+TMB_API void tmb_logger_destroy(tmb_logger_t* logger) {
+    // todo cleanup this destroy mess
+    for (int i = 0; i < logger->sinks.length; i++) {
+        tmb_sink_t* sink = &logger->sinks.items[i];
+        sink->free_fn(sink->sink_data);
+    }
+
+    for (int i = 0; i < logger->formatters.length; i++) {
+        tmb_formatter_t* fmt = &logger->formatters.items[i];
+        fmt->data_free_fn(fmt->data);
+        for (int j = 0; j < fmt->length; j++) {
+            tmb_chip_t* chip = &fmt->items[j];
+            if (chip->type == CHIP_TYPE_CONST_VAL) {
+                free((void*)chip->const_val.items);
+            }
+        }
+        da_free(fmt);
+    }
+
+    da_free(&logger->formatters);
+    da_free(&logger->sinks);
+    da_free(&logger->sink_formatter_map);
+    free(logger);
+    logger = NULL;
 }
 
 void tmb_register_logger(const char* name, tmb_logger_t* logger) {
@@ -203,8 +248,8 @@ TMB_API void tmb_set_options(tmb_cfg_t cfg) {
 /// LOGGING FUNCTIONS
 static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                           tmb_logger_t* logger) {
-    if (ctx.log_level < logger->min_log_level) { return; }
-    if (ctx.log_level < logger->min_log_level) { return; }
+    if (ctx.log_level > logger->max_log_level) { return; }
+    if (ctx.log_level > logger->max_log_level) { return; }
 
     if (logger->formatters.length < 1) {
         tmb_logger_set_default_format(logger, TMB_DEFAULT_FORMAT);

@@ -26,7 +26,7 @@ int main(void) {
     assert(da.length == 4);
 
     int a[] = { 1, 2, 3, 4 };
-    da_appendn(&da, a, 4);
+    da_appendn(&da, 4, a);
     assert(da.length == 8);
     assert(da.items[4] == 1);
     assert(da.items[5] == 2);

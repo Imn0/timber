@@ -14,7 +14,7 @@ tmb_formatted_msg_t format(tmb_formatter_t* formatter,
 }
 
 int main(void) {
-    tmb_logger_t lgr = { .min_log_level = LOG_LEVEL_INFO };
+    tmb_logger_t lgr = { .max_log_level = LOG_LEVEL_INFO };
 
     tmb_formatter_t formatter = { .format_fn        = format,
                                   .formated_free_fn = pass,

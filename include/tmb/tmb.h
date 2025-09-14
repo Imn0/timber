@@ -54,6 +54,8 @@ extern const char* const TMB_MAJOR_V;
 extern const char* const TMB_SO_V;
 extern const char* const GIT_REV;
 
+#define MAX_LOGGER_NAME_LEN 64
+
 #define TMB_LEVEL_NONE    (-1)
 #define TMB_LEVEL_FATAL   0
 #define TMB_LEVEL_ERROR   1
@@ -141,12 +143,13 @@ typedef struct tmb_log_ctx {
 } tmb_log_ctx_t;
 
 typedef struct tmb_cfg {
-    tmb_log_level min_log_level;
+    tmb_log_level max_log_level;
     bool enable_colors;
 } tmb_cfg_t;
 
 typedef struct tmb_logger {
-    tmb_log_level min_log_level;
+    char name[MAX_LOGGER_NAME_LEN];
+    tmb_log_level max_log_level;
     tmb_sinks_t sinks;
     tmb_formatters_t formatters;
     struct {
@@ -169,6 +172,9 @@ TMB_API const char* tmb_get_version(void);
 
 /* Logger functions */
 TMB_API tmb_logger_t* tmb_get_default_logger();
+TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name);
+TMB_API void tmb_logger_destroy(tmb_logger_t* logger);
+
 TMB_API bool tmb_logger_set_default_format(tmb_logger_t* logger,
                                            const char* fmt);
 TMB_API int tmb_logger_add_formatter(tmb_logger_t* lgr,
@@ -272,7 +278,7 @@ TMB_API void tmb_tee_log(tmb_log_ctx_t ctx,
     } while (0)
 
 #define TMB_CFG(...)                                                           \
-    tmb_set_options((struct tmb_cfg) { .min_log_level = LOG_LEVEL_INFO,    \
+    tmb_set_options((struct tmb_cfg) { .min_log_level = LOG_LEVEL_INFO,        \
                                        .enable_colors = true,                  \
                                        __VA_ARGS__ })
 

@@ -102,7 +102,7 @@ void tmb_sb_just(tmb_string_builder_t* sb,
         for (int i = 0; i < append_left; i++) {
             sb_append(&left_pad, pad_char);
         }
-        sb_appendn(&left_pad, sb->items, sb->length);
+        sb_appendn(&left_pad, sb->length, sb->items);
         sb_free(sb);
         sb->items    = left_pad.items;
         sb->capacity = left_pad.capacity;
@@ -129,11 +129,11 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
     int start_idx;
     int append_len;
     switch (truncate_setting) {
-    case TRUNCATE_LEFT:
+    case TRUNCATE_RIGHT:
         start_idx  = 0;
         append_len = max_len;
         break;
-    case TRUNCATE_RIGHT:
+    case TRUNCATE_LEFT:
         start_idx  = current_size - max_len;
         append_len = max_len;
         break;
@@ -142,7 +142,7 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
         return;
     }
     tmb_string_builder_t truncated = { 0 };
-    sb_appendn(&truncated, &sb->items[start_idx], append_len);
+    sb_appendn(&truncated, append_len, &sb->items[start_idx]);
     sb_free(sb);
     sb->items    = truncated.items;
     sb->length   = truncated.length;

@@ -113,7 +113,7 @@ typedef struct tmb_string_builder {
 
 typedef struct tmb_string_view {
     int length;
-    char* items;
+    const char* items;
 } tmb_string_view_t;
 
 #define NSEC_IN_SEC  1000000000
@@ -253,7 +253,7 @@ typedef struct {
         (da)->items_name[(da)->length_name++] = (item);                        \
     } while (0)
 
-#define da_appendn(da, new_items, new_items_length)                            \
+#define da_appendn(da, new_items_length, new_items)                            \
     do {                                                                       \
         da_reserve((da), (da)->length + (new_items_length));                   \
         memcpy((da)->items + (da)->length,                                     \
@@ -298,7 +298,7 @@ typedef struct {
 
 #define sb_to_cstr(sb) da_append(sb, 0)
 
-#define sb_appendn(sb, buff, n) da_appendn(sb, buff, n)
+#define sb_appendn(sb, n, buff) da_appendn(sb, n, buff)
 #define sb_append(sb, chr)      da_append(sb, chr)
 #define sb_free(sb)             da_free(sb)
 #define sb_appendf(sb, fmt, ...)                                               \
@@ -309,7 +309,7 @@ typedef struct {
     do {                                                                       \
         const char* _m__s = (char*)(str);                                      \
         int _m__n         = (int)strlen(_m__s);                                \
-        da_appendn(sb, _m__s, _m__n);                                          \
+        da_appendn(sb, _m__n, _m__s);                                          \
     } while (0)
 
 tmb_string_view_t sv_from_sb(tmb_string_builder_t* sb);

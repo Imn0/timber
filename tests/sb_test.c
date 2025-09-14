@@ -25,7 +25,7 @@ int main(void) {
     assert(sb.length == 15);
     assert(strncmp("hello world3aa2", sb.items, sb.length) == 0);
 
-    sb_appendn(&sb, "hell", 4);
+    sb_appendn(&sb, 4, "hell");
     assert(sb.length == 19);
     assert(strncmp("hello world3aa2hell", sb.items, sb.length) == 0);
 }

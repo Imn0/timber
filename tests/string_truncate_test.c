@@ -12,7 +12,7 @@ void test_just(const char* file,
                int line_no,
                const char* what,
                int amount,
-               enum tmb_sb_just_opt how,
+               enum tmb_sb_truncate_opt how,
                const char* expected) {
 #define CHECK(v)                                                               \
     do {                                                                       \
@@ -20,7 +20,7 @@ void test_just(const char* file,
             printf("%s:%d\n", file, line_no);                                  \
             printf("expected: >%s<\ngot: >%.*s<\n\tamount:%d\n\thow:%d\n",     \
                    expected,                                                   \
-                   sb.length,                                                    \
+                   sb.length,                                                  \
                    sb.items,                                                   \
                    amount,                                                     \
                    how);                                                       \
@@ -30,30 +30,16 @@ void test_just(const char* file,
 
     tmb_string_builder_t sb = { 0 };
     sb_append_cstr(&sb, what);
-    tmb_sb_just(&sb, how, amount, ' ');
+    tmb_sb_truncate(&sb, how, amount);
 
     CHECK(strncmp(expected, sb.items, sb.length) == 0);
 }
 
 int main(void) {
-    TEST_CASE("h", 1, JUST_CENTER, "h");
-    TEST_CASE("h", 1, JUST_LEFT, "h");
-    TEST_CASE("h", 1, JUST_RIGHT, "h");
-    TEST_CASE("hh", 1, JUST_CENTER, "hh");
-    TEST_CASE("hh", 1, JUST_LEFT, "hh");
-    TEST_CASE("hh", 1, JUST_RIGHT, "hh");
-
-    TEST_CASE("h", 2, JUST_RIGHT, " h");
-    TEST_CASE("h", 2, JUST_LEFT, "h ");
-    TEST_CASE("h", 2, JUST_CENTER, " h");
-
-    TEST_CASE("h", 3, JUST_RIGHT, "  h");
-    TEST_CASE("h", 3, JUST_LEFT, "h  ");
-    TEST_CASE("h", 3, JUST_CENTER, " h ");
-    TEST_CASE("hh", 3, JUST_CENTER, " hh");
-    TEST_CASE("hh", 5, JUST_CENTER, "  hh ");
-    TEST_CASE("hh", 4, JUST_CENTER, " hh ");
-    TEST_CASE("hello", 7, JUST_CENTER, " hello ");
+    TEST_CASE("1234", 2, TRUNCATE_LEFT, "34");    // '['
+    TEST_CASE("1234", 4, TRUNCATE_LEFT, "1234");  // '['
+    TEST_CASE("1234", 2, TRUNCATE_RIGHT, "12");   // ']'
+    TEST_CASE("1234", 4, TRUNCATE_RIGHT, "1234"); // ']'
 
     return ret;
 }

@@ -1,6 +1,8 @@
-- implement justing / truncating in logging
+- add destructors to format and sinks
+- color handling
+- date
 - tagging
 - python bindings
 - actual log rotation
 - failsaife if log file was moved
-- error checking
+- internal logging
