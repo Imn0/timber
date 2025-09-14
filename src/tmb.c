@@ -269,7 +269,7 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
                                   tmb_logger_t* logger,
                                   const char* message,
                                   va_list args) {
-    tmb_time_stamp_t ts = tmb_timestamp();
+    tmb_time_stamp_t ts = tmb_time_stamp();
 
     tmb_string_builder_t message_filled = { 0 };
     sb_appendv(&message_filled, message, args);
@@ -284,7 +284,7 @@ void tmb_tee_log(tmb_log_ctx_t ctx,
                  const tmb_tee_logger_t* tee_logger,
                  const char* message,
                  ...) {
-    tmb_time_stamp_t ts = tmb_timestamp();
+    tmb_time_stamp_t ts = tmb_time_stamp();
 
     tmb_string_builder_t message_filled = { 0 };
 

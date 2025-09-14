@@ -139,8 +139,9 @@ typedef struct tmb_time_stamp {
     i64 nsec;
 } tmb_time_stamp_t;
 
-f32 tmb_stopwatch(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2);
-tmb_time_stamp_t tmb_timestamp();
+f32 tmb_time_stamp_diff(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2);
+tmb_time_stamp_t tmb_time_stamp();
+tmb_time_stamp_t tmb_time_stopwatch();
 
 struct tmb_cmp_flt_opt {
     f32 eps;

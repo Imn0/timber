@@ -341,7 +341,7 @@ static float tmb_fabsf(float x) {
 //     return u.f;
 // }
 
-f32 tmb_stopwatch(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2) {
+f32 tmb_time_stamp_diff(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2) {
     f32 d = 0;
     d += (f32)(ts1.nsec - ts2.nsec);
     d /= NSEC_IN_SEC;
