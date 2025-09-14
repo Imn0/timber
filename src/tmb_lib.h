@@ -101,6 +101,19 @@ typedef size_t usize;
     #define TMB_INIT
     #define TMB_DEINIT
 #endif
+#if defined(TMB_WINDOWS_MSVC)
+__declspec(noreturn) inline void unreachable() {
+    __assume(false);
+}
+#elif defined(TMB_UNIX) || defined(TMB_WINDOWS_GNU)
+    #ifndef unreachable
+        #define unreachable() __builtin_unreachable()
+    #endif
+#else
+inline void unreachable() {
+    abort();
+}
+#endif
 
 #define _da_header_(T)                                                         \
     int length;                                                                \

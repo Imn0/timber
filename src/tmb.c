@@ -14,10 +14,13 @@ const char* const TMB_MINOR_V = "0";
 const char* const TMB_MAJOR_V = "0";
 const char* const TMB_SO_V    = "0";
 
+
 tmb_logger_registry_t tmb_logger_registry = { 0 };
-const tmb_cfg_t tmb_default_cfg           = { .enable_colors = true,
-                                              .max_log_level = LOG_LEVEL_INFO };
-tmb_cfg_t tmb_cfg                         = tmb_default_cfg;
+
+#define TMB_DEFAULT_CFG { .enable_colors = true, .max_log_level = LOG_LEVEL_INFO }
+const tmb_cfg_t tmb_default_cfg           = TMB_DEFAULT_CFG;
+tmb_cfg_t tmb_cfg                         = TMB_DEFAULT_CFG;
+#undef TMB_DEFAULT_CFG
 
 const char* const tmb_log_level_str[LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_STR,

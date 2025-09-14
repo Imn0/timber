@@ -16,7 +16,7 @@ enum CHIP_TYPE {
     CHIP_TYPE_COLOR,
 };
 
-enum CHIP_COLOR : u8 {
+enum CHIP_COLOR  {
     CHIP_COLOR_BLUE,
     CHIP_COLOR_BLACK,
     CHIP_COLOR_RESET,
