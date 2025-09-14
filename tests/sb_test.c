@@ -14,18 +14,18 @@ int main(void) {
     tmb_string_builder_t sb = { 0 };
     sb_append_cstr(&sb, "hello");
     sb_append_cstr(&sb, " world");
-    assert(sb.length == 11); // no \0 termination
-    assert(strncmp("hello world", sb.items, sb.length) == 0);
+    ASSERT(sb.length == 11); // no \0 termination
+    ASSERT(strncmp("hello world", sb.items, sb.length) == 0);
 
     sb_appendf__(&sb, "%d", 3);
-    assert(sb.length == 12);
-    assert(strncmp("hello world3", sb.items, sb.length) == 0);
+    ASSERT(sb.length == 12);
+    ASSERT(strncmp("hello world3", sb.items, sb.length) == 0);
 
     test_sb_anppendv(&sb, "aa%d", 2);
-    assert(sb.length == 15);
-    assert(strncmp("hello world3aa2", sb.items, sb.length) == 0);
+    ASSERT(sb.length == 15);
+    ASSERT(strncmp("hello world3aa2", sb.items, sb.length) == 0);
 
     sb_appendn(&sb, 4, "hell");
-    assert(sb.length == 19);
-    assert(strncmp("hello world3aa2hell", sb.items, sb.length) == 0);
+    ASSERT(sb.length == 19);
+    ASSERT(strncmp("hello world3aa2hell", sb.items, sb.length) == 0);
 }

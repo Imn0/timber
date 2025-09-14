@@ -10,7 +10,6 @@ void sb_appendf__(tmb_string_builder_t* sb, const char* fmt, ...) {
 }
 
 void sb_appendv__(tmb_string_builder_t* sb, const char* fmt, va_list args) {
-
     va_list args1;
     va_copy(args1, args);
 
@@ -55,7 +54,7 @@ char* load_entire_file(const char* file) {
     size_t read = fread(file_conents, (size_t)buffsize, 1, f);
     if (read != (size_t)buffsize) {
         fprintf(stderr,
-                "error reading file, read %lu bytes, expected %lu",
+                "error reading file, read %zu bytes, expected %lu",
                 read,
                 buffsize);
     }
@@ -159,30 +158,31 @@ static u64 hash_djb2(const void* addr_of_key, size_t key_size) {
 }
 
 /**
- * @brief Compares two keys with eachother, if key_type is KEY_RAW then value refference by pointers will be compared,
- * if it's KEY_STR then value will be derefferenced and compared using strcmp
- * 
- * @param key1 
- * @param key2 
- * @param key_size 
- * @param key_type 
- * @return int 
+ * @brief Compares two keys with eachother, if key_type is KEY_RAW then value
+ * refference by pointers will be compared, if it's KEY_STR then value will be
+ * derefferenced and compared using strcmp
+ *
+ * @param key1
+ * @param key2
+ * @param key_size
+ * @param key_type
+ * @return int
  */
 static int hm_cmp(const void* key1,
-           const void* key2,
-           size_t key_size,
-           enum tmb_hm_key_type__ key_type) {
+                  const void* key2,
+                  size_t key_size,
+                  enum tmb_hm_key_type__ key_type) {
     if (key_type == KEY_RAW) { return memcmp(key1, key2, key_size); }
     if (key_type == KEY_STR) { return strcmp(*(char**)key1, *(char**)key2); }
     return 0;
 }
 
 static void tmb_hm_grow(void* user_hm,
-                 size_t bucket_size,
-                 size_t buckets_offset,
-                 size_t key_size,
-                 size_t key_offset,
-                 size_t occupied_offset) {
+                        size_t bucket_size,
+                        size_t buckets_offset,
+                        size_t key_size,
+                        size_t key_offset,
+                        size_t occupied_offset) {
     tmb_hash_map_internal* hm = user_hm;
     u8* buckets               = *(u8**)(void*)((u8*)user_hm + buckets_offset);
 
@@ -257,7 +257,7 @@ void tmb_hm_set_wrapper(void* user_hm,
 
     if (!*occupied_addr) {
         if (hm->key_type == KEY_STR) {
-            *(char**)key_addr = strdup(*(char**)key);
+            *(char**)key_addr = _strdup(*(char**)key);
         } else {
             memcpy(key_addr, key, key_size);
         }
@@ -352,4 +352,11 @@ f32 tmb_time_stamp_diff(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2) {
 
 bool tmb_cmp_flt_impl(f32 a, f32 b, struct tmb_cmp_flt_opt opt) {
     return tmb_fabsf(a - b) < opt.eps;
+}
+
+char* tmb_strdup(const char* const s){
+    size_t  str_size = strlen(s);
+    char* b = malloc(str_size);
+    memcpy(b, s, str_size);
+    return b;
 }

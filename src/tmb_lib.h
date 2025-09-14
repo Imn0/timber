@@ -226,6 +226,7 @@ typedef struct {
         if (!(expr)) {                                                         \
             UNUSED fprintf(                                                    \
                     stderr, "assertion failed at %s:%d", __FILE__, __LINE__);  \
+            exit(1);                                                           \
         }                                                                      \
     } while (0)
 
@@ -428,5 +429,6 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
  * @return char*
  */
 char* load_entire_file(const char* file);
+char* tmb_strdup(const char* const s);
 
 #endif // TMB_LIB_H_
