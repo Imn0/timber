@@ -354,9 +354,11 @@ bool tmb_cmp_flt_impl(f32 a, f32 b, struct tmb_cmp_flt_opt opt) {
     return tmb_fabsf(a - b) < opt.eps;
 }
 
-char* tmb_strdup(const char* const s){
-    size_t  str_size = strlen(s);
-    char* b = malloc(str_size);
-    memcpy(b, s, str_size);
+char* tmb_strdup(const char* const s) {
+    if (s == NULL) { return NULL; }
+    size_t str_size_w_null_terminator = strlen(s) + 1;
+    char* b                           = malloc(str_size_w_null_terminator);
+    if (!b) return NULL;
+    memcpy(b, s, str_size_w_null_terminator);
     return b;
 }
