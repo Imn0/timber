@@ -140,6 +140,7 @@ typedef struct tmb_time_stamp {
 } tmb_time_stamp_t;
 
 f32 tmb_stopwatch(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2);
+tmb_time_stamp_t tmb_timestamp();
 
 struct tmb_cmp_flt_opt {
     f32 eps;
