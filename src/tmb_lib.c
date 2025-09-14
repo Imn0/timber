@@ -257,7 +257,7 @@ void tmb_hm_set_wrapper(void* user_hm,
 
     if (!*occupied_addr) {
         if (hm->key_type == KEY_STR) {
-            *(char**)key_addr = _strdup(*(char**)key);
+            *(char**)key_addr = tmb_strdup(*(char**)key);
         } else {
             memcpy(key_addr, key, key_size);
         }
