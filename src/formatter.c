@@ -156,7 +156,6 @@ static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
         tmb_chip_t* current_chip = &formatter->items[i];
         tmb_chip_format(current_chip, &message, ctx, opt.use_color);
     }
-    sb_to_cstr(&message);
     return (tmb_formatted_msg_t) { .items  = message.items,
                                    .length = message.length };
 }

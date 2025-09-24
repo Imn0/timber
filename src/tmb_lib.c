@@ -362,3 +362,12 @@ char* tmb_strdup(const char* const s) {
     memcpy(b, s, str_size_w_null_terminator);
     return b;
 }
+
+bool tmb_sv_cmp(tmb_string_view_t* sv1, tmb_string_view_t* sv2) {
+    if (sv1->length != sv2->length) return false;
+
+    for (int i = 0; i < sv1->length; i++) {
+        if (sv1->items[i] != sv2->items[i]) return false;
+    }
+    return true;
+}

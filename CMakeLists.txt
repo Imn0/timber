@@ -26,6 +26,10 @@ option(BUILD_SHARED_AND_STATIC_LIBS "Build both shared and static libraries" OFF
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(BUILD_PYTHON_BINDINGS "" OFF)
+option(DEBUG_DEFINES "Enable developer build" OFF)
+if(DEBUG_DEFINES)
+    add_compile_definitions(TMB_DEBUG=1)
+endif()
 
 file(GLOB_RECURSE LIB_SOURCES "src/*.c" ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 

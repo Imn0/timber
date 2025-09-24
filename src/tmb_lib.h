@@ -328,7 +328,11 @@ typedef struct {
         da_appendn(sb, _m__n, _m__s);                                          \
     } while (0)
 
+#define sv_make(chrs)                                                          \
+    (tmb_string_view_t) { .items = (chrs), .length = strlen(chrs) }
+
 tmb_string_view_t sv_from_sb(tmb_string_builder_t* sb);
+bool tmb_sv_cmp(tmb_string_view_t* sv1, tmb_string_view_t* sv2);
 
 void tmb_hm_get_wrapper(void* user_hm,
                         size_t bucket_size,
