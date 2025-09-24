@@ -7,7 +7,7 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
                                    bool use_color) {
     tmb_string_builder_t buff       = { 0 };
     tmb_string_builder_t color_buff = { 0 };
-    bool color_used                 = false;
+    bool auto_color_used = false; // when color comes from chip itself
     switch (chip->type) {
     case CHIP_TYPE_UNKNOWN:
         printf("ERROR CHIP\n");
@@ -23,7 +23,7 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
             sb_appendn(&color_buff,
                        tmb_log_level_color_len[ctx->log_level],
                        tmb_log_level_color[ctx->log_level]);
-            color_used = true;
+            auto_color_used = true;
         }
         sb_appendn(&buff,
                    tmb_log_level_str_len[ctx->log_level],
@@ -34,7 +34,7 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
             sb_appendn(&color_buff,
                        tmb_log_level_color_len[ctx->log_level],
                        tmb_log_level_color[ctx->log_level]);
-            color_used = true;
+            auto_color_used = true;
         }
         sb_append(&buff, tmb_log_level_char[ctx->log_level]);
         break;
@@ -51,7 +51,80 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
         sb_appendn(&buff, ctx->funcname_len, ctx->funcname);
         break;
     case CHIP_TYPE_COLOR:
-        // todo
+        switch (chip->ansi_val) {
+        case CHIP_ANSI_RESET:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_RESET));
+            break;
+        case CHIP_ANSI_BOLD:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BOLD));
+            break;
+        case CHIP_ANSI_DIM:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_DIM));
+            break;
+        case CHIP_ANSI_ITALIC:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_ITALIC));
+            break;
+        case CHIP_ANSI_UNDERLINE:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_UNDERLINE));
+            break;
+        case CHIP_ANSI_BLINK:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BLINK));
+            break;
+        case CHIP_ANSI_REVERSE:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_REVERSE));
+            break;
+        case CHIP_ANSI_BLACK:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BLACK));
+            break;
+        case CHIP_ANSI_RED:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_RED));
+            break;
+        case CHIP_ANSI_GREEN:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_GREEN));
+            break;
+        case CHIP_ANSI_YELLOW:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_YELLOW));
+            break;
+        case CHIP_ANSI_BLUE:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BLUE));
+            break;
+        case CHIP_ANSI_MAGENTA:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_MAGENTA));
+            break;
+        case CHIP_ANSI_CYAN:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_CYAN));
+            break;
+        case CHIP_ANSI_WHITE:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_WHITE));
+            break;
+        case CHIP_ANSI_BG_BLACK:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_BLACK));
+            break;
+        case CHIP_ANSI_BG_RED:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_RED));
+            break;
+        case CHIP_ANSI_BG_GREEN:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_GREEN));
+            break;
+        case CHIP_ANSI_BG_YELLOW:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_YELLOW));
+            break;
+        case CHIP_ANSI_BG_BLUE:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_BLUE));
+            break;
+        case CHIP_ANSI_BG_MAGENTA:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_MAGENTA));
+            break;
+        case CHIP_ANSI_BG_CYAN:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_CYAN));
+            break;
+        case CHIP_ANSI_BG_WHITE:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_WHITE));
+            break;
+        case CHIP_ANSI_INVALID:
+        default:
+            sb_append_cstr(&buff, MAKE_ANSI(ANSI_RESET));
+        }
         break;
     default:
         break;
@@ -61,7 +134,7 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
     } else if (buff.length > chip->just_amount) {
         tmb_sb_truncate(&buff, chip->truncate_opt, chip->just_amount);
     }
-    if (color_used) {
+    if (auto_color_used) {
         sb_appendn(&color_buff, buff.length, buff.items);
         sb_appendn(&color_buff,
                    (int)TMB_CONST_STR_SIZE(MAKE_ANSI(ANSI_RESET)),
@@ -88,6 +161,32 @@ static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
                                    .length = message.length };
 }
 
+static enum CHIP_ANSI chip_ansi_from_str(tmb_string_view_t sv) {
+    if (tmb_is_substring(sv, "BOLD")) { return CHIP_ANSI_BOLD; }
+    if (tmb_is_substring(sv, "DIM")) { return CHIP_ANSI_DIM; }
+    if (tmb_is_substring(sv, "ITALIC")) { return CHIP_ANSI_ITALIC; }
+    if (tmb_is_substring(sv, "UNDERLINE")) { return CHIP_ANSI_UNDERLINE; }
+    if (tmb_is_substring(sv, "BLINK")) { return CHIP_ANSI_BLINK; }
+    if (tmb_is_substring(sv, "REVERSE")) { return CHIP_ANSI_REVERSE; }
+    if (tmb_is_substring(sv, "BLACK")) { return CHIP_ANSI_BLACK; }
+    if (tmb_is_substring(sv, "RED")) { return CHIP_ANSI_RED; }
+    if (tmb_is_substring(sv, "GREEN")) { return CHIP_ANSI_GREEN; }
+    if (tmb_is_substring(sv, "YELLOW")) { return CHIP_ANSI_YELLOW; }
+    if (tmb_is_substring(sv, "BLUE")) { return CHIP_ANSI_BLUE; }
+    if (tmb_is_substring(sv, "MAGENTA")) { return CHIP_ANSI_MAGENTA; }
+    if (tmb_is_substring(sv, "CYAN")) { return CHIP_ANSI_CYAN; }
+    if (tmb_is_substring(sv, "WHITE")) { return CHIP_ANSI_WHITE; }
+    if (tmb_is_substring(sv, "BG_BLACK")) { return CHIP_ANSI_BG_BLACK; }
+    if (tmb_is_substring(sv, "BG_RED")) { return CHIP_ANSI_BG_RED; }
+    if (tmb_is_substring(sv, "BG_GREEN")) { return CHIP_ANSI_BG_GREEN; }
+    if (tmb_is_substring(sv, "BG_YELLOW")) { return CHIP_ANSI_BG_YELLOW; }
+    if (tmb_is_substring(sv, "BG_BLUE")) { return CHIP_ANSI_BG_BLUE; }
+    if (tmb_is_substring(sv, "BG_MAGENTA")) { return CHIP_ANSI_BG_MAGENTA; }
+    if (tmb_is_substring(sv, "BG_CYAN")) { return CHIP_ANSI_BG_CYAN; }
+    if (tmb_is_substring(sv, "BG_WHITE")) { return CHIP_ANSI_BG_WHITE; }
+    return CHIP_ANSI_INVALID;
+}
+
 typedef struct tmb_chip_opts {
     _da_header_(tmb_string_view_t*);
 } tmb_chip_opts_t;
@@ -105,8 +204,7 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
     bool only_opts = false;
     bool do_color  = false;
 
-    if (chip_type->length > 1) { return false; }
-    if (chip_type->length > 0) {
+    if (chip_type->length == 1) {
         switch (chip_type->items[0]) {
             CASE('$', CHIP_TYPE_MESSAGE);
             CASE('l', CHIP_TYPE_LEVEL_L);
@@ -122,7 +220,6 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
         }
     } else {
         only_opts = true;
-        chip.type = CHIP_TYPE_COLOR;
     }
 
     enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
@@ -134,6 +231,7 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
         if (current_opt->length <= 0) { continue; }
         if (current_opt->items[0] == '$') {
             tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
+            color_chip.ansi_val   = chip_ansi_from_str(*current_opt);
             da_append(formatter, color_chip);
             continue;
         }
@@ -182,15 +280,15 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
         }
     }
 
-    if (do_color && !only_opts) {
-        tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
-        da_append(formatter, color_chip);
-    }
-
     chip.just_amount  = just_amount;
     chip.truncate_opt = truncate_opt;
     chip.just_opt     = just_opt;
-    da_append(formatter, chip);
+    if (!only_opts) { da_append(formatter, chip); }
+    if (do_color && !only_opts) {
+        tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
+        color_chip.ansi_val   = CHIP_ANSI_RESET;
+        da_append(formatter, color_chip);
+    }
     return true;
 }
 
@@ -290,4 +388,58 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
     formatter->data             = NULL;
     da_free(&opts);
     return true;
+}
+
+void tmb_formatter_print(const tmb_formatter_t* formatter) {
+    printf("formatter:\n");
+    for (int i = 0; i < formatter->length; i++) {
+        printf("chip :");
+        switch (formatter->items[i].type) {
+        case CHIP_TYPE_MESSAGE:
+            printf("CHIP_TYPE_MESSAGE");
+            break;
+        case CHIP_TYPE_CONST_VAL:
+            printf("CHIP_TYPE_CONST_VAL");
+            break;
+        case CHIP_TYPE_LEVEL_L:
+            printf("CHIP_TYPE_LEVEL_L");
+            break;
+        case CHIP_TYPE_LEVEL_S:
+            printf("CHIP_TYPE_LEVEL_S");
+            break;
+        case CHIP_TYPE_BASEFILE:
+            printf("CHIP_TYPE_BASEFILE");
+            break;
+        case CHIP_TYPE_FILE:
+            printf("CHIP_TYPE_FILE");
+            break;
+        case CHIP_TYPE_LINE:
+            printf("CHIP_TYPE_LINE");
+            break;
+        case CHIP_TYPE_FUNC:
+            printf("CHIP_TYPE_FUNC");
+            break;
+        case CHIP_TYPE_COLOR:
+            printf("CHIP_TYPE_COLOR ");
+            printf("%d ", formatter->items[i].ansi_val);
+            break;
+        default:
+        case CHIP_TYPE_UNKNOWN:
+            printf("CHIP_TYPE_UNKNOWN");
+            break;
+        }
+        printf("\n");
+    }
+}
+
+void tmb_formatter_deinit(tmb_formatter_t* formatter) {
+    if (formatter->data_free_fn != NULL) {
+        formatter->data_free_fn(formatter->data);
+    }
+    for (int j = 0; j < formatter->length; j++) {
+        tmb_chip_t* chip = &formatter->items[j];
+        if (chip->type == CHIP_TYPE_CONST_VAL) {
+            free((void*)chip->const_val.items);
+        }
+    }
 }

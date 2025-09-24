@@ -14,12 +14,12 @@ const char* const TMB_MINOR_V = "0";
 const char* const TMB_MAJOR_V = "0";
 const char* const TMB_SO_V    = "0";
 
-
 tmb_logger_registry_t tmb_logger_registry = { 0 };
 
-#define TMB_DEFAULT_CFG { .enable_colors = true, .max_log_level = LOG_LEVEL_INFO }
-const tmb_cfg_t tmb_default_cfg           = TMB_DEFAULT_CFG;
-tmb_cfg_t tmb_cfg                         = TMB_DEFAULT_CFG;
+#define TMB_DEFAULT_CFG                                                        \
+    { .enable_colors = true, .max_log_level = LOG_LEVEL_INFO }
+const tmb_cfg_t tmb_default_cfg = TMB_DEFAULT_CFG;
+tmb_cfg_t tmb_cfg               = TMB_DEFAULT_CFG;
 #undef TMB_DEFAULT_CFG
 
 const char* const tmb_log_level_str[LOG_LEVEL_COUNT] = {
@@ -186,21 +186,14 @@ tmb_logger_t* tmb_logger_create(const char* logger_name) {
 }
 
 TMB_API void tmb_logger_destroy(tmb_logger_t* logger) {
-    // todo cleanup this destroy mess
     for (int i = 0; i < logger->sinks.length; i++) {
         tmb_sink_t* sink = &logger->sinks.items[i];
-        sink->free_fn(sink->sink_data);
+        tmb_sink_deinit(sink);
     }
 
     for (int i = 0; i < logger->formatters.length; i++) {
         tmb_formatter_t* fmt = &logger->formatters.items[i];
-        fmt->data_free_fn(fmt->data);
-        for (int j = 0; j < fmt->length; j++) {
-            tmb_chip_t* chip = &fmt->items[j];
-            if (chip->type == CHIP_TYPE_CONST_VAL) {
-                free((void*)chip->const_val.items);
-            }
-        }
+        tmb_formatter_deinit(fmt);
         da_free(fmt);
     }
 
@@ -315,4 +308,18 @@ void tmb_log_default(tmb_log_ctx_t ctx, const char* message, ...) {
     va_start(args, message);
     tmb_log_impl__(ctx, tmb_get_default_logger(), message, args);
     va_end(args);
+}
+
+bool tmb_is_substring(tmb_string_view_t haystack, const char* needle) {
+    size_t needle_len = strlen(needle);
+    size_t needle_idx = 0;
+    for (int i = 0; i < haystack.length; i++) {
+        if (needle[needle_idx] == haystack.items[i]) {
+            needle_idx++;
+            if (needle_idx == needle_len) { return true; }
+        } else {
+            needle_idx = 0;
+        }
+    }
+    return false;
 }

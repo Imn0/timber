@@ -16,20 +16,43 @@ enum CHIP_TYPE {
     CHIP_TYPE_COLOR,
 };
 
-enum CHIP_COLOR  {
-    CHIP_COLOR_BLUE,
-    CHIP_COLOR_BLACK,
-    CHIP_COLOR_RESET,
-    CHIP_COLOR_RED,
+enum CHIP_ANSI {
+    CHIP_ANSI_INVALID,
+    CHIP_ANSI_RESET,
+    CHIP_ANSI_BOLD,
+    CHIP_ANSI_DIM,
+    CHIP_ANSI_ITALIC,
+    CHIP_ANSI_UNDERLINE,
+    CHIP_ANSI_BLINK,
+    CHIP_ANSI_REVERSE,
+    CHIP_ANSI_BLACK,
+    CHIP_ANSI_RED,
+    CHIP_ANSI_GREEN,
+    CHIP_ANSI_YELLOW,
+    CHIP_ANSI_BLUE,
+    CHIP_ANSI_MAGENTA,
+    CHIP_ANSI_CYAN,
+    CHIP_ANSI_WHITE,
+    CHIP_ANSI_BG_BLACK,
+    CHIP_ANSI_BG_RED,
+    CHIP_ANSI_BG_GREEN,
+    CHIP_ANSI_BG_YELLOW,
+    CHIP_ANSI_BG_BLUE,
+    CHIP_ANSI_BG_MAGENTA,
+    CHIP_ANSI_BG_CYAN,
+    CHIP_ANSI_BG_WHITE,
 };
 
 typedef struct tmb_chip {
     enum CHIP_TYPE type;
     union {
         tmb_string_view_t const_val;
+        enum CHIP_ANSI ansi_val;
     };
     int just_amount;
     enum tmb_sb_just_opt just_opt;
     enum tmb_sb_truncate_opt truncate_opt;
 } tmb_chip_t;
+
+void tmb_formatter_deinit(tmb_formatter_t* formatter);
 #endif

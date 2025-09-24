@@ -1,5 +1,3 @@
-- add destructors to format and sinks
-- color handling
 - date
 - tagging
 - python bindings

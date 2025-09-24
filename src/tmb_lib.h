@@ -421,6 +421,8 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
                      enum tmb_sb_truncate_opt truncate_setting,
                      int max_len);
 
+bool tmb_is_substring(tmb_string_view_t haystack, const char* needle);
+
 /**
  * @brief Returns heap allocated zero terminated string with contents of the
  * file
