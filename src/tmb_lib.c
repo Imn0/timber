@@ -371,3 +371,18 @@ bool tmb_sv_cmp(tmb_string_view_t* sv1, tmb_string_view_t* sv2) {
     }
     return true;
 }
+
+bool tmb_is_substring(tmb_string_view_t haystack, const char* needle) {
+    size_t needle_len = strlen(needle);
+    size_t needle_idx = 0;
+    for (int i = 0; i < haystack.length; i++) {
+        if (needle[needle_idx] == haystack.items[i]) {
+            needle_idx++;
+            if (needle_idx == needle_len) { return true; }
+        } else {
+            needle_idx = 0;
+        }
+    }
+    return false;
+}
+
