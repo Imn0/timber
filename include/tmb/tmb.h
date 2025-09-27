@@ -147,11 +147,23 @@ typedef struct tmb_cfg {
     bool enable_colors;
 } tmb_cfg_t;
 
+typedef struct tmb_tag {
+    const char* items;
+    int length;
+} tmb_tag_t;
+
+typedef struct tmb_tags {
+    tmb_tag_t* items;
+    int capacity;
+    int length;
+} tmb_tags_t;
+
 typedef struct tmb_logger {
     char name[MAX_LOGGER_NAME_LEN];
-    tmb_log_level max_log_level;
+    tmb_cfg_t cfg;
     tmb_sinks_t sinks;
     tmb_formatters_t formatters;
+    tmb_tags_t tags;
     struct {
         int length;
         int capacity;
@@ -172,7 +184,7 @@ TMB_API const char* tmb_get_version(void);
 
 /* Logger functions */
 TMB_API tmb_logger_t* tmb_get_default_logger();
-TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name);
+TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg);
 TMB_API void tmb_logger_destroy(tmb_logger_t* logger);
 
 TMB_API bool tmb_logger_set_default_format(tmb_logger_t* logger,
@@ -181,6 +193,8 @@ TMB_API int tmb_logger_add_formatter(tmb_logger_t* lgr,
                                      tmb_formatter_t formatter);
 TMB_API int tmb_logger_add_format(tmb_logger_t* lgr, const char* fmt);
 TMB_API int tmb_logger_add_sink(tmb_logger_t* lgr, tmb_sink_t);
+TMB_API void tmb_logger_add_tag(tmb_logger_t* lgr, const char* tag);
+TMB_API void tmb_logger_remove_tag(tmb_logger_t* lgr, const char* tag);
 TMB_API int tmb_logger_assign_format(tmb_logger_t* lgr,
                                      int sink_idx,
                                      int fmt_idx);
@@ -208,7 +222,7 @@ TMB_API void tmb_tee_log(tmb_log_ctx_t ctx,
                          ...) TMB_FMT_CHECK(3, 4);
 
 #ifndef TMB_MIN_LOG_LEVEL
-    #define TMB_MIN_LOG_LEVEL TMB_LEVEL_INFO
+    #define TMB_MIN_LOG_LEVEL TMB_LEVEL_DEBUG
 #endif
 
 #define TMB_CALL(func, ...)   func(__VA_ARGS__)
@@ -278,9 +292,14 @@ TMB_API void tmb_tee_log(tmb_log_ctx_t ctx,
     } while (0)
 
 #define TMB_CFG(...)                                                           \
-    tmb_set_options((struct tmb_cfg) { .min_log_level = LOG_LEVEL_INFO,        \
+    tmb_set_options((struct tmb_cfg) { .max_log_level = LOG_LEVEL_INFO,        \
                                        .enable_colors = true,                  \
                                        __VA_ARGS__ })
+#define TMB_LOGGER(_m_name, ...)                                               \
+    tmb_logger_create(_m_name,                                                 \
+                      (struct tmb_cfg) { .max_log_level = LOG_LEVEL_INFO,      \
+                                         .enable_colors = true,                \
+                                         __VA_ARGS__ })
 
 #ifdef TMB_LOGGING_IMPLEMENTATION
 // TODO

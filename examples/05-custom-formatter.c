@@ -14,14 +14,14 @@ tmb_formatted_msg_t format(tmb_formatter_t* formatter,
 }
 
 int main(void) {
-    tmb_logger_t lgr = { .max_log_level = LOG_LEVEL_INFO };
+    tmb_logger_t* lgr = TMB_LOGGER("my logger");
 
     tmb_formatter_t formatter = { .format_fn        = format,
                                   .formated_free_fn = pass,
                                   .data_free_fn     = pass };
 
-    tmb_logger_add_sink(&lgr, TMB_SINK_STDOUT());
-    tmb_logger_add_formatter(&lgr, formatter);
-    LOG_WARNING(&lgr, "hello");
-    LOG_WARNING(&lgr, "hello");
+    tmb_logger_add_sink(lgr, TMB_SINK_STDOUT());
+    tmb_logger_add_formatter(lgr, formatter);
+    LOG_WARNING(lgr, "hello");
+    LOG_WARNING(lgr, "hello");
 }

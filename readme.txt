@@ -9,14 +9,15 @@ format specification
     Where
         Template options:
             * $ - log message
-            * n - loggers name
+            * n - logger's name
             * l - log level (long)
             * L - log level (short)
             * s - source file (like /src/main.c)
             * @ - basename source file (like main.c)
             * # - source line
             * f - function
-            * t - logger tags
+            * T - logger tags separated by ':'
+            * t - last added tag
 
     Justing options is as follows
         justing

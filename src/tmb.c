@@ -17,7 +17,7 @@ const char* const TMB_SO_V    = "0";
 tmb_logger_registry_t tmb_logger_registry = { 0 };
 
 #define TMB_DEFAULT_CFG                                                        \
-    { .enable_colors = true, .max_log_level = LOG_LEVEL_INFO }
+    { .enable_colors = true, .max_log_level = LOG_LEVEL_DEBUG }
 const tmb_cfg_t tmb_default_cfg = TMB_DEFAULT_CFG;
 tmb_cfg_t tmb_cfg               = TMB_DEFAULT_CFG;
 #undef TMB_DEFAULT_CFG
@@ -108,7 +108,7 @@ tmb_logger_t* tmb_get_default_logger() {
     if (!default_logger_initialized) {
         tmb_logger_set_default_format(&default_logger, TMB_DEFAULT_FORMAT);
         tmb_logger_add_sink(&default_logger, TMB_SINK_STDERR());
-        default_logger.max_log_level = LOG_LEVEL_INFO;
+        default_logger.cfg.max_log_level = LOG_LEVEL_INFO;
         default_logger_initialized   = true;
     }
     return &default_logger;
@@ -135,8 +135,8 @@ TMB_API void tmb_set_options(tmb_cfg_t cfg) {
 /// LOGGING FUNCTIONS
 static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                           tmb_logger_t* logger) {
-    if (ctx.log_level > logger->max_log_level) { return; }
-    if (ctx.log_level > logger->max_log_level) { return; }
+    if (ctx.log_level > logger->cfg.max_log_level) { return; }
+    if (ctx.log_level > logger->cfg.max_log_level) { return; }
 
     if (logger->formatters.length < 1) {
         tmb_logger_set_default_format(logger, TMB_DEFAULT_FORMAT);
@@ -161,6 +161,12 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                        formatted_messages.items[fmt_idx].length,
                                        logger->sinks.items[i].sink_data);
     }
+    if (logger->sinks.length < 1) {
+        printf("%.*s",
+               formatted_messages.items[0].length,
+               formatted_messages.items[0].items);
+    }
+
     for (int j = 0; j < logger->formatters.length; j++) {
         tmb_formatter_t* formatter = &logger->formatters.items[j];
         formatter->formated_free_fn(formatted_messages.items[j].message);

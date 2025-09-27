@@ -4,7 +4,7 @@
 #include <tmb_internal.h>
 
 int main() {
-    tmb_logger_t* lgr = tmb_logger_create("d");
+    tmb_logger_t* lgr = TMB_LOGGER("d");
     tmb_logger_set_default_format(lgr, "{$BLUE:}{$}{$RED:}aa{$RESET:}\n");
     int sink_idx  = tmb_logger_add_sink(lgr, tmb_sink_buffer_make(1024));
     tmb_sink_t* s = &lgr->sinks.items[sink_idx];

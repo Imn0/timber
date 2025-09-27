@@ -2,7 +2,7 @@
 #include <tmb_lib.h>
 
 typedef struct {
-   _da_header_(int*);
+    _da_header_(int*);
 } DynamicArray;
 
 int main(void) {
@@ -33,7 +33,18 @@ int main(void) {
     ASSERT(da.items[6] == 3);
     ASSERT(da.items[7] == 4);
 
-    da_for_each(int, it, &da){
-        printf("%d\n", *it);
-    }
+    DynamicArray da2 = { 0 };
+    da_appendn(&da2, 4, a);
+    ASSERT(da2.length == 4);
+    ASSERT(da2.items[0] == 1);
+    ASSERT(da2.items[1] == 2);
+    ASSERT(da2.items[2] == 3);
+    ASSERT(da2.items[3] == 4);
+
+    da_remove(&da2, 1);
+    ASSERT(da2.length == 3);
+    ASSERT(da2.items[0] == 1);
+    ASSERT(da2.items[1] == 3);
+    ASSERT(da2.items[2] == 4);
+
 }

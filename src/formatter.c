@@ -195,40 +195,14 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
                                             tmb_chip_opts_t* opts) {
     tmb_chip_t chip = { 0 };
 
-    UNUSED opts;
-#define CASE(c, new_type)                                                      \
-    case c:                                                                    \
-        chip.type = new_type;                                                  \
-        break
-    bool only_opts = false;
-    bool do_color  = false;
-
-    if (chip_type->length == 1) {
-        switch (chip_type->items[0]) {
-            CASE('$', CHIP_TYPE_MESSAGE);
-            CASE('l', CHIP_TYPE_LEVEL_L);
-            CASE('L', CHIP_TYPE_LEVEL_S);
-            CASE('@', CHIP_TYPE_BASEFILE);
-            CASE('s', CHIP_TYPE_FILE);
-            CASE('#', CHIP_TYPE_LINE);
-            CASE('f', CHIP_TYPE_FUNC);
-        default:
-            UNUSED fprintf(stderr, "unknown format %c\n", chip_type->items[0]);
-            return false;
-            break;
-        }
-    } else {
-        only_opts = true;
-    }
-
-    enum tmb_sb_truncate_opt truncate_opt = TRUNCATE_OFF;
-    enum tmb_sb_just_opt just_opt         = JUST_OFF;
-    int just_amount                       = 0;
+    bool auto_reset_color = false;
+    bool doing_color      = false;
 
     for (int i = 0; i < opts->length; i++) {
         tmb_string_view_t* current_opt = &opts->items[i];
         if (current_opt->length <= 0) { continue; }
         if (current_opt->items[0] == '$') {
+            doing_color           = true;
             tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
             color_chip.ansi_val   = chip_ansi_from_str(*current_opt);
             da_append(formatter, color_chip);
@@ -243,13 +217,13 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
                 current_opt_char == JUSTING_RIGHT_OPT_CHAR) {
                 switch (current_opt_char) {
                 case JUSTING_LEFT_OPT_CHAR:
-                    just_opt = JUST_LEFT;
+                    chip.just_opt = JUST_LEFT;
                     break;
                 case JUSTING_CENTER_OPT_CHAR:
-                    just_opt = JUST_CENTER;
+                    chip.just_opt = JUST_CENTER;
                     break;
                 case JUSTING_RIGHT_OPT_CHAR:
-                    just_opt = JUST_RIGHT;
+                    chip.just_opt = JUST_RIGHT;
                     break;
                 default:
                     unreachable();
@@ -260,10 +234,10 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
                 current_opt_char == TRUNCATING_RIGHT_OPT_CHAR) {
                 switch (current_opt_char) {
                 case TRUNCATING_LEFT_OPT_CHAR:
-                    truncate_opt = TRUNCATE_LEFT;
+                    chip.truncate_opt = TRUNCATE_LEFT;
                     break;
                 case TRUNCATING_RIGHT_OPT_CHAR:
-                    truncate_opt = TRUNCATE_RIGHT;
+                    chip.truncate_opt = TRUNCATE_RIGHT;
                     break;
                 default:
                     unreachable();
@@ -271,23 +245,50 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
                 }
             }
             if (isdigit(current_opt_char)) {
-                just_amount *= 10;
-                just_amount += (current_opt_char - '0');
+                chip.just_amount *= 10;
+                chip.just_amount += (current_opt_char - '0');
             }
 
             j++;
         }
     }
 
-    chip.just_amount  = just_amount;
-    chip.truncate_opt = truncate_opt;
-    chip.just_opt     = just_opt;
-    if (!only_opts) { da_append(formatter, chip); }
-    if (do_color && !only_opts) {
-        tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
-        color_chip.ansi_val   = CHIP_ANSI_RESET;
-        da_append(formatter, color_chip);
+#define CASE(c, new_type)                                                      \
+    case c:                                                                    \
+        chip.type = new_type;                                                  \
+        break
+
+    if (chip_type->length == 1) {
+        auto_reset_color = true;
+        switch (chip_type->items[0]) {
+            CASE('$', CHIP_TYPE_MESSAGE);
+            CASE('l', CHIP_TYPE_LEVEL_L);
+            CASE('L', CHIP_TYPE_LEVEL_S);
+            CASE('@', CHIP_TYPE_BASEFILE);
+            CASE('s', CHIP_TYPE_FILE);
+            CASE('#', CHIP_TYPE_LINE);
+            CASE('f', CHIP_TYPE_FUNC);
+        default:
+            UNUSED fprintf(stderr, "unknown format %c\n", chip_type->items[0]);
+            return false;
+            break;
+        }
+    } else if (chip_type->length > 1 && chip_type->items[0] == '$') {
+        chip.type     = CHIP_TYPE_COLOR;
+        chip.ansi_val = chip_ansi_from_str(*chip_type);
+    } else if (chip_type->length == 0) {
+        goto skip_append;
+        // idk do nothing
     }
+    da_append(formatter, chip);
+
+skip_append:
+    if (doing_color && auto_reset_color) {
+        tmb_chip_t r_chip = { .type     = CHIP_TYPE_COLOR,
+                              .ansi_val = CHIP_ANSI_RESET };
+        da_append(formatter, r_chip);
+    }
+
     return true;
 }
 

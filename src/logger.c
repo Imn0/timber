@@ -8,11 +8,11 @@
 #include <stdbool.h>
 #include <time.h>
 
-tmb_logger_t* tmb_logger_create(const char* logger_name) {
+tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg) {
     tmb_logger_t* lgr = malloc(sizeof(*lgr));
     memset(lgr, 0, sizeof(*lgr));
 
-    lgr->max_log_level  = LOG_LEVEL_INFO;
+    lgr->cfg  = cfg;
     int logger_name_len = (int)strlen(logger_name);
     int len_to_cpy      = 0;
     if (logger_name_len > MAX_LOGGER_NAME_LEN) {
@@ -53,7 +53,6 @@ bool tmb_logger_set_default_format(tmb_logger_t* logger, const char* fmt) {
     }
     return tmb_formatter_init(&logger->formatters.items[0], fmt);
 }
-
 
 int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
     da_append(&logger->sinks, sink);
@@ -99,3 +98,26 @@ int tmb_logger_set_format(tmb_logger_t* lgr, int sink_idx, const char* fmt) {
     return -1;
 }
 
+void tmb_logger_add_tag(tmb_logger_t* lgr, const char* tag) {
+    tmb_string_view_t n_tag = { .items = tag, .length = (int)strlen(tag) };
+    for (int i = 0; i < lgr->tags.length; i++) {
+        tmb_string_view_t c_tag = { .length = lgr->tags.items[i].length,
+                                    .items  = lgr->tags.items[i].items };
+        if (tmb_sv_cmp(&n_tag, &c_tag)) { return; }
+    }
+    tmb_tag_t to_append = { .length = n_tag.length, .items = tmb_strdup(tag) };
+    da_append(&lgr->tags, to_append);
+}
+
+void tmb_logger_remove_tag(tmb_logger_t* lgr, const char* tag) {
+    tmb_string_view_t n_tag = { .items = tag, .length = (int)strlen(tag) };
+    for (int i = 0; i < lgr->tags.length; i++) {
+        tmb_string_view_t c_tag = { .length = lgr->tags.items[i].length,
+                                    .items  = lgr->tags.items[i].items };
+        if (tmb_sv_cmp(&n_tag, &c_tag)) {
+            free((void*)c_tag.items);
+            da_remove(&lgr->tags, i);
+            return;
+        }
+    }
+}

@@ -363,7 +363,7 @@ char* tmb_strdup(const char* const s) {
     return b;
 }
 
-bool tmb_sv_cmp(tmb_string_view_t* sv1, tmb_string_view_t* sv2) {
+bool tmb_sv_cmp(const tmb_string_view_t* sv1, const tmb_string_view_t* sv2) {
     if (sv1->length != sv2->length) return false;
 
     for (int i = 0; i < sv1->length; i++) {

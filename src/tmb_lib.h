@@ -283,11 +283,19 @@ typedef struct {
 #define da_for_each(T, it, da)                                                 \
     for (T * (it) = (da)->items; (it) < (da)->items + (da)->length; (it)++)
 
-#define da_remove(da, idx)                                                     \
+#define da_remove_fast(da, idx)                                                \
     do {                                                                       \
-        size_t _m__i = (idx);                                                  \
+        int _m__i = (idx);                                                     \
         ASSERT(_m__i < (da)->length);                                          \
         (da)->items[j] = (da)->items[(da)->items[--(da)->length]]              \
+    } while (0)
+
+#define da_remove(da, _m_idx)                                                  \
+    do {                                                                       \
+        for (int _m_i = _m_idx; _m_i < (da)->length - 1; _m_i++) {             \
+            (da)->items[_m_i] = (da)->items[_m_i + 1];                         \
+        }                                                                      \
+        (da)->length--;                                                        \
     } while (0)
 
 #define da_free(da)                                                            \
@@ -329,10 +337,12 @@ typedef struct {
     } while (0)
 
 #define sv_make(chrs)                                                          \
-    (tmb_string_view_t) { .items = (chrs), .length = strlen(chrs) }
+    (tmb_string_view_t) {                                                      \
+        .items = (chrs), .length = strlen(chrs)                                \
+    }
 
 tmb_string_view_t sv_from_sb(tmb_string_builder_t* sb);
-bool tmb_sv_cmp(tmb_string_view_t* sv1, tmb_string_view_t* sv2);
+bool tmb_sv_cmp(const tmb_string_view_t* sv1, const tmb_string_view_t* sv2);
 
 void tmb_hm_get_wrapper(void* user_hm,
                         size_t bucket_size,
