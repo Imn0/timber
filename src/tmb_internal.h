@@ -63,6 +63,7 @@ extern int const tmb_log_level_str_len[LOG_LEVEL_COUNT];
 extern const char* const tmb_log_level_color[LOG_LEVEL_COUNT];
 extern int const tmb_log_level_color_len[LOG_LEVEL_COUNT];
 extern const char tmb_log_level_char[LOG_LEVEL_COUNT];
+extern tmb_cfg_t tmb_cfg;
 
 bool tmb_formatter_init(tmb_formatter_t* format, const char* fmt);
 void tmb_formatter_print(const tmb_formatter_t* formatter);

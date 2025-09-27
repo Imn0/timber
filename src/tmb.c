@@ -16,11 +16,8 @@ const char* const TMB_SO_V    = "0";
 
 tmb_logger_registry_t tmb_logger_registry = { 0 };
 
-#define TMB_DEFAULT_CFG                                                        \
-    { .enable_colors = true, .max_log_level = LOG_LEVEL_DEBUG }
-const tmb_cfg_t tmb_default_cfg = TMB_DEFAULT_CFG;
-tmb_cfg_t tmb_cfg               = TMB_DEFAULT_CFG;
-#undef TMB_DEFAULT_CFG
+const tmb_cfg_t tmb_default_logger_cfg = { TMB_DEFAULT_LOGGER_CFG };
+tmb_cfg_t tmb_cfg                      = { TMB_DEFAULT_LIB_CFG };
 
 const char* const tmb_log_level_str[LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_STR,
@@ -68,16 +65,14 @@ static bool default_logger_initialized = false;
 
 static inline void fill_ctx(tmb_log_ctx_t* ctx,
                             tmb_string_builder_t user_message,
-                            tmb_time_stamp_t ts) {
-    ctx->message     = user_message.items;
-    ctx->message_len = user_message.length;
-    ctx->ts_nsec     = ts.nsec;
-    ctx->ts_sec      = ts.sec;
-}
-
-void tmb_tee_logger_add_logger(tmb_tee_logger_t* tee_logger,
-                               tmb_logger_t* lgr) {
-    da_append(tee_logger, lgr);
+                            tmb_time_stamp_t ts,
+                            tmb_time_stamp_t current_stopwatch) {
+    ctx->message        = user_message.items;
+    ctx->message_len    = user_message.length;
+    ctx->ts_nsec        = ts.nsec;
+    ctx->ts_sec         = ts.sec;
+    ctx->stopwatch_sec  = current_stopwatch.sec;
+    ctx->stopwatch_nsec = current_stopwatch.nsec;
 }
 
 void tmb_print_version(void) {
@@ -108,8 +103,8 @@ tmb_logger_t* tmb_get_default_logger() {
     if (!default_logger_initialized) {
         tmb_logger_set_default_format(&default_logger, TMB_DEFAULT_FORMAT);
         tmb_logger_add_sink(&default_logger, TMB_SINK_STDERR());
-        default_logger.cfg.max_log_level = LOG_LEVEL_INFO;
-        default_logger_initialized   = true;
+        default_logger.cfg         = tmb_default_logger_cfg;
+        default_logger_initialized = true;
     }
     return &default_logger;
 }
@@ -135,7 +130,7 @@ TMB_API void tmb_set_options(tmb_cfg_t cfg) {
 /// LOGGING FUNCTIONS
 static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                           tmb_logger_t* logger) {
-    if (ctx.log_level > logger->cfg.max_log_level) { return; }
+    if (ctx.log_level > tmb_cfg.max_log_level) { return; }
     if (ctx.log_level > logger->cfg.max_log_level) { return; }
 
     if (logger->formatters.length < 1) {
@@ -148,11 +143,7 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
     for (int j = 0; j < logger->formatters.length; j++) {
         tmb_formatter_t* formatter = &logger->formatters.items[j];
         da_append(&formatted_messages,
-                  formatter->format_fn(
-                          formatter,
-                          &ctx,
-                          (tmb_format_opt_t) {
-                                  .use_color = tmb_cfg.enable_colors }));
+                  formatter->format_fn(formatter, &ctx, logger));
     }
 
     for (int i = 0; i < logger->sinks.length; i++) {
@@ -178,35 +169,16 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
                                   tmb_logger_t* logger,
                                   const char* message,
                                   va_list args) {
-    tmb_time_stamp_t ts = tmb_time_stamp();
+    tmb_time_stamp_t stop_watch = tmb_time_stamp();
+    tmb_time_stamp_t ts         = tmb_time_stamp();
 
     tmb_string_builder_t message_filled = { 0 };
     sb_appendv(&message_filled, message, args);
 
-    fill_ctx(&ctx, message_filled, ts);
+    fill_ctx(&ctx, message_filled, ts, stop_watch);
 
     tmb_log_impl_ext_ctx__(ctx, logger);
     sb_free(&message_filled);
-}
-
-void tmb_tee_log(tmb_log_ctx_t ctx,
-                 const tmb_tee_logger_t* tee_logger,
-                 const char* message,
-                 ...) {
-    tmb_time_stamp_t ts = tmb_time_stamp();
-
-    tmb_string_builder_t message_filled = { 0 };
-
-    va_list args;
-    va_start(args, message);
-    sb_appendv(&message_filled, message, args);
-    va_end(args);
-
-    fill_ctx(&ctx, message_filled, ts);
-
-    for (int i = 0; i < tee_logger->length; i++) {
-        tmb_log_impl_ext_ctx__(ctx, tee_logger->items[i]);
-    }
 }
 
 void tmb_log(tmb_log_ctx_t ctx,

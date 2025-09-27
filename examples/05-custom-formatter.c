@@ -6,7 +6,7 @@ void pass(void* thing) {}
 
 tmb_formatted_msg_t format(tmb_formatter_t* formatter,
                            const tmb_log_ctx_t* const ctx,
-                           tmb_format_opt_t opt) {
+                           const tmb_logger_t* lgr) {
     static char buff[1024];
     snprintf(buff, 1024, "message -> %s\n", ctx->message);
 

@@ -1,11 +1,90 @@
 #include <ctype.h>
 #include <formatter.h>
 
+static inline void handle_color_chip(tmb_chip_t* chip,
+                                     tmb_string_builder_t* target) {
+    switch (chip->ansi_val) {
+    case CHIP_ANSI_RESET:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_RESET));
+        break;
+    case CHIP_ANSI_BOLD:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BOLD));
+        break;
+    case CHIP_ANSI_DIM:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_DIM));
+        break;
+    case CHIP_ANSI_ITALIC:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_ITALIC));
+        break;
+    case CHIP_ANSI_UNDERLINE:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_UNDERLINE));
+        break;
+    case CHIP_ANSI_BLINK:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BLINK));
+        break;
+    case CHIP_ANSI_REVERSE:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_REVERSE));
+        break;
+    case CHIP_ANSI_BLACK:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BLACK));
+        break;
+    case CHIP_ANSI_RED:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_RED));
+        break;
+    case CHIP_ANSI_GREEN:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_GREEN));
+        break;
+    case CHIP_ANSI_YELLOW:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_YELLOW));
+        break;
+    case CHIP_ANSI_BLUE:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BLUE));
+        break;
+    case CHIP_ANSI_MAGENTA:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_MAGENTA));
+        break;
+    case CHIP_ANSI_CYAN:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_CYAN));
+        break;
+    case CHIP_ANSI_WHITE:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_WHITE));
+        break;
+    case CHIP_ANSI_BG_BLACK:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_BLACK));
+        break;
+    case CHIP_ANSI_BG_RED:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_RED));
+        break;
+    case CHIP_ANSI_BG_GREEN:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_GREEN));
+        break;
+    case CHIP_ANSI_BG_YELLOW:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_YELLOW));
+        break;
+    case CHIP_ANSI_BG_BLUE:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_BLUE));
+        break;
+    case CHIP_ANSI_BG_MAGENTA:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_MAGENTA));
+        break;
+    case CHIP_ANSI_BG_CYAN:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_CYAN));
+        break;
+    case CHIP_ANSI_BG_WHITE:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_BG_WHITE));
+        break;
+    case CHIP_ANSI_INVALID:
+    default:
+        sb_append_cstr(target, MAKE_ANSI(ANSI_RESET));
+    }
+}
+
 static inline void tmb_chip_format(tmb_chip_t* chip,
                                    tmb_string_builder_t* target,
                                    const tmb_log_ctx_t* const ctx,
-                                   bool use_color) {
-    tmb_string_builder_t buff       = { 0 };
+                                   const tmb_logger_t* lgr) {
+    bool use_color            = lgr->cfg.enable_colors && tmb_cfg.enable_colors;
+    tmb_string_builder_t buff = { 0 };
     tmb_string_builder_t color_buff = { 0 };
     bool auto_color_used = false; // when color comes from chip itself
     switch (chip->type) {
@@ -50,81 +129,25 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
     case CHIP_TYPE_FUNC:
         sb_appendn(&buff, ctx->funcname_len, ctx->funcname);
         break;
-    case CHIP_TYPE_COLOR:
-        switch (chip->ansi_val) {
-        case CHIP_ANSI_RESET:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_RESET));
-            break;
-        case CHIP_ANSI_BOLD:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BOLD));
-            break;
-        case CHIP_ANSI_DIM:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_DIM));
-            break;
-        case CHIP_ANSI_ITALIC:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_ITALIC));
-            break;
-        case CHIP_ANSI_UNDERLINE:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_UNDERLINE));
-            break;
-        case CHIP_ANSI_BLINK:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BLINK));
-            break;
-        case CHIP_ANSI_REVERSE:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_REVERSE));
-            break;
-        case CHIP_ANSI_BLACK:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BLACK));
-            break;
-        case CHIP_ANSI_RED:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_RED));
-            break;
-        case CHIP_ANSI_GREEN:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_GREEN));
-            break;
-        case CHIP_ANSI_YELLOW:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_YELLOW));
-            break;
-        case CHIP_ANSI_BLUE:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BLUE));
-            break;
-        case CHIP_ANSI_MAGENTA:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_MAGENTA));
-            break;
-        case CHIP_ANSI_CYAN:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_CYAN));
-            break;
-        case CHIP_ANSI_WHITE:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_WHITE));
-            break;
-        case CHIP_ANSI_BG_BLACK:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_BLACK));
-            break;
-        case CHIP_ANSI_BG_RED:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_RED));
-            break;
-        case CHIP_ANSI_BG_GREEN:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_GREEN));
-            break;
-        case CHIP_ANSI_BG_YELLOW:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_YELLOW));
-            break;
-        case CHIP_ANSI_BG_BLUE:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_BLUE));
-            break;
-        case CHIP_ANSI_BG_MAGENTA:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_MAGENTA));
-            break;
-        case CHIP_ANSI_BG_CYAN:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_CYAN));
-            break;
-        case CHIP_ANSI_BG_WHITE:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_BG_WHITE));
-            break;
-        case CHIP_ANSI_INVALID:
-        default:
-            sb_append_cstr(&buff, MAKE_ANSI(ANSI_RESET));
+    case CHIP_TYPE_LOGGER_NAME:
+        sb_appendn(&buff, (int)strlen(lgr->name), lgr->name);
+        break;
+    case CHIP_TYPE_TAG:
+        if (lgr->tags.length > 0) {
+            sb_appendn(&buff,
+                       lgr->tags.items[lgr->tags.length - 1].length,
+                       lgr->tags.items[lgr->tags.length - 1].items);
         }
+        break;
+    case CHIP_TYPE_TAGS:
+        for (int i = 0; i < lgr->tags.length; i++) {
+            sb_appendn(
+                    &buff, lgr->tags.items[i].length, lgr->tags.items[i].items);
+            if (i != lgr->tags.length - 1) { sb_append(&buff, ':'); }
+        }
+        break;
+    case CHIP_TYPE_COLOR:
+        if (use_color) { handle_color_chip(chip, &buff); }
         break;
     default:
         break;
@@ -150,11 +173,11 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
 
 static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
                                       const tmb_log_ctx_t* const ctx,
-                                      tmb_format_opt_t opt) {
+                                      const tmb_logger_t* lgr) {
     tmb_string_builder_t message = { 0 };
     for (int i = 0; i < formatter->length; i++) {
         tmb_chip_t* current_chip = &formatter->items[i];
-        tmb_chip_format(current_chip, &message, ctx, opt.use_color);
+        tmb_chip_format(current_chip, &message, ctx, lgr);
     }
     return (tmb_formatted_msg_t) { .items  = message.items,
                                    .length = message.length };
@@ -268,6 +291,9 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
             CASE('s', CHIP_TYPE_FILE);
             CASE('#', CHIP_TYPE_LINE);
             CASE('f', CHIP_TYPE_FUNC);
+            CASE('t', CHIP_TYPE_TAG);
+            CASE('T', CHIP_TYPE_TAGS);
+            CASE('n', CHIP_TYPE_LOGGER_NAME);
         default:
             UNUSED fprintf(stderr, "unknown format %c\n", chip_type->items[0]);
             return false;
@@ -422,6 +448,15 @@ void tmb_formatter_print(const tmb_formatter_t* formatter) {
         case CHIP_TYPE_COLOR:
             printf("CHIP_TYPE_COLOR ");
             printf("%d ", formatter->items[i].ansi_val);
+            break;
+        case CHIP_TYPE_TAG:
+            printf("CHIP_TYPE_TAG");
+            break;
+        case CHIP_TYPE_TAGS:
+            printf("CHIP_TYPE_TAGS");
+            break;
+        case CHIP_TYPE_LOGGER_NAME:
+            printf("CHIP_TYPE_LOGGER_NAME");
             break;
         default:
         case CHIP_TYPE_UNKNOWN:

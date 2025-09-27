@@ -9,6 +9,8 @@ int main(void) {
     LOG_FATAL(logger, "just a message");
     LOG_ERROR(logger, "a message with number %d", 3);
     LOG_WARNING(logger, "literrally just %s", "printf");
+
+
     tmb_logger_set_default_format(logger, "{@}:{#} {$BLUE:}{$}{$RESET}\n");
     LOG_INFO(logger, "message %d", 3);
     LOG_DEBUG(logger, "fancy message %d", 3);
