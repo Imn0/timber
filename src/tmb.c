@@ -178,6 +178,8 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
     fill_ctx(&ctx, message_filled, ts, stop_watch);
 
     tmb_log_impl_ext_ctx__(ctx, logger);
+    logger->last_message_stopwatch_nsec = stop_watch.nsec;
+    logger->last_message_stopwatch_sec = stop_watch.sec;
     sb_free(&message_filled);
 }
 

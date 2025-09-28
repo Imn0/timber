@@ -146,6 +146,15 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
             if (i != lgr->tags.length - 1) { sb_append(&buff, ':'); }
         }
         break;
+    case CHIP_TYPE_LOGGER_STOPWATCH:
+        float d = tmb_time_stamp_diff(
+                (tmb_time_stamp_t) { .sec  = ctx->stopwatch_sec,
+                                     .nsec = ctx->stopwatch_nsec },
+                (tmb_time_stamp_t) {
+                        .sec  = lgr->last_message_stopwatch_sec,
+                        .nsec = lgr->last_message_stopwatch_nsec });
+        sb_appendf(&buff, "%f", (double)d);
+        break;
     case CHIP_TYPE_COLOR:
         if (use_color) { handle_color_chip(chip, &buff); }
         break;
@@ -294,6 +303,7 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
             CASE('t', CHIP_TYPE_TAG);
             CASE('T', CHIP_TYPE_TAGS);
             CASE('n', CHIP_TYPE_LOGGER_NAME);
+            CASE('d', CHIP_TYPE_LOGGER_STOPWATCH);
         default:
             UNUSED fprintf(stderr, "unknown format %c\n", chip_type->items[0]);
             return false;
@@ -457,6 +467,9 @@ void tmb_formatter_print(const tmb_formatter_t* formatter) {
             break;
         case CHIP_TYPE_LOGGER_NAME:
             printf("CHIP_TYPE_LOGGER_NAME");
+            break;
+        case CHIP_TYPE_LOGGER_STOPWATCH:
+            printf("CHIP_TYPE_LOGGER_STOPWATCH");
             break;
         default:
         case CHIP_TYPE_UNKNOWN:

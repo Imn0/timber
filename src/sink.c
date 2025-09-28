@@ -19,7 +19,6 @@ tmb_sink_t tmb_sink_fd_make(FILE* fd) {
                           .free_fn   = free };
 }
 
-
 static void buffer_sink(const char* msg, int msg_len, void* data) {
     struct sink_buffer_data* buff_data = data;
     int copy_len                       = 0;
@@ -29,7 +28,7 @@ static void buffer_sink(const char* msg, int msg_len, void* data) {
         copy_len = msg_len;
 
     for (int i = 0; i < copy_len; i++) { buff_data->items[i] = msg[i]; }
-    buff_data->length=copy_len;
+    buff_data->length = copy_len;
 }
 
 tmb_sink_t tmb_sink_buffer_make(int buff_size) {
@@ -39,6 +38,20 @@ tmb_sink_t tmb_sink_buffer_make(int buff_size) {
     return (tmb_sink_t) { .sink_data = (void*)buff_data,
                           .sink_fn   = buffer_sink,
                           .free_fn   = free };
+}
+
+static void close_and_free_fd(void* data) {
+    struct sink_fd_data* sink_data = data;
+    (void)fclose(sink_data->fd);
+    free(data);
+}
+
+TMB_API tmb_sink_t tmb_sink_file_make(const char* filename) {
+    FILE* fd = fopen(filename, "a");
+    if (fd == NULL) {}
+    tmb_sink_t sink = tmb_sink_fd_make(fd);
+    sink.free_fn    = close_and_free_fd;
+    return sink;
 }
 
 TMB_API void tmb_sink_deinit(tmb_sink_t* sink) {

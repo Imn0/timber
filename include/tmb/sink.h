@@ -5,9 +5,12 @@
 #include <stdio.h>
 
 TMB_API tmb_sink_t tmb_sink_fd_make(FILE* fd);
-TMB_API void tmb_sink_deinit(tmb_sink_t* sink);
 #define TMB_SINK_STDOUT() tmb_sink_fd_make(stdout)
 #define TMB_SINK_STDERR() tmb_sink_fd_make(stderr)
 #define TMB_SINK_FD(fd)   tmb_sink_fd_make(fd)
 
+TMB_API tmb_sink_t tmb_sink_file_make(const char* filename);
+#define TMB_SINK_FILE(filename) tmb_sink_file_make(filename)
+
+TMB_API void tmb_sink_deinit(tmb_sink_t* sink);
 #endif

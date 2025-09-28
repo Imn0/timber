@@ -18,6 +18,7 @@ format specification
             * f - function
             * T - logger tags separated by ':'
             * t - last added tag
+            * d - time since last log message on given logger
 
     Justing options is as follows
         justing

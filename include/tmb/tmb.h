@@ -107,11 +107,6 @@ typedef struct tmb_sink {
     void* sink_data;
 } tmb_sink_t;
 
-typedef struct tmb_time_stamp {
-    int64_t sec;
-    int64_t nsec;
-} tmb_time_stamp_t;
-
 struct tmb_chip;
 
 typedef struct tmb_sinks {
@@ -180,7 +175,8 @@ typedef struct tmb_logger {
         int capacity;
         int* items;
     } sink_formatter_map;
-    tmb_time_stamp_t last_message_stopwatch;
+    int64_t last_message_stopwatch_sec;
+    int64_t last_message_stopwatch_nsec;
 } tmb_logger_t;
 
 /* Library functions */
