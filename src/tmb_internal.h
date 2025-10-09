@@ -43,7 +43,7 @@
 #endif
 
 #ifndef TMB_DEFAULT_FORMAT
-    #define TMB_DEFAULT_FORMAT "[{^7:l}] - {$BLACK:$DIM:}{>]20:@}:{<4:#}{$RESET:} - {$}\n"
+    #define TMB_DEFAULT_FORMAT "[{^7:l}] - {$BLACK:$ANSI_BOLD:}{>]20:@}:{<4:#}{$RESET:} - {$}\n"
 #endif
 
 #define JUSTING_LEFT_OPT_CHAR   '<'
