@@ -7,8 +7,8 @@ if(BUILD_TESTS)
         target_link_libraries(${TEST_NAME} PRIVATE timber-objects)
         target_include_directories(${TEST_NAME}
             PRIVATE
-            ${CMAKE_SOURCE_DIR}/src
-            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/../src
+            ${CMAKE_CURRENT_SOURCE_DIR}/../include
         )
         set_target_properties(${TEST_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
