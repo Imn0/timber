@@ -33,25 +33,8 @@ endif()
 
 file(GLOB_RECURSE LIB_SOURCES "src/*.c" ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 
-add_library(${PROJECT_NAME}-objects OBJECT ${LIB_SOURCES})
-target_include_directories(${PROJECT_NAME}-objects
-    PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-target_compile_options(${PROJECT_NAME}-objects PRIVATE
-    $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-    -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
-    $<$<C_COMPILER_ID:MSVC>:
-    /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
-target_compile_definitions(${PROJECT_NAME}-objects PRIVATE TMB_BUILD_DLL=1)
-set_target_properties(${PROJECT_NAME}-objects PROPERTIES
-    POSITION_INDEPENDENT_CODE ON)
-
 function(setup_shared_lib)
-    add_library(${PROJECT_NAME}-shared SHARED $<TARGET_OBJECTS:${PROJECT_NAME}-objects>)
+    add_library(${PROJECT_NAME}-shared SHARED ${LIB_SOURCES})
     add_library(${PROJECT_NAME}::shared ALIAS ${PROJECT_NAME}-shared)
 
     set_target_properties(${PROJECT_NAME}-shared PROPERTIES
@@ -59,12 +42,21 @@ function(setup_shared_lib)
         SOVERSION ${GIT_SOVERSION}
     )
     target_include_directories(${PROJECT_NAME}-shared
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
-    target_compile_definitions(${PROJECT_NAME}-shared PRIVATE TMB_BUILD_DLL=1)
-
+    target_compile_options(${PROJECT_NAME}-shared PRIVATE
+        $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
+        -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
+        $<$<C_COMPILER_ID:MSVC>:
+        /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
+    target_compile_definitions(${PROJECT_NAME}-shared 
+        PRIVATE TMB_BUILD_SHARED=1
+        INTERFACE TMB_USING_SHARED=1
+    )
     install(TARGETS ${PROJECT_NAME}-shared
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -75,15 +67,21 @@ function(setup_shared_lib)
 endfunction(setup_shared_lib)
 
 function(setup_static_lib)
-    add_library(${PROJECT_NAME}-static STATIC $<TARGET_OBJECTS:${PROJECT_NAME}-objects>)
+    add_library(${PROJECT_NAME}-static STATIC ${LIB_SOURCES})
     add_library(${PROJECT_NAME}::static ALIAS ${PROJECT_NAME}-static)
 
-
     target_include_directories(${PROJECT_NAME}-static
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
         PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
+    target_compile_options(${PROJECT_NAME}-static PRIVATE
+        $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
+        -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
+        $<$<C_COMPILER_ID:MSVC>:
+        /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
 
     if(WIN32)
         set_target_properties(${PROJECT_NAME}-static PROPERTIES
@@ -94,6 +92,10 @@ function(setup_static_lib)
             OUTPUT_NAME ${PROJECT_NAME}
         )
     endif()
+    target_compile_definitions(${PROJECT_NAME}-static 
+        PRIVATE TMB_BUILD_STATIC=1
+        INTERFACE TMB_USING_STATIC=1
+    )
     install(TARGETS ${PROJECT_NAME}-static
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -124,22 +126,6 @@ else()
     add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME}-static)
 endif()
 
-
-if(BUILD_PYTHON_BINDINGS)
-    set(Python_ADDITIONAL_VERSIONS 3)
-    find_package(PythonLibs REQUIRED)
-    find_package(PythonInterp REQUIRED)
-    add_library(${PROJECT_NAME}-python MODULE bindings/python/_timber.c)
-    target_link_libraries(${PROJECT_NAME}-python PRIVATE ${PROJECT_NAME}-objects)
-    include_directories("${PYTHON_INCLUDE_DIRS}")
-    set_target_properties(${PROJECT_NAME}-python PROPERTIES PREFIX "")
-    set_target_properties(${PROJECT_NAME}-python PROPERTIES OUTPUT_NAME "_timber")
-    if(WIN32)
-        set_target_properties(${PROJECT_NAME}-python PROPERTIES SUFFIX ".pyd")
-    else()
-        set_target_properties(${PROJECT_NAME}-python PROPERTIES SUFFIX ".so")
-    endif()
-endif()
 
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/library_config/Config.cmake.in

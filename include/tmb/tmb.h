@@ -22,17 +22,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if defined(_WIN32) && defined(_MSC_VER) &&                                    \
-        !(defined(__clang__) || defined(__GNUC__))
-    #ifdef TMB_WIN_USE_STAIC
+#if defined(_WIN32) && defined(_MSC_VER) && \
+    !(defined(__clang__) || defined(__GNUC__))
+    #if defined(TMB_BUILD_STATIC) || defined(TMB_USING_STATIC)
         #define TMB_API
-    #elif defined(TMB_BUILD_DLL)
+    #elif defined(TMB_BUILD_SHARED)
         #define TMB_API __declspec(dllexport)
     #else
         #define TMB_API __declspec(dllimport)
     #endif
 #else
-    #ifdef TMB_BUILD_DLL
+    #if defined(TMB_BUILD_SHARED) && defined(__GNUC__) && __GNUC__ >= 4
         #define TMB_API __attribute__((visibility("default")))
     #else
         #define TMB_API
