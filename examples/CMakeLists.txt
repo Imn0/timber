@@ -1,7 +1,7 @@
 if(BUILD_EXAMPLES)
     function(add_example EXAMPLE_NAME)
         add_executable(${EXAMPLE_NAME} ${EXAMPLE_NAME}.c)
-        target_link_libraries(${EXAMPLE_NAME} ${PROJECT_NAME}-objects)
+        target_link_libraries(${EXAMPLE_NAME} ${PROJECT_NAME}::static)
         target_include_directories(${EXAMPLE_NAME} PRIVATE ../include)
         set_target_properties(${EXAMPLE_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
