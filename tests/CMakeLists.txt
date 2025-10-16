@@ -11,7 +11,7 @@ if(BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/../include
         )
         set_target_properties(${TEST_NAME} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests/
         )
         add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     endforeach()
