@@ -133,6 +133,7 @@ typedef struct tmb_string_view {
 #define NSEC_IN_MSEC 1000000
 
 #define MSEC_TO_NSEC(msec) ((msec) * NSEC_IN_MSEC)
+#define NSEC_TO_MSEC(nsec) ((nsec) / NSEC_IN_MSEC)
 
 typedef struct tmb_time_stamp {
     i64 sec;

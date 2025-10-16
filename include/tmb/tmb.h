@@ -208,6 +208,10 @@ TMB_API void tmb_register_logger(const char* name, tmb_logger_t* logger);
 TMB_API tmb_logger_t* tmb_get_logger(const char* name);
 TMB_API tmb_logger_t* tmb_get_logger_or_default(const char* name);
 
+/* Formatt functions */
+TMB_API tmb_formatter_t tmb_formatter_graylog_make(void);
+
+
 /* Logging functions */
 TMB_API void tmb_log(tmb_log_ctx_t ctx,
                      tmb_logger_t* logger,

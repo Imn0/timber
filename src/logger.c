@@ -12,7 +12,7 @@ tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg) {
     tmb_logger_t* lgr = malloc(sizeof(*lgr));
     memset(lgr, 0, sizeof(*lgr));
 
-    lgr->cfg  = cfg;
+    lgr->cfg            = cfg;
     int logger_name_len = (int)strlen(logger_name);
     int len_to_cpy      = 0;
     if (logger_name_len > MAX_LOGGER_NAME_LEN) {
@@ -61,6 +61,9 @@ int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
 }
 
 int tmb_logger_add_formatter(tmb_logger_t* lgr, tmb_formatter_t formatter) {
+    if (lgr->formatters.length == 0) {
+        tmb_logger_set_default_format(lgr, TMB_DEFAULT_FORMAT);
+    }
     da_append(&lgr->formatters, formatter);
     return lgr->formatters.length - 1;
 }
