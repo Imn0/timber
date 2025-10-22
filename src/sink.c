@@ -1,7 +1,6 @@
 #include <sink_internal.h>
 #include <tmb/sink.h>
 #include <tmb_internal.h>
-#include <unistd.h>
 
 struct sink_fd_data {
     FILE* fd;
@@ -58,6 +57,7 @@ TMB_API tmb_sink_t tmb_sink_file_make(const char* filename) {
 #ifdef TMB_UNIX
     #include <arpa/inet.h>
     #include <sys/socket.h>
+    #include <unistd.h>
 
 struct sink_graylog_data {
     char address[16];
