@@ -5,6 +5,7 @@
 // https://go2docs.graylog.org/current/getting_in_log_data/gelf.html
 #endif
 
+#ifdef TMB_UNIX
 static tmb_formatted_msg_t graylog_format(tmb_formatter_t* formatter,
                                           const tmb_log_ctx_t* const ctx,
                                           const tmb_logger_t* lgr) {
@@ -51,3 +52,11 @@ tmb_formatter_t tmb_formatter_graylog_make(void) {
                             .data_free_fn     = do_nothing__ };
     return fmt;
 }
+#else
+tmb_formatter_t tmb_formatter_graylog_make(void) {
+    tmb_formatter_t fmt = { .format_fn        = graylog_format,
+                            .formated_free_fn = do_nothing__,
+                            .data_free_fn     = do_nothing__ };
+    return fmt;
+}
+#endif

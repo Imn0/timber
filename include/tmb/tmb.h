@@ -22,8 +22,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#if defined(_WIN32) && defined(_MSC_VER) && \
-    !(defined(__clang__) || defined(__GNUC__))
+#if defined(_WIN32) && defined(_MSC_VER) &&                                    \
+        !(defined(__clang__) || defined(__GNUC__))
     #if defined(TMB_BUILD_STATIC) || defined(TMB_USING_STATIC)
         #define TMB_API
     #elif defined(TMB_BUILD_SHARED)
@@ -123,6 +123,10 @@ typedef struct tmb_formatter {
     tmb_format_fn_t* format_fn;
     tmb_free_fn_t* formated_free_fn;
     tmb_free_fn_t* data_free_fn;
+    struct {
+        bool stopwatch;
+        bool perf_counter;
+    } has;
 } tmb_formatter_t;
 
 typedef struct tmb_formatters {
@@ -177,15 +181,19 @@ typedef struct tmb_logger {
     } sink_formatter_map;
     int64_t last_message_stopwatch_sec;
     int64_t last_message_stopwatch_nsec;
+    struct {
+        bool stopwatch;
+        bool perf_counter;
+    } has;
 } tmb_logger_t;
 
 /* Library functions */
 TMB_API void tmb_set_options(tmb_cfg_t);
 TMB_API void tmb_print_version(void);
 TMB_API const char* tmb_get_version(void);
+TMB_API tmb_logger_t* tmb_get_default_logger();
 
 /* Logger functions */
-TMB_API tmb_logger_t* tmb_get_default_logger();
 TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg);
 TMB_API void tmb_logger_destroy(tmb_logger_t* logger);
 
@@ -204,13 +212,13 @@ TMB_API int tmb_logger_set_format(tmb_logger_t* lgr,
                                   int sink_idx,
                                   const char* fmt);
 
+/* Logger registry */
 TMB_API void tmb_register_logger(const char* name, tmb_logger_t* logger);
 TMB_API tmb_logger_t* tmb_get_logger(const char* name);
 TMB_API tmb_logger_t* tmb_get_logger_or_default(const char* name);
 
-/* Formatt functions */
+/* Format functions */
 TMB_API tmb_formatter_t tmb_formatter_graylog_make(void);
-
 
 /* Logging functions */
 TMB_API void tmb_log(tmb_log_ctx_t ctx,

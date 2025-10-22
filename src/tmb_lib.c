@@ -251,17 +251,17 @@ void tmb_hm_set_wrapper(void* user_hm,
                        key_size,
                        key_offset,
                        occupied_offset);
-    void* key_addr      = (u8*)hm->tmp + key_offset;
-    void* val_addr      = (u8*)hm->tmp + value_offset;
-    bool* occupied_addr = (bool*)((u8*)hm->tmp + occupied_offset);
+    void* key_addr        = (u8*)hm->tmp + key_offset;
+    void* val_addr        = (u8*)hm->tmp + value_offset;
+    bool* is_occupied_ptr = (bool*)((u8*)hm->tmp + occupied_offset);
 
-    if (!*occupied_addr) {
+    if (!*is_occupied_ptr) {
         if (hm->key_type == KEY_STR) {
             *(char**)key_addr = tmb_strdup(*(char**)key);
         } else {
             memcpy(key_addr, key, key_size);
         }
-        *occupied_addr = true;
+        *is_occupied_ptr = true;
         hm->occupied++;
     }
     memcpy(val_addr, value, value_size);
@@ -286,6 +286,7 @@ void tmb_hm_del_wrapper(void* user_hm,
     if (hm->tmp->occupied != true) { return; }
     if (hm->key_type == KEY_STR) { free(hm->tmp->key); }
     hm->tmp->occupied = false;
+    hm->occupied--;
 }
 
 void tmb_hm_get_wrapper(void* user_hm,
@@ -385,4 +386,3 @@ bool tmb_is_substring(tmb_string_view_t haystack, const char* needle) {
     }
     return false;
 }
-

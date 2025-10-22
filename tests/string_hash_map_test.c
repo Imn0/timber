@@ -10,20 +10,31 @@ typedef struct {
 } c_hash_map;
 
 int main() {
-    hash_map hm = { 0 };
-    char* p1 = tmb_strdup("a very long string so its easy to see in the debbuger");
-    char* p2 = tmb_strdup("a very long string so its easy to see in the debbuger");
-    hm_put(&hm, p1, 12);
-    int a = hm_get(&hm, p2);
-    ASSERT(a == 12);
-    ASSERT(hm.key_type == KEY_STR);
+    {
+        hash_map hm = { 0 };
+        char* p1    = tmb_strdup(
+                "a very long string so its easy to see in the debbuger");
+        char* p2 = tmb_strdup(
+                "a very long string so its easy to see in the debbuger");
+        hm_put(&hm, p1, 12);
+        int a = hm_get(&hm, p2);
+        ASSERT(a == 12);
+        ASSERT(hm.key_type == KEY_STR);
+    }
+    {
+        hash_map hm = { 0 };
+        char* p1    = tmb_strdup(
+                "a very long string so its easy to see in the debbuger");
+        char* p2 = tmb_strdup(
+                "a very long string so its easy to see in the debbuger");
+        hm_put(&hm, p1, 12);
+        ASSERT(hm_has(&hm,
+                      "a very long string so its easy to see in the debbuger"));
+        hm_put(&hm, p2, 123);
 
-    c_hash_map hm2 = { 0 };
-    char* p12 = tmb_strdup("a very long string so its easy to see in the debbuger");
-    char* p22 = tmb_strdup("a very long string so its easy to see in the debbuger");
-
-    hm_put(&hm2, p12, 12);
-    int a2 = hm_get(&hm, p22);
-    ASSERT(a2 == 12);
-    ASSERT(hm2.key_type == KEY_STR);
+        int a = hm_get(&hm,
+                       "a very long string so its easy to see in the debbuger");
+        ASSERT(a == 123);
+        ASSERT(hm.key_type == KEY_STR);
+    }
 }

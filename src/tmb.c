@@ -63,18 +63,6 @@ const char tmb_log_level_char[LOG_LEVEL_COUNT] = {
 static tmb_logger_t default_logger     = { 0 };
 static bool default_logger_initialized = false;
 
-static inline void fill_ctx(tmb_log_ctx_t* ctx,
-                            tmb_string_builder_t user_message,
-                            tmb_time_stamp_t ts,
-                            tmb_time_stamp_t current_stopwatch) {
-    ctx->message        = user_message.items;
-    ctx->message_len    = user_message.length;
-    ctx->ts_nsec        = ts.nsec;
-    ctx->ts_sec         = ts.sec;
-    ctx->stopwatch_sec  = current_stopwatch.sec;
-    ctx->stopwatch_nsec = current_stopwatch.nsec;
-}
-
 void tmb_print_version(void) {
     printf("%s.%s.%s @ %s\nSO Version: %s\n",
            TMB_MAJOR_V,
@@ -165,6 +153,7 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
     da_free(&formatted_messages);
 }
 
+
 static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
                                   tmb_logger_t* logger,
                                   const char* message,
@@ -175,11 +164,16 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
     tmb_string_builder_t message_filled = { 0 };
     sb_appendv(&message_filled, message, args);
 
-    fill_ctx(&ctx, message_filled, ts, stop_watch);
+    ctx.message        = message_filled.items;
+    ctx.message_len    = message_filled.length;
+    ctx.ts_nsec        = ts.nsec;
+    ctx.ts_sec         = ts.sec;
+    ctx.stopwatch_sec  = stop_watch.sec;
+    ctx.stopwatch_nsec = stop_watch.nsec;
 
     tmb_log_impl_ext_ctx__(ctx, logger);
     logger->last_message_stopwatch_nsec = stop_watch.nsec;
-    logger->last_message_stopwatch_sec = stop_watch.sec;
+    logger->last_message_stopwatch_sec  = stop_watch.sec;
     sb_free(&message_filled);
 }
 
