@@ -22,7 +22,11 @@ tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg) {
     }
 
     for (int i = 0; i < len_to_cpy; i++) { lgr->name[i] = logger_name[i]; }
+    tmb_logger_set_default_format(lgr, TMB_DEFAULT_FORMAT);
 
+    tmb_time_stamp_t ts = tmb_time_stopwatch();
+    lgr->last_message_stopwatch_nsec = ts.nsec;
+    lgr->last_message_stopwatch_sec = ts.sec;
     return lgr;
 }
 
@@ -45,38 +49,44 @@ TMB_API void tmb_logger_destroy(tmb_logger_t* logger) {
     logger = NULL;
 }
 
-bool tmb_logger_set_default_format(tmb_logger_t* logger, const char* fmt) {
-    if (logger->formatters.length == 0) {
-        da_append(&logger->formatters, (tmb_formatter_t) { 0 });
-    } else {
-        da_free(&logger->formatters.items[0]);
-    }
-    return tmb_formatter_init(&logger->formatters.items[0], fmt);
-}
-
 int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
     da_append(&logger->sinks, sink);
     da_append(&logger->sink_formatter_map, 0);
     return logger->sinks.length - 1;
 }
 
-int tmb_logger_add_formatter(tmb_logger_t* lgr, tmb_formatter_t formatter) {
-    if (lgr->formatters.length == 0) {
-        tmb_logger_set_default_format(lgr, TMB_DEFAULT_FORMAT);
+static inline int tmb_logger_add_formatter_impl(tmb_logger_t* lgr,
+                                                int idx,
+                                                tmb_formatter_t formatter) {
+    lgr->has.stopwatch |= formatter.has.stopwatch;
+    lgr->has.time_stamp |= formatter.has.time_stamp;
+    if (idx < lgr->formatters.length ) {
+        da_free(&lgr->formatters.items[idx]);
+        lgr->formatters.items[idx] = formatter;
+    } else {
+        da_append(&lgr->formatters, formatter);
     }
-    da_append(&lgr->formatters, formatter);
-    return lgr->formatters.length - 1;
+    return idx;
+}
+
+bool tmb_logger_set_default_format(tmb_logger_t* logger, const char* fmt) {
+    tmb_formatter_t formatter = { 0 };
+    bool init_ok              = tmb_formatter_init(&formatter, fmt);
+    if (!init_ok) { return -1; }
+    return tmb_logger_add_formatter_impl(logger, 0, formatter);
+}
+
+int tmb_logger_add_formatter(tmb_logger_t* lgr, tmb_formatter_t formatter) {
+    return tmb_logger_add_formatter_impl(
+            lgr, lgr->formatters.length, formatter);
 }
 
 int tmb_logger_add_format(tmb_logger_t* lgr, const char* fmt) {
     tmb_formatter_t formatter = { 0 };
-    if (tmb_formatter_init(&formatter, fmt)) {
-        da_append(&lgr->formatters, formatter);
-        return lgr->formatters.length - 1;
-    } else {
-        da_free(&formatter);
-        return -1;
-    }
+    bool init_ok              = tmb_formatter_init(&formatter, fmt);
+    if (!init_ok) { return -1; }
+    return tmb_logger_add_formatter_impl(
+            lgr, lgr->formatters.length, formatter);
 }
 
 int tmb_logger_assign_format(tmb_logger_t* lgr, int sink_idx, int fmt_idx) {

@@ -125,7 +125,7 @@ typedef struct tmb_formatter {
     tmb_free_fn_t* data_free_fn;
     struct {
         bool stopwatch;
-        bool perf_counter;
+        bool time_stamp;
     } has;
 } tmb_formatter_t;
 
@@ -183,7 +183,7 @@ typedef struct tmb_logger {
     int64_t last_message_stopwatch_nsec;
     struct {
         bool stopwatch;
-        bool perf_counter;
+        bool time_stamp;
     } has;
 } tmb_logger_t;
 

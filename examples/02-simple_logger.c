@@ -13,8 +13,8 @@ int main(void) {
     LOG_WARNING(logger, "literrally just %s", "printf");
 
     tmb_logger_set_default_format(
-            logger, "{d} {$BLACK:$DIM}{@}:{#}{$RESET} {$BLUE:$}\n");
-    tmb_logger_set_format(logger, file_sink_idx, "{d} {@}:{#} {$}\n");
+            logger, "{D} {d} {$BLACK:$DIM}{@}:{#}{$RESET} {$BLUE:$}\n");
+    tmb_logger_set_format(logger, file_sink_idx, "{D} {d} {@}:{#} {$}\n");
     LOG_INFO(logger, "message %d", 3);
     LOG_DEBUG(logger, "fancy message %d", 3);
 

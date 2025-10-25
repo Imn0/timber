@@ -26,6 +26,41 @@ option(BUILD_SHARED_AND_STATIC_LIBS "Build both shared and static libraries" ON)
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(DEBUG_DEFINES "Enable developer build" OFF)
+
+set(THREADING_BACKEND "C11" CACHE STRING "Threading backend to use (C11, PTHREADS, WINDOWS, NONE)")
+set_property(CACHE THREADING_BACKEND PROPERTY STRINGS C11 PTHREADS WINDOWS NONE)
+
+set(THREADING_LIBS "")
+if(THREADING_BACKEND STREQUAL "C11")
+    add_compile_definitions(TMB_THREADING_C11=1)
+    message(STATUS "Threading backend: C11 threads")
+elseif(THREADING_BACKEND STREQUAL "PTHREADS")
+    find_package(Threads REQUIRED)
+    if(NOT CMAKE_USE_PTHREADS_INIT)
+        message(FATAL_ERROR "Pthreads not found but THREADING_BACKEND=PTHREADS")
+    endif()
+    add_compile_definitions(TMB_THREADING_PTHREADS=1)
+    set(THREADING_LIBS Threads::Threads)
+    message(STATUS "Threading backend: POSIX threads (pthreads)")
+elseif(THREADING_BACKEND STREQUAL "WINDOWS")
+    if(NOT WIN32)
+        message(WARNING "THREADING_BACKEND=WINDOWS but not building on Windows")
+    endif()
+    add_compile_definitions(TMB_THREADING_WINDOWS=1)
+    message(STATUS "Threading backend: Windows threads")
+elseif(THREADING_BACKEND STREQUAL "NONE")
+    add_compile_definitions(TMB_THREADING_NONE=1)
+    message(STATUS "Threading backend: None (single-threaded)")
+else()
+    message(FATAL_ERROR "Invalid THREADING_BACKEND: ${THREADING_BACKEND}. Must be one of: C11, PTHREADS, WINDOWS, NONE")
+endif()
+
+function(apply_threading_to_target target_name)
+    if(THREADING_LIBS)
+        target_link_libraries(${target_name} PRIVATE ${THREADING_LIBS})
+    endif()
+endfunction()
+
 if(DEBUG_DEFINES)
     add_compile_definitions(TMB_DEBUG=1)
 endif()
@@ -52,10 +87,13 @@ function(setup_shared_lib)
         -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
         $<$<C_COMPILER_ID:MSVC>:
         /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
-    target_compile_definitions(${PROJECT_NAME}-shared 
+    target_compile_definitions(${PROJECT_NAME}-shared
         PRIVATE TMB_BUILD_SHARED=1
         INTERFACE TMB_USING_SHARED=1
     )
+
+    apply_threading_to_target(${PROJECT_NAME}-shared)
+
     install(TARGETS ${PROJECT_NAME}-shared
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -91,10 +129,13 @@ function(setup_static_lib)
             OUTPUT_NAME ${PROJECT_NAME}
         )
     endif()
-    target_compile_definitions(${PROJECT_NAME}-static 
+    target_compile_definitions(${PROJECT_NAME}-static
         PRIVATE TMB_BUILD_STATIC=1
         INTERFACE TMB_USING_STATIC=1
     )
+
+    apply_threading_to_target(${PROJECT_NAME}-static)
+
     install(TARGETS ${PROJECT_NAME}-static
         EXPORT ${PROJECT_NAME}Targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

@@ -153,13 +153,15 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
     da_free(&formatted_messages);
 }
 
-
 static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
                                   tmb_logger_t* logger,
                                   const char* message,
                                   va_list args) {
-    tmb_time_stamp_t stop_watch = tmb_time_stamp();
-    tmb_time_stamp_t ts         = tmb_time_stamp();
+    tmb_time_stamp_t stop_watch = { 0 };
+    tmb_time_stamp_t ts         = { 0 };
+
+    if (logger->has.time_stamp) { ts = tmb_time_stamp(); }
+    if (logger->has.stopwatch) { stop_watch = tmb_time_stopwatch(); }
 
     tmb_string_builder_t message_filled = { 0 };
     sb_appendv(&message_filled, message, args);
@@ -172,8 +174,10 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
     ctx.stopwatch_nsec = stop_watch.nsec;
 
     tmb_log_impl_ext_ctx__(ctx, logger);
-    logger->last_message_stopwatch_nsec = stop_watch.nsec;
-    logger->last_message_stopwatch_sec  = stop_watch.sec;
+    if (logger->has.time_stamp)
+        logger->last_message_stopwatch_nsec = stop_watch.nsec;
+    if (logger->has.time_stamp)
+        logger->last_message_stopwatch_sec = stop_watch.sec;
     sb_free(&message_filled);
 }
 

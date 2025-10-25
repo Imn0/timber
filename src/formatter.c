@@ -155,6 +155,22 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
                         .nsec = lgr->last_message_stopwatch_nsec });
         sb_appendf(&buff, "%f", (double)d);
         break;
+    case CHIP_TYPE_LOGGER_TIME_STAMP:
+        // Convert to local time
+        struct tm* tm_info;
+        time_t secs = (time_t)ctx->ts_sec;
+        tm_info     = localtime(&secs);
+
+        // Format the time string with nanoseconds
+        // Example: "2024-01-15 14:30:45.123456789"
+        da_reserve(&buff, 40);
+        size_t written = strftime(buff.items,
+                                  (size_t)buff.capacity,
+                                  "%Y-%m-%d %H:%M:%S",
+                                  tm_info);
+        buff.length += (int)written;
+        sb_appendf(&buff, ".%09lld", ctx->ts_nsec);
+        break;
     case CHIP_TYPE_COLOR:
         if (use_color) { handle_color_chip(chip, &buff); }
         break;
@@ -303,7 +319,14 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
             CASE('t', CHIP_TYPE_TAG);
             CASE('T', CHIP_TYPE_TAGS);
             CASE('n', CHIP_TYPE_LOGGER_NAME);
-            CASE('d', CHIP_TYPE_LOGGER_STOPWATCH);
+        case 'd':
+            chip.type                = CHIP_TYPE_LOGGER_STOPWATCH;
+            formatter->has.stopwatch = true;
+            break;
+        case 'D':
+            chip.type                 = CHIP_TYPE_LOGGER_TIME_STAMP;
+            formatter->has.time_stamp = true;
+            break;
         default:
             UNUSED fprintf(stderr, "unknown format %c\n", chip_type->items[0]);
             return false;
@@ -369,7 +392,7 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
         // handle lone '}' for consistency with {{ -> {
         if (sv.items[i] == '}' && sv.items[i + 1] != '}') {
             printf("BROKEN FMT next chip is %c\n", sv.items[i + 1]);
-            return false;
+            goto fail;
         } else if (sv.items[i] == '}' && sv.items[i + 1] == '}') {
             i++;
             tmb_formatter_add_const_chip(formatter, sv.items + i, 1);
@@ -391,7 +414,7 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
             while (sv.items[i] != '}') {
                 if (i >= sv.length) {
                     printf("BROKEN FMT\n");
-                    return false;
+                    goto fail;
                 }
                 if (sv.items[i] == ':') {
                     tmb_string_view_t c = { .items  = buff.items,
@@ -405,7 +428,7 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
             }
             if (!tmb_formatter_add_chip_from_opt(formatter, &buff, &opts)) {
                 printf("BROKEN FMT\n");
-                return false;
+                goto fail;
             }
             da_free(&opts);
             opts = (tmb_chip_opts_t) { 0 };
@@ -424,6 +447,10 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
     formatter->data             = NULL;
     da_free(&opts);
     return true;
+fail:
+    da_free(&opts);
+    da_free(formatter);
+    return false;
 }
 
 void tmb_formatter_print(const tmb_formatter_t* formatter) {
@@ -470,6 +497,9 @@ void tmb_formatter_print(const tmb_formatter_t* formatter) {
             break;
         case CHIP_TYPE_LOGGER_STOPWATCH:
             printf("CHIP_TYPE_LOGGER_STOPWATCH");
+            break;
+        case CHIP_TYPE_LOGGER_TIME_STAMP:
+            printf("CHIP_TYPE_LOGGER_TIME_STAMP");
             break;
         default:
         case CHIP_TYPE_UNKNOWN:
