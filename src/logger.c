@@ -24,9 +24,9 @@ tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg) {
     for (int i = 0; i < len_to_cpy; i++) { lgr->name[i] = logger_name[i]; }
     tmb_logger_set_default_format(lgr, TMB_DEFAULT_FORMAT);
 
-    tmb_time_stamp_t ts = tmb_time_stopwatch();
+    tmb_time_stamp_t ts              = tmb_time_stopwatch();
     lgr->last_message_stopwatch_nsec = ts.nsec;
-    lgr->last_message_stopwatch_sec = ts.sec;
+    lgr->last_message_stopwatch_sec  = ts.sec;
     return lgr;
 }
 
@@ -60,7 +60,7 @@ static inline int tmb_logger_add_formatter_impl(tmb_logger_t* lgr,
                                                 tmb_formatter_t formatter) {
     lgr->has.stopwatch |= formatter.has.stopwatch;
     lgr->has.time_stamp |= formatter.has.time_stamp;
-    if (idx < lgr->formatters.length ) {
+    if (idx < lgr->formatters.length) {
         da_free(&lgr->formatters.items[idx]);
         lgr->formatters.items[idx] = formatter;
     } else {

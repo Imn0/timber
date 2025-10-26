@@ -464,6 +464,34 @@ void tmb_hm_set_wrapper(void* user_hm,
                        TMB_OFFSETOF_DEREF(*(hm), tmp, key),                    \
                        TMB_OFFSETOF_DEREF(*(hm), tmp, occupied))
 
+/*
+Mutexes
+*/
+#if defined(TMB_THREADING_C11)
+    #include <threads.h>
+#elif defined(TMB_THREADING_PTHREADS)
+
+#elif defined(TMB_THREADING_WINDOWS)
+
+#elif defined(TMB_THREADING_NONE)
+
+#endif
+
+typedef struct tmb_mutex_t {
+#if defined(TMB_THREADING_C11)
+    mtx_t mtx;
+#elif defined(TMB_THREADING_PTHREADS)
+
+#elif defined(TMB_THREADING_WINDOWS)
+
+#elif defined(TMB_THREADING_NONE)
+
+#endif
+} tmb_mutex;
+void tmb_mutex_init(tmb_mutex* mtx);
+void tmb_mutex_lock(tmb_mutex* mtx);
+void tmb_mutex_unlock(tmb_mutex* mtx);
+
 /**
  * @brief Returns heap allocated zero terminated string with contents of the
  * file

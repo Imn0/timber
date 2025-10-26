@@ -1,6 +1,3 @@
-- date
-- tagging
-- python bindings
 - actual log rotation
 - failsaife if log file was moved
 - internal logging
