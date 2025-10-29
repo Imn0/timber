@@ -387,7 +387,7 @@ bool tmb_is_substring(tmb_string_view_t haystack, const char* needle) {
     return false;
 }
 
-void tmb_mutex_lock(tmb_mutex* mtx) {
+void tmb_mutex_lock(tmb_mutex_t* mtx) {
 #if defined(TMB_THREADING_C11)
     mtx_lock(&mtx->mtx);
 #elif defined(TMB_THREADING_PTHREADS)
@@ -398,7 +398,7 @@ void tmb_mutex_lock(tmb_mutex* mtx) {
 
 #endif
 }
-void tmb_mutex_unlock(tmb_mutex* mtx) {
+void tmb_mutex_unlock(tmb_mutex_t* mtx) {
 #if defined(TMB_THREADING_C11)
     mtx_unlock(&mtx->mtx);
 #elif defined(TMB_THREADING_PTHREADS)
@@ -410,7 +410,7 @@ void tmb_mutex_unlock(tmb_mutex* mtx) {
 #endif
 }
 
-void tmb_mutex_init(tmb_mutex* mtx) {
+void tmb_mutex_init(tmb_mutex_t* mtx) {
 #if defined(TMB_THREADING_C11)
     mtx_init(&mtx->mtx, mtx_plain);
 #elif defined(TMB_THREADING_PTHREADS)

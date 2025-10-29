@@ -477,7 +477,7 @@ Mutexes
 
 #endif
 
-typedef struct tmb_mutex_t {
+typedef struct tmb_mutex {
 #if defined(TMB_THREADING_C11)
     mtx_t mtx;
 #elif defined(TMB_THREADING_PTHREADS)
@@ -487,10 +487,10 @@ typedef struct tmb_mutex_t {
 #elif defined(TMB_THREADING_NONE)
 
 #endif
-} tmb_mutex;
-void tmb_mutex_init(tmb_mutex* mtx);
-void tmb_mutex_lock(tmb_mutex* mtx);
-void tmb_mutex_unlock(tmb_mutex* mtx);
+} tmb_mutex_t;
+void tmb_mutex_init(tmb_mutex_t* mtx);
+void tmb_mutex_lock(tmb_mutex_t* mtx);
+void tmb_mutex_unlock(tmb_mutex_t* mtx);
 
 /**
  * @brief Returns heap allocated zero terminated string with contents of the

@@ -54,6 +54,41 @@ TMB_API tmb_sink_t tmb_sink_file_make(const char* filename) {
     return sink;
 }
 
+struct rotating_file_data {
+    FILE* fd;
+    tmb_mutex_t sink_mtx;
+    tmb_string_view_t base_filename;
+    int max_num_files;
+    int max_file_size_B;
+    int current_written_B;
+};
+
+static void rotating_file_sink(const char* msg, int msg_len, void* data) {
+    struct rotating_file_data* sink_data = data;
+
+    int new_size = sink_data->current_written_B + msg_len;
+    if (new_size > sink_data->max_file_size_B) {
+        // rotate
+    }
+    printf("%*.s", msg_len, msg);
+}
+
+TMB_API tmb_sink_t tmb_sink_rotating_file_make(const char* filename) {
+    struct rotating_file_data* rot_file_data = malloc(sizeof(*rot_file_data));
+
+    tmb_string_builder_t sb = { 0 };
+
+    sb_append_cstr(&sb, filename);
+    tmb_string_view_t sv = sv_from_sb(&sb);
+
+    rot_file_data->base_filename = sv;
+    rot_file_data->fd            = NULL;
+
+    return (tmb_sink_t) { .sink_data = (void*)rot_file_data,
+                          .sink_fn   = rotating_file_sink,
+                          .free_fn   = free };
+}
+
 #ifdef TMB_UNIX
     #include <arpa/inet.h>
     #include <sys/socket.h>
