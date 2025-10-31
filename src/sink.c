@@ -11,12 +11,16 @@ static void fd_sink(const char* msg, int msg_len, void* data) {
     fprintf(sink_data->fd, "%.*s", msg_len, msg);
 }
 
-tmb_sink_t tmb_sink_fd_make(FILE* fd) {
+tmb_sink_t* tmb_sink_fd_create(FILE* fd) {
+    tmb_sink_t* sink                 = malloc(sizeof(*sink));
     struct sink_fd_data* fd_malloced = malloc(sizeof(*fd_malloced));
     fd_malloced->fd                  = fd;
-    return (tmb_sink_t) { .sink_data = (void*)fd_malloced,
-                          .sink_fn   = fd_sink,
-                          .free_fn   = free };
+
+    sink->sink_data = (void*)fd_malloced;
+    sink->sink_fn   = fd_sink;
+    sink->free_fn   = free;
+    sink->ref_count = 0;
+    return sink;
 }
 
 static void buffer_sink(const char* msg, int msg_len, void* data) {
@@ -31,13 +35,17 @@ static void buffer_sink(const char* msg, int msg_len, void* data) {
     buff_data->length = copy_len;
 }
 
-tmb_sink_t tmb_sink_buffer_make(int buff_size) {
+tmb_sink_t* tmb_sink_buffer_create(int buff_size) {
+    tmb_sink_t* sink                   = malloc(sizeof(*sink));
     struct sink_buffer_data* buff_data = malloc(sizeof(*buff_data) +
                                                 (size_t)buff_size);
     buff_data->buffer_size             = buff_size;
-    return (tmb_sink_t) { .sink_data = (void*)buff_data,
-                          .sink_fn   = buffer_sink,
-                          .free_fn   = free };
+
+    sink->sink_data = (void*)buff_data;
+    sink->sink_fn   = buffer_sink;
+    sink->free_fn   = free;
+    sink->ref_count = 0;
+    return sink;
 }
 
 static void close_and_free_fd(void* data) {
@@ -46,11 +54,12 @@ static void close_and_free_fd(void* data) {
     free(data);
 }
 
-TMB_API tmb_sink_t tmb_sink_file_make(const char* filename) {
+TMB_API tmb_sink_t* tmb_sink_file_create(const char* filename) {
     FILE* fd = fopen(filename, "a");
     if (fd == NULL) {}
-    tmb_sink_t sink = tmb_sink_fd_make(fd);
-    sink.free_fn    = close_and_free_fd;
+
+    tmb_sink_t* sink = tmb_sink_fd_create(fd);
+    sink->free_fn    = close_and_free_fd;
     return sink;
 }
 
@@ -73,7 +82,8 @@ static void rotating_file_sink(const char* msg, int msg_len, void* data) {
     printf("%*.s", msg_len, msg);
 }
 
-TMB_API tmb_sink_t tmb_sink_rotating_file_make(const char* filename) {
+TMB_API tmb_sink_t* tmb_sink_rotating_file_make(const char* filename) {
+    tmb_sink_t* sink                         = malloc(sizeof(*sink));
     struct rotating_file_data* rot_file_data = malloc(sizeof(*rot_file_data));
 
     tmb_string_builder_t sb = { 0 };
@@ -84,9 +94,11 @@ TMB_API tmb_sink_t tmb_sink_rotating_file_make(const char* filename) {
     rot_file_data->base_filename = sv;
     rot_file_data->fd            = NULL;
 
-    return (tmb_sink_t) { .sink_data = (void*)rot_file_data,
-                          .sink_fn   = rotating_file_sink,
-                          .free_fn   = free };
+    sink->sink_data = (void*)rot_file_data;
+    sink->ref_count = 0;
+    sink->sink_fn   = rotating_file_sink;
+    sink->free_fn   = free;
+    return sink;
 }
 
 #ifdef TMB_UNIX
@@ -126,21 +138,29 @@ static void graylog_log(const char* msg, int msg_len, void* data) {
     if (sent_bytes < 0) {}
 }
 
-TMB_API tmb_sink_t tmb_sink_graylog_make(const char* graylog_host, int port) {
+TMB_API tmb_sink_t* tmb_sink_graylog_create(const char* graylog_host,
+                                            int port) {
     struct sink_graylog_data* gdata = malloc(sizeof(*gdata));
     strncpy(gdata->address, graylog_host, sizeof(gdata->address) - 1);
     gdata->address[sizeof(gdata->address) - 1] = '\0';
     gdata->port                                = port;
     if (!graylog_connect(gdata)) {
         free(gdata);
-        return (tmb_sink_t) { 0 };
+        return NULL;
     }
-    return (tmb_sink_t) { .sink_data = (void*)gdata,
-                          .sink_fn   = graylog_log,
-                          .free_fn   = free };
+    tmb_sink_t* sink = malloc(sizeof(*sink));
+
+    sink->sink_data = (void*)gdata;
+    sink->sink_fn   = graylog_log;
+    sink->free_fn   = free;
+    sink->ref_count = 0;
+    return sink;
 }
 #endif
 
-TMB_API void tmb_sink_deinit(tmb_sink_t* sink) {
+TMB_API void tmb_sink_destroy(tmb_sink_t* sink) {
+    sink->ref_count--;
+    if (sink->ref_count > 0) { return; }
     if (sink->free_fn != NULL) { sink->free_fn(sink->sink_data); }
+    free(sink);
 }

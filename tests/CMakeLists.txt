@@ -13,6 +13,7 @@ if(BUILD_TESTS)
         set_target_properties(${TEST_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests/
         )
+        apply_compile_flags(${TEST_NAME})
         add_test(NAME ${TEST_NAME} COMMAND ${TEST_NAME})
     endforeach()
 

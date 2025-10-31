@@ -3,6 +3,7 @@
 
 // https://graylog.org/
 int main(void) {
+#ifndef _MSC_VER
     tmb_logger_t* logger = TMB_LOGGER("my logger");
 
     tmb_logger_assign_format(
@@ -15,4 +16,5 @@ int main(void) {
     LOG_WARNING(logger, "literrally just %s", "printf");
 
     tmb_logger_destroy(logger);
+#endif
 }

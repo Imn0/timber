@@ -6,8 +6,8 @@
 int main() {
     tmb_logger_t* lgr = TMB_LOGGER("d");
     tmb_logger_set_default_format(lgr, "{$BLUE:}{$}{$RED:}aa{$RESET:}\n");
-    int sink_idx  = tmb_logger_add_sink(lgr, tmb_sink_buffer_make(1024));
-    tmb_sink_t* s = &lgr->sinks.items[sink_idx];
+    int sink_idx  = tmb_logger_add_sink(lgr, tmb_sink_buffer_create(1024));
+    tmb_sink_t* s = lgr->sinks.items[sink_idx];
     LOG_INFO(lgr, "hej");
 
     struct sink_buffer_data* d = s->sink_data;

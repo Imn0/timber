@@ -32,8 +32,8 @@ tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg) {
 
 TMB_API void tmb_logger_destroy(tmb_logger_t* logger) {
     for (int i = 0; i < logger->sinks.length; i++) {
-        tmb_sink_t* sink = &logger->sinks.items[i];
-        tmb_sink_deinit(sink);
+        tmb_sink_t* sink = logger->sinks.items[i];
+        tmb_sink_destroy(sink);
     }
 
     for (int i = 0; i < logger->formatters.length; i++) {
@@ -49,7 +49,8 @@ TMB_API void tmb_logger_destroy(tmb_logger_t* logger) {
     logger = NULL;
 }
 
-int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t sink) {
+int tmb_logger_add_sink(tmb_logger_t* logger, tmb_sink_t* sink) {
+    sink->ref_count++;
     da_append(&logger->sinks, sink);
     da_append(&logger->sink_formatter_map, 0);
     return logger->sinks.length - 1;
