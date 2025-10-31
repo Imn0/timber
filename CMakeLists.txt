@@ -67,6 +67,14 @@ endif()
 
 file(GLOB_RECURSE LIB_SOURCES "src/*.c" ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 
+function(apply_compile_flags target_name)
+    target_compile_options(${target_name} PRIVATE
+        $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
+        -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
+        $<$<C_COMPILER_ID:MSVC>:
+        /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest /experimental:c11atomics>)
+endfunction()
+
 function(setup_shared_lib)
     add_library(${PROJECT_NAME}-shared SHARED ${LIB_SOURCES})
     add_library(${PROJECT_NAME}::shared ALIAS ${PROJECT_NAME}-shared)
@@ -82,11 +90,7 @@ function(setup_shared_lib)
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
-    target_compile_options(${PROJECT_NAME}-shared PRIVATE
-        $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-        -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
-        $<$<C_COMPILER_ID:MSVC>:
-        /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
+    apply_compile_flags(${PROJECT_NAME}-shared)
     target_compile_definitions(${PROJECT_NAME}-shared
         PRIVATE TMB_BUILD_SHARED=1
         INTERFACE TMB_USING_SHARED=1
@@ -114,12 +118,7 @@ function(setup_static_lib)
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
-    target_compile_options(${PROJECT_NAME}-static PRIVATE
-        $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-        -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden>
-        $<$<C_COMPILER_ID:MSVC>:
-        /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest>)
-
+    apply_compile_flags(${PROJECT_NAME}-static)
     if(WIN32)
         set_target_properties(${PROJECT_NAME}-static PROPERTIES
             OUTPUT_NAME ${PROJECT_NAME}_static

@@ -35,7 +35,7 @@ typedef struct tmb_cfg_lexer {
 } tmb_cfg_lexer_t;
 
 void tmb_lex(tmb_cfg_lexer_t* lex, const char* input, size_t input_size);
-#ifdef TMB_UNIX
+#ifndef TMB_WINDOWS_MSVC
 bool tmb_lex_expect(tmb_cfg_lexer_t* lex,
                     int n,
                     tmb_cfg_tok_type toks[static n]);

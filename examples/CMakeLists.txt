@@ -6,10 +6,8 @@ if(BUILD_EXAMPLES)
         set_target_properties(${EXAMPLE_NAME} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/
         )
-        target_compile_options(${EXAMPLE_NAME} PRIVATE
-            $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-            -Wno-initializer-overrides>
-        )
+        apply_compile_flags(${EXAMPLE_NAME})
+
     endfunction(add_example example_name)
 
     add_example(01-default_logger)
