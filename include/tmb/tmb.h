@@ -18,6 +18,7 @@
 #ifndef TMB_H_
 #define TMB_H_
 #include <stdarg.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -105,6 +106,7 @@ typedef struct tmb_sink {
     tmb_sink_fn_t* sink_fn;
     tmb_free_fn_t* free_fn;
     void* sink_data;
+    atomic_int ref_count;
 } tmb_sink_t;
 
 struct tmb_chip;
@@ -112,7 +114,7 @@ struct tmb_chip;
 typedef struct tmb_sinks {
     int length;
     int capacity;
-    struct tmb_sink* items;
+    struct tmb_sink** items;
 } tmb_sinks_t;
 
 typedef struct tmb_formatter {
@@ -202,7 +204,7 @@ TMB_API bool tmb_logger_set_default_format(tmb_logger_t* logger,
 TMB_API int tmb_logger_add_formatter(tmb_logger_t* lgr,
                                      tmb_formatter_t formatter);
 TMB_API int tmb_logger_add_format(tmb_logger_t* lgr, const char* fmt);
-TMB_API int tmb_logger_add_sink(tmb_logger_t* lgr, tmb_sink_t);
+TMB_API int tmb_logger_add_sink(tmb_logger_t* lgr, tmb_sink_t*);
 TMB_API void tmb_logger_add_tag(tmb_logger_t* lgr, const char* tag);
 TMB_API void tmb_logger_remove_tag(tmb_logger_t* lgr, const char* tag);
 TMB_API int tmb_logger_assign_format(tmb_logger_t* lgr,
@@ -219,6 +221,7 @@ TMB_API tmb_logger_t* tmb_get_logger_or_default(const char* name);
 
 /* Format functions */
 TMB_API tmb_formatter_t tmb_formatter_graylog_make(void);
+TMB_API void tmb_formatter_deinit(tmb_formatter_t* formater);
 
 /* Logging functions */
 TMB_API void tmb_log(tmb_log_ctx_t ctx,

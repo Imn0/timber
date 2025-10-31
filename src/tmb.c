@@ -136,9 +136,10 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
 
     for (int i = 0; i < logger->sinks.length; i++) {
         int fmt_idx = logger->sink_formatter_map.items[i];
-        logger->sinks.items[i].sink_fn(formatted_messages.items[fmt_idx].items,
-                                       formatted_messages.items[fmt_idx].length,
-                                       logger->sinks.items[i].sink_data);
+        logger->sinks.items[i]->sink_fn(
+                formatted_messages.items[fmt_idx].items,
+                formatted_messages.items[fmt_idx].length,
+                logger->sinks.items[i]->sink_data);
     }
     if (logger->sinks.length < 1) {
         printf("%.*s",

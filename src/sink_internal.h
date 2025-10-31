@@ -8,6 +8,6 @@ struct sink_buffer_data {
     int length;
     char items[];
 };
-tmb_sink_t tmb_sink_buffer_make(int buff_size);
+tmb_sink_t* tmb_sink_buffer_create(int buff_size);
 
 #endif
