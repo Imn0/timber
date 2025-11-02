@@ -9,10 +9,11 @@
 #include <stdio.h>
 #include <time.h>
 
-const char* const TMB_PATCH_V = "0";
-const char* const TMB_MINOR_V = "0";
-const char* const TMB_MAJOR_V = "0";
-const char* const TMB_SO_V    = "0";
+const char* const TMB_PATCH_V    = "0";
+const char* const TMB_MINOR_V    = "0";
+const char* const TMB_MAJOR_V    = "0";
+const char* const TMB_SO_V       = "0";
+const char* const TMB_BUILD_TIME = __DATE__ ", " __TIME__;
 
 tmb_logger_registry_t tmb_logger_registry = { 0 };
 
@@ -64,24 +65,28 @@ static tmb_logger_t default_logger     = { 0 };
 static bool default_logger_initialized = false;
 
 void tmb_print_version(void) {
-    printf("%s.%s.%s @ %s\nSO Version: %s\n",
+    printf("%s.%s.%s @ %s\nSO Version: %s\n"
+           "Build %s\n",
            TMB_MAJOR_V,
            TMB_MINOR_V,
            TMB_PATCH_V,
            GIT_REV,
-           TMB_SO_V);
+           TMB_SO_V,
+           TMB_BUILD_TIME);
 }
 
 const char* tmb_get_version(void) {
     static tmb_string_builder_t sb = { 0 };
     if (sb.length == 0) {
-        sb_appendf__(&sb,
-                     "%s.%s.%s @ %s\nSO Version: %s\n",
-                     TMB_MAJOR_V,
-                     TMB_MINOR_V,
-                     TMB_PATCH_V,
-                     GIT_REV,
-                     TMB_SO_V);
+        sb_appendf(&sb,
+                   "%s.%s.%s @ %s\nSO Version: %s\n"
+                   "Build %s\n",
+                   TMB_MAJOR_V,
+                   TMB_MINOR_V,
+                   TMB_PATCH_V,
+                   GIT_REV,
+                   TMB_SO_V,
+                   TMB_BUILD_TIME);
         sb_to_cstr(&sb);
     }
     return sb.items;

@@ -17,7 +17,7 @@ int main(void) {
     ASSERT(sb.length == 11); // no \0 termination
     ASSERT(strncmp("hello world", sb.items, sb.length) == 0);
 
-    sb_appendf__(&sb, "%d", 3);
+    sb_appendf(&sb, "%d", 3);
     ASSERT(sb.length == 12);
     ASSERT(strncmp("hello world3", sb.items, sb.length) == 0);
 
