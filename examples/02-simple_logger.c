@@ -5,7 +5,8 @@ int main(void) {
     tmb_logger_t* logger = TMB_LOGGER("my logger",
                                       .max_log_level = TMB_LEVEL_DEBUG);
     tmb_logger_set_default_format(logger, "{$}\n");
-    int file_sink_idx = tmb_logger_add_sink(logger, TMB_SINK_FILE("log.txt"));
+    int file_sink_idx = tmb_logger_add_sink(
+            logger, TMB_SINK_ROTATING_FILE("log.txt", 5, 1024));
     tmb_logger_add_sink(logger, TMB_SINK_STDOUT());
 
     LOG_FATAL(logger, "just a message");

@@ -21,7 +21,7 @@ CompileFlags:
     - -Wbad-function-cast
     - -Wstrict-aliasing
     - -Wmissing-prototypes
-    - -Wreserved-identifier
+    # - -Wreserved-identifier
     - -Wno-empty-translation-unit
     - -Wno-unused-const-variable
 
