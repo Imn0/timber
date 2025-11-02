@@ -374,11 +374,13 @@ enum tmb_hm_key_type__ { KEY_RAW = 1, KEY_STR = 2 };
         K key;                                                                 \
         V value;                                                               \
         bool occupied;                                                         \
+        bool tombstone;                                                        \
     }* tmp;                                                                    \
     struct {                                                                   \
         K key;                                                                 \
         V value;                                                               \
         bool occupied;                                                         \
+        bool tombstone;                                                        \
     }* buckets
 
 typedef struct {

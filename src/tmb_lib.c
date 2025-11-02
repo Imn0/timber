@@ -176,7 +176,6 @@ static int hm_cmp(const void* key1,
     if (key_type == KEY_STR) { return strcmp(*(char**)key1, *(char**)key2); }
     return 0;
 }
-
 static void tmb_hm_grow(void* user_hm,
                         size_t bucket_size,
                         size_t buckets_offset,
@@ -192,31 +191,80 @@ static void tmb_hm_grow(void* user_hm,
     for (int i = 0; i < hm->capacity; i++) {
         u8* old_bucket_base  = (u8*)(buckets + (size_t)i * bucket_size);
         bool is_old_occupied = *(bool*)(old_bucket_base + occupied_offset);
+
         if (!is_old_occupied) { continue; }
+
         u8* addr_of_old_key = (old_bucket_base + key_offset);
 
         u32 hash = (u32)hash_djb2(addr_of_old_key, key_size) %
                    (u32)new_capacity;
-        u32 j      = hash;
-        bool found = false;
-        while (!found) {
+        u32 j = hash;
+
+        while (true) {
             u8* new_bucket_base = (u8*)(new_buckets + (size_t)j * bucket_size);
-            u8* addr_of_new_key = (new_bucket_base + key_offset);
             bool occupied       = *(bool*)(new_bucket_base + occupied_offset);
 
-            if (!occupied || hm_cmp(addr_of_old_key,
-                                    addr_of_new_key,
-                                    key_size,
-                                    hm->key_type) == 0) {
-                hm->tmp = (void*)(buckets + ((size_t)j * bucket_size));
-                memcpy(new_buckets + (size_t)j * bucket_size,
-                       old_bucket_base,
-                       bucket_size);
-                found = true;
+            if (!occupied) {
+                memcpy(new_bucket_base, old_bucket_base, bucket_size);
+                *(bool*)(new_bucket_base + occupied_offset +
+                         sizeof(bool)) = false;
+                break;
             }
             j = (j + 1) % (u32)new_capacity;
         }
     }
+
+    free(hm->buckets);
+    hm->buckets  = (void*)new_buckets;
+    hm->capacity = new_capacity;
+}
+
+static void tmb_hm_shrink(void* user_hm,
+                          size_t bucket_size,
+                          size_t buckets_offset,
+                          size_t key_size,
+                          size_t key_offset,
+                          size_t occupied_offset) {
+    tmb_hash_map_internal* hm = user_hm;
+    u8* buckets               = *(u8**)(void*)((u8*)user_hm + buckets_offset);
+
+    int new_capacity = hm->capacity / 2;
+
+    if (new_capacity < TMB_HM_DEFAULT_START_SIZE) {
+        new_capacity = TMB_HM_DEFAULT_START_SIZE;
+    }
+
+    if (new_capacity == hm->capacity) { return; }
+
+    u8* new_buckets = calloc((size_t)new_capacity, bucket_size);
+
+    for (int i = 0; i < hm->capacity; i++) {
+        u8* old_bucket_base  = (u8*)(buckets + (size_t)i * bucket_size);
+        bool is_old_occupied = *(bool*)(old_bucket_base + occupied_offset);
+
+        if (!is_old_occupied) { continue; }
+
+        u8* addr_of_old_key = (old_bucket_base + key_offset);
+
+        u32 hash = (u32)hash_djb2(addr_of_old_key, key_size) %
+                   (u32)new_capacity;
+        u32 j = hash;
+
+        while (true) {
+            u8* new_bucket_base = (u8*)(new_buckets + (size_t)j * bucket_size);
+            bool occupied       = *(bool*)(new_bucket_base + occupied_offset);
+
+            if (!occupied) {
+                memcpy(new_bucket_base, old_bucket_base, bucket_size);
+                // clear tombstone flag in new table
+                *(bool*)(new_bucket_base + occupied_offset +
+                         sizeof(bool)) = false;
+                break;
+            }
+            j = (j + 1) % (u32)new_capacity;
+        }
+    }
+
     free(hm->buckets);
     hm->buckets  = (void*)new_buckets;
     hm->capacity = new_capacity;
@@ -283,10 +331,31 @@ void tmb_hm_del_wrapper(void* user_hm,
                        key_size,
                        key_offset,
                        occupied_offset);
+
     if (hm->tmp->occupied != true) { return; }
-    if (hm->key_type == KEY_STR) { free(hm->tmp->key); }
-    hm->tmp->occupied = false;
+
+    if (hm->key_type == KEY_STR) {
+        void* key_addr = (u8*)hm->tmp + key_offset;
+        char* str_key  = *(char**)key_addr;
+        if (str_key != NULL) {
+            free(str_key);
+            *(char**)key_addr = NULL;
+        }
+    }
+
+    hm->tmp->occupied  = false;
+    hm->tmp->tombstone = true;
     hm->occupied--;
+
+    float occupancy = (float)hm->occupied / (float)hm->capacity;
+    if (hm->capacity > TMB_HM_DEFAULT_START_SIZE && occupancy < 0.25f) {
+        tmb_hm_shrink(user_hm,
+                      bucket_size,
+                      buckets_offset,
+                      key_size,
+                      key_offset,
+                      occupied_offset);
+    }
 }
 
 void tmb_hm_get_wrapper(void* user_hm,
@@ -306,20 +375,48 @@ void tmb_hm_get_wrapper(void* user_hm,
         hash = hash_djb2(addr_of_new_key, key_size) % (u32)hm->capacity;
     }
 
-    u32 i      = hash;
-    bool found = false;
-    while (!found) {
+    u32 i                   = hash;
+    u32 first_tombstone_idx = (u32)-1;
+    bool has_tombstone      = false;
+
+    for (u32 probes = 0; probes < (u32)hm->capacity; probes++) {
         u8* bucket_base          = (u8*)(buckets + (size_t)i * bucket_size);
         u8* addr_of_existing_key = (bucket_base + key_offset);
         bool occupied            = *(bool*)(bucket_base + occupied_offset);
-        if (!occupied || hm_cmp(addr_of_new_key,
-                                addr_of_existing_key,
-                                key_size,
-                                hm->key_type) == 0) {
+        bool tombstone = *(bool*)(bucket_base + occupied_offset + sizeof(bool));
+
+        // If we find the key, use this slot
+        if (occupied && hm_cmp(addr_of_new_key,
+                               addr_of_existing_key,
+                               key_size,
+                               hm->key_type) == 0) {
             hm->tmp = (void*)(buckets + ((size_t)i * bucket_size));
             return;
         }
+
+        if (!has_tombstone && tombstone && !occupied) {
+            first_tombstone_idx = i;
+            has_tombstone       = true;
+        }
+
+        if (!occupied && !tombstone) {
+            if (has_tombstone) {
+                hm->tmp = (void*)(buckets +
+                                  ((size_t)first_tombstone_idx * bucket_size));
+            } else {
+                hm->tmp = (void*)(buckets + ((size_t)i * bucket_size));
+            }
+            return;
+        }
+
         i = (i + 1) % (u32)hm->capacity;
+    }
+
+    if (has_tombstone) {
+        hm->tmp = (void*)(buckets +
+                          ((size_t)first_tombstone_idx * bucket_size));
+    } else {
+        hm->tmp = (void*)(buckets + ((size_t)hash * bucket_size));
     }
 }
 
