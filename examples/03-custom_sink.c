@@ -6,7 +6,9 @@ struct sink_data {
     int a;
 };
 
-void custom_sink_fn(const char* message, int message_length, void* data) {
+static void custom_sink_fn(const char* message,
+                           int message_length,
+                           void* data) {
     struct sink_data* sink_data = data;
     printf("custom sink has been called %d times -> %.*s",
            ++sink_data->a,

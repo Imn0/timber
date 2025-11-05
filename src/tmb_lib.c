@@ -85,8 +85,8 @@ void tmb_sb_just(tmb_string_builder_t* sb,
         break;
     case JUST_CENTER:
         int total_pad = amount - current_size;
-        append_left   = (total_pad + 1) / 2;
-        append_right  = total_pad - append_left;
+        append_right  = (total_pad + 1) / 2;
+        append_left   = total_pad - append_right;
         break;
     case JUST_RIGHT:
         append_left = amount - current_size;

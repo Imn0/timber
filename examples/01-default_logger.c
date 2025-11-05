@@ -8,10 +8,11 @@ int main(void) {
     LOG_INFO("message %d", 3);
     LOG_DEBUG("debug wont show by default");
 
-    tmb_get_default_logger()->cfg.max_log_level = LOG_LEVEL_DEBUG;
+    tmb_get_default_logger()->cfg.log_level = TMB_LOG_LEVEL_DEBUG;
     LOG_DEBUG("and now it will");
 
-    TMB_CFG(.enable_colors = false, .max_log_level = LOG_LEVEL_WARNING);
-    LOG_FATAL("wow");
+    // global config
+    TMB_CFG(.enable_colors = false, .log_level = TMB_LOG_LEVEL_WARNING);
+
     LOG_INFO("and this wont show");
 }

@@ -100,18 +100,6 @@ int tmb_logger_assign_format(tmb_logger_t* lgr, int sink_idx, int fmt_idx) {
     return 1;
 }
 
-int tmb_logger_set_format(tmb_logger_t* lgr, int sink_idx, const char* fmt) {
-    if (sink_idx >= lgr->sinks.length ||
-        sink_idx >= lgr->sink_formatter_map.length) {
-        return -1;
-    }
-    tmb_formatter_t formatter = { 0 };
-    if (!tmb_formatter_init(&formatter, fmt)) { return -2; }
-    da_append(&lgr->formatters, formatter);
-    lgr->sink_formatter_map.items[sink_idx] = lgr->formatters.length - 1;
-    return -1;
-}
-
 void tmb_logger_add_tag(tmb_logger_t* lgr, const char* tag) {
     tmb_string_view_t n_tag = { .items = tag, .length = (int)strlen(tag) };
     for (int i = 0; i < lgr->tags.length; i++) {

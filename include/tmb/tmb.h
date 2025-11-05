@@ -54,9 +54,9 @@ extern const char* const TMB_PATCH_V;
 extern const char* const TMB_MINOR_V;
 extern const char* const TMB_MAJOR_V;
 extern const char* const TMB_SO_V;
-extern const char* const GIT_REV;
+extern const char* const TMB_GIT_REV;
 
-#define MAX_LOGGER_NAME_LEN 64
+#define TMB_MAX_LOGGER_NAME_LEN 64
 
 #define TMB_LEVEL_NONE    (-1)
 #define TMB_LEVEL_FATAL   0
@@ -86,21 +86,20 @@ typedef tmb_formatted_msg_t tmb_format_fn_t(struct tmb_formatter* formatter,
                                             const struct tmb_logger* lgr);
 
 typedef enum {
-    LOG_LEVEL_FATAL   = TMB_LEVEL_FATAL,
-    LOG_LEVEL_ERROR   = TMB_LEVEL_ERROR,
-    LOG_LEVEL_WARNING = TMB_LEVEL_WARNING,
-    LOG_LEVEL_INFO    = TMB_LEVEL_INFO,
-    LOG_LEVEL_DEBUG   = TMB_LEVEL_DEBUG,
-    LOG_LEVEL_TRACE   = TMB_LEVEL_TRACE,
+    TMB_LOG_LEVEL_FATAL   = TMB_LEVEL_FATAL,
+    TMB_LOG_LEVEL_ERROR   = TMB_LEVEL_ERROR,
+    TMB_LOG_LEVEL_WARNING = TMB_LEVEL_WARNING,
+    TMB_LOG_LEVEL_INFO    = TMB_LEVEL_INFO,
+    TMB_LOG_LEVEL_DEBUG   = TMB_LEVEL_DEBUG,
+    TMB_LOG_LEVEL_TRACE   = TMB_LEVEL_TRACE,
 
-    LOG_LEVEL_COUNT
+    TMB_LOG_LEVEL_COUNT
 } tmb_log_level;
 
-#define TMB_DEFAULT_LIB_CFG                                                    \
-    .enable_colors = true, .max_log_level = LOG_LEVEL_DEBUG
+#define TMB_DEFAULT_LIB_CFG .enable_colors = true, .log_level = LOG_LEVEL_DEBUG
 
 #define TMB_DEFAULT_LOGGER_CFG                                                 \
-    .enable_colors = true, .max_log_level = LOG_LEVEL_INFO
+    .enable_colors = true, .log_level = TMB_LOG_LEVEL_INFO
 
 typedef struct tmb_sink {
     tmb_sink_fn_t* sink_fn;
@@ -155,7 +154,7 @@ typedef struct tmb_log_ctx {
 } tmb_log_ctx_t;
 
 typedef struct tmb_cfg {
-    tmb_log_level max_log_level;
+    tmb_log_level log_level;
     bool enable_colors;
 } tmb_cfg_t;
 
@@ -171,7 +170,7 @@ typedef struct tmb_tags {
 } tmb_tags_t;
 
 typedef struct tmb_logger {
-    char name[MAX_LOGGER_NAME_LEN];
+    char name[TMB_MAX_LOGGER_NAME_LEN];
     tmb_cfg_t cfg;
     tmb_sinks_t sinks;
     tmb_formatters_t formatters;
@@ -210,9 +209,6 @@ TMB_API void tmb_logger_remove_tag(tmb_logger_t* lgr, const char* tag);
 TMB_API int tmb_logger_assign_format(tmb_logger_t* lgr,
                                      int sink_idx,
                                      int fmt_idx);
-TMB_API int tmb_logger_set_format(tmb_logger_t* lgr,
-                                  int sink_idx,
-                                  const char* fmt);
 
 /* Logger registry */
 TMB_API void tmb_register_logger(const char* name, tmb_logger_t* logger);
@@ -220,6 +216,7 @@ TMB_API tmb_logger_t* tmb_get_logger(const char* name);
 TMB_API tmb_logger_t* tmb_get_logger_or_default(const char* name);
 
 /* Format functions */
+TMB_API tmb_formatter_t tmb_formatter_make(const char* fmt);
 TMB_API tmb_formatter_t tmb_formatter_graylog_make(void);
 TMB_API void tmb_formatter_deinit(tmb_formatter_t* formater);
 
@@ -240,41 +237,51 @@ TMB_API void tmb_log_default(tmb_log_ctx_t ctx, const char* message, ...)
 
 // clang-format off
 #if TMB_LEVEL_FATAL <= TMB_MIN_LOG_LEVEL
-    #define LOG_FATAL(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_FATAL, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define TMB_LOG_FATAL(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_FATAL, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define LOG_FATAL(lgr_or_fmt, ...)
+    #define TMB_LOG_FATAL(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_ERROR <= TMB_MIN_LOG_LEVEL
-    #define LOG_ERROR(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ERROR, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define TMB_LOG_ERROR(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_ERROR, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define LOG_ERROR(lgr_or_fmt, ...)
+    #define TMB_LOG_ERROR(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_WARNING <= TMB_MIN_LOG_LEVEL
-    #define LOG_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
-    #define LOG_WARN(lgr_or_fmt, ...) LOG_WARNING(lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define TMB_LOG_WARNING(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_WARNING, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define TMB_LOG_WARN(lgr_or_fmt, ...) TMB_LOG_WARNING(lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define LOG_WARN(lgr_or_fmt, ...)
-    #define LOG_WARNING(lgr_or_fmt, ...)
+    #define TMB_LOG_WARN(lgr_or_fmt, ...)
+    #define TMB_LOG_WARNING(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_INFO <= TMB_MIN_LOG_LEVEL
-    #define LOG_INFO(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_INFO, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define TMB_LOG_INFO(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_INFO, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define LOG_INFO(lgr_or_fmt, ...)
+    #define TMB_LOG_INFO(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_DEBUG <= TMB_MIN_LOG_LEVEL
-    #define LOG_DEBUG(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_DEBUG, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define TMB_LOG_DEBUG(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_DEBUG, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define LOG_DEBUG(lgr_or_fmt, ...)
+    #define TMB_LOG_DEBUG(lgr_or_fmt, ...)
 #endif
 
 #if TMB_LEVEL_TRACE <= TMB_MIN_LOG_LEVEL
-    #define LOG_TRACE(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_TRACE, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
+    #define TMB_LOG_TRACE(lgr_or_fmt, ...) TMB_LOG(TMB_LEVEL_TRACE, lgr_or_fmt __VA_OPT__(, ) __VA_ARGS__)
 #else
-    #define LOG_TRACE(lgr_or_fmt, ...)
+    #define TMB_LOG_TRACE(lgr_or_fmt, ...)
+#endif
+
+
+#ifndef TMB_DONT_STRIP_PREFIX
+#define LOG_FATAL TMB_LOG_FATAL
+#define LOG_ERROR TMB_LOG_ERROR
+#define LOG_WARNING TMB_LOG_WARNING
+#define LOG_INFO TMB_LOG_INFO
+#define LOG_DEBUG TMB_LOG_DEBUG
+#define LOG_TRACE TMB_LOG_TRACE
 #endif
 // clang-format on
 
@@ -301,7 +308,7 @@ TMB_API void tmb_log_default(tmb_log_ctx_t ctx, const char* message, ...)
     } while (0)
 
 #define TMB_CFG(...)                                                           \
-    tmb_set_options((struct tmb_cfg) { .max_log_level = LOG_LEVEL_INFO,        \
+    tmb_set_options((struct tmb_cfg) { .log_level     = TMB_LOG_LEVEL_INFO,    \
                                        .enable_colors = true,                  \
                                        __VA_ARGS__ })
 

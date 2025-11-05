@@ -65,7 +65,7 @@ set(GIT_SOVERSION "${GIT_SOVERSION}")
 
 set(VERSION
     "
-const char* const GIT_REV=\"${GIT_REV}${GIT_DIFF}\";
+const char* const TMB_GIT_REV=\"${GIT_REV}${GIT_DIFF}\";
 "
 )
 

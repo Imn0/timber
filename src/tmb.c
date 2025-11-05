@@ -20,7 +20,7 @@ tmb_logger_registry_t tmb_logger_registry = { 0 };
 const tmb_cfg_t tmb_default_logger_cfg = { TMB_DEFAULT_LOGGER_CFG };
 tmb_cfg_t tmb_cfg                      = { TMB_DEFAULT_LIB_CFG };
 
-const char* const tmb_log_level_str[LOG_LEVEL_COUNT] = {
+const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_STR,
     [TMB_LEVEL_ERROR]   = TMB_LEVEL_ERROR_STR,
     [TMB_LEVEL_WARNING] = TMB_LEVEL_WARNING_STR,
@@ -29,7 +29,7 @@ const char* const tmb_log_level_str[LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_TRACE]   = TMB_LEVEL_TRACE_STR,
 };
 
-const int tmb_log_level_str_len[LOG_LEVEL_COUNT] = {
+const int tmb_log_level_str_len[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_CONST_STR_SIZE(TMB_LEVEL_FATAL_STR),
     [TMB_LEVEL_ERROR]   = TMB_CONST_STR_SIZE(TMB_LEVEL_ERROR_STR),
     [TMB_LEVEL_WARNING] = TMB_CONST_STR_SIZE(TMB_LEVEL_WARNING_STR),
@@ -38,7 +38,7 @@ const int tmb_log_level_str_len[LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_TRACE]   = TMB_CONST_STR_SIZE(TMB_LEVEL_TRACE_STR),
 };
 
-const char* const tmb_log_level_color[LOG_LEVEL_COUNT] = {
+const char* const tmb_log_level_color[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_COLOR,
     [TMB_LEVEL_ERROR]   = TMB_LEVEL_ERROR_COLOR,
     [TMB_LEVEL_WARNING] = TMB_LEVEL_WARNING_COLOR,
@@ -47,7 +47,7 @@ const char* const tmb_log_level_color[LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_TRACE]   = TMB_LEVEL_TRACE_COLOR,
 };
 
-const int tmb_log_level_color_len[LOG_LEVEL_COUNT] = {
+const int tmb_log_level_color_len[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_CONST_STR_SIZE(TMB_LEVEL_FATAL_COLOR),
     [TMB_LEVEL_ERROR]   = TMB_CONST_STR_SIZE(TMB_LEVEL_ERROR_COLOR),
     [TMB_LEVEL_WARNING] = TMB_CONST_STR_SIZE(TMB_LEVEL_WARNING_COLOR),
@@ -56,7 +56,7 @@ const int tmb_log_level_color_len[LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_TRACE]   = TMB_CONST_STR_SIZE(TMB_LEVEL_TRACE_COLOR),
 };
 
-const char tmb_log_level_char[LOG_LEVEL_COUNT] = {
+const char tmb_log_level_char[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL] = 'F', [TMB_LEVEL_ERROR] = 'E', [TMB_LEVEL_WARNING] = 'W',
     [TMB_LEVEL_INFO] = 'I',  [TMB_LEVEL_DEBUG] = 'D', [TMB_LEVEL_TRACE] = 'T',
 };
@@ -70,7 +70,7 @@ void tmb_print_version(void) {
            TMB_MAJOR_V,
            TMB_MINOR_V,
            TMB_PATCH_V,
-           GIT_REV,
+           TMB_GIT_REV,
            TMB_SO_V,
            TMB_BUILD_TIME);
 }
@@ -84,7 +84,7 @@ const char* tmb_get_version(void) {
                    TMB_MAJOR_V,
                    TMB_MINOR_V,
                    TMB_PATCH_V,
-                   GIT_REV,
+                   TMB_GIT_REV,
                    TMB_SO_V,
                    TMB_BUILD_TIME);
         sb_to_cstr(&sb);
@@ -123,8 +123,8 @@ TMB_API void tmb_set_options(tmb_cfg_t cfg) {
 /// LOGGING FUNCTIONS
 static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                           tmb_logger_t* logger) {
-    if (ctx.log_level > tmb_cfg.max_log_level) { return; }
-    if (ctx.log_level > logger->cfg.max_log_level) { return; }
+    if (ctx.log_level > tmb_cfg.log_level) { return; }
+    if (ctx.log_level > logger->cfg.log_level) { return; }
 
     if (logger->formatters.length < 1) {
         tmb_logger_set_default_format(logger, TMB_DEFAULT_FORMAT);

@@ -3,19 +3,27 @@
 
 int main(void) {
     tmb_logger_t* logger = TMB_LOGGER("my logger",
-                                      .max_log_level = TMB_LEVEL_DEBUG);
-    tmb_logger_set_default_format(logger, "{$}\n");
-    int file_sink_idx = tmb_logger_add_sink(
-            logger, TMB_SINK_ROTATING_FILE("log.txt", 5, 1024));
-    tmb_logger_add_sink(logger, TMB_SINK_STDOUT());
+                                      .log_level = TMB_LEVEL_DEBUG);
+
+    tmb_logger_assign_format(
+            logger,
+            tmb_logger_add_sink(logger, TMB_SINK_STDOUT()),
+            tmb_logger_add_formatter(
+                    logger,
+                    tmb_formatter_make("{D} {d} {$BLACK:$DIM}{@}:{#}{$RESET} "
+                                       "{$BLUE:$}\n")));
+
+    tmb_logger_assign_format(
+            logger,
+            tmb_logger_add_sink(logger,
+                                TMB_SINK_ROTATING_FILE("log.txt", 5, 1024)),
+            tmb_logger_add_formatter(
+                    logger, tmb_formatter_make("{D} {d} {@}:{#} {$}\n")));
 
     LOG_FATAL(logger, "just a message");
     LOG_ERROR(logger, "a message with number %d", 3);
     LOG_WARNING(logger, "literrally just %s", "printf");
 
-    tmb_logger_set_default_format(
-            logger, "{D} {d} {$BLACK:$DIM}{@}:{#}{$RESET} {$BLUE:$}\n");
-    tmb_logger_set_format(logger, file_sink_idx, "{D} {d} {@}:{#} {$}\n");
     LOG_INFO(logger, "message %d", 3);
     LOG_DEBUG(logger, "fancy message %d", 3);
 

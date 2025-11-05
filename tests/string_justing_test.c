@@ -45,13 +45,13 @@ int main(void) {
 
     TEST_CASE("h", 2, JUST_RIGHT, " h");
     TEST_CASE("h", 2, JUST_LEFT, "h ");
-    TEST_CASE("h", 2, JUST_CENTER, " h");
+    TEST_CASE("h", 2, JUST_CENTER, "h ");
 
     TEST_CASE("h", 3, JUST_RIGHT, "  h");
     TEST_CASE("h", 3, JUST_LEFT, "h  ");
     TEST_CASE("h", 3, JUST_CENTER, " h ");
-    TEST_CASE("hh", 3, JUST_CENTER, " hh");
-    TEST_CASE("hh", 5, JUST_CENTER, "  hh ");
+    TEST_CASE("hh", 3, JUST_CENTER, "hh ");
+    TEST_CASE("hh", 5, JUST_CENTER, " hh  ");
     TEST_CASE("hh", 4, JUST_CENTER, " hh ");
     TEST_CASE("hello", 7, JUST_CENTER, " hello ");
 

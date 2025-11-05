@@ -510,6 +510,14 @@ void tmb_formatter_print(const tmb_formatter_t* formatter) {
     }
 }
 
+TMB_API tmb_formatter_t tmb_formatter_make(const char* fmt) {
+    tmb_formatter_t formatter = { 0 };
+    if (!tmb_formatter_init(&formatter, fmt)) {
+        return (tmb_formatter_t) { 0 };
+    }
+    return formatter;
+}
+
 void tmb_formatter_deinit(tmb_formatter_t* formatter) {
     if (formatter->data_free_fn != NULL) {
         formatter->data_free_fn(formatter->data);
