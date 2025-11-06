@@ -15,8 +15,8 @@ tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg) {
     lgr->cfg            = cfg;
     int logger_name_len = (int)strlen(logger_name);
     int len_to_cpy      = 0;
-    if (logger_name_len > MAX_LOGGER_NAME_LEN) {
-        len_to_cpy = MAX_LOGGER_NAME_LEN;
+    if (logger_name_len > TMB_MAX_LOGGER_NAME_LEN) {
+        len_to_cpy = TMB_MAX_LOGGER_NAME_LEN;
     } else {
         len_to_cpy = logger_name_len;
     }

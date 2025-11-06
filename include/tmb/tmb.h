@@ -96,7 +96,7 @@ typedef enum {
     TMB_LOG_LEVEL_COUNT
 } tmb_log_level;
 
-#define TMB_DEFAULT_LIB_CFG .enable_colors = true, .log_level = LOG_LEVEL_DEBUG
+#define TMB_DEFAULT_LIB_CFG .enable_colors = true, .log_level = TMB_LOG_LEVEL_DEBUG
 
 #define TMB_DEFAULT_LOGGER_CFG                                                 \
     .enable_colors = true, .log_level = TMB_LOG_LEVEL_INFO
