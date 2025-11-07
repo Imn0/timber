@@ -43,8 +43,37 @@
 #endif
 
 #ifndef TMB_DEFAULT_FORMAT
-    #define TMB_DEFAULT_FORMAT "[{^7:l}] - {$BLACK:$ANSI_BOLD:}{>]20:@}:{<4:#}{$RESET:} - {$}\n"
+    #define TMB_DEFAULT_FORMAT                                                 \
+        "[{^7:l}] - {$BLACK:$ANSI_BOLD:}{>]20:@}:{<4:#}{$RESET:} - {$}\n"
 #endif
+
+#define TMB_INT_LOG_LEVEL_DEBUG 0
+#define TMB_INT_LOG_LEVEL_INFO  1
+#define TMB_INT_LOG_LEVEL_WARN  2
+#define TMB_INT_LOG_LEVEL_ERROR 3
+
+#ifndef TMB_INT_LOG_LEVEL
+    #define TMB_INT_LOG_LEVEL TMB_INT_LOG_LEVEL_DEBUG
+#endif
+
+#if TMB_INT_LOG_LEVEL <= TMB_INT_LOG_LEVEL_DEBUG
+    #define TMB_INT_DEBUG(msg, ...) TMB_INT_LOG("[DBG]", msg, __VA_ARGS__)
+#endif
+
+#if TMB_INT_LOG_LEVEL <= TMB_INT_LOG_LEVEL_DEBUG
+    #define TMB_INT_INFO(msg, ...) TMB_INT_LOG("[INF]", msg, __VA_ARGS__)
+#endif
+
+#if TMB_INT_LOG_LEVEL <= TMB_INT_LOG_LEVEL_DEBUG
+    #define TMB_INT_WARN(msg, ...) TMB_INT_LOG("[WRN]", msg, __VA_ARGS__)
+#endif
+
+#if TMB_INT_LOG_LEVEL <= TMB_INT_LOG_LEVEL_DEBUG
+    #define TMB_INT_ERROR(msg, ...) TMB_INT_LOG("[ERR]", msg, __VA_ARGS__)
+#endif
+
+#define TMB_INT_LOG(level, msg, ...)                                           \
+    fprintf(stderr, "%s %s " msg "\n", level, __func__, ##__VA_ARGS__);
 
 #define JUSTING_LEFT_OPT_CHAR   '<'
 #define JUSTING_RIGHT_OPT_CHAR  '>'
