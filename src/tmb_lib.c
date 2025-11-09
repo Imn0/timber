@@ -29,46 +29,45 @@ void do_nothing__(void* _data) {
     UNUSED _data;
 }
 
-char* load_entire_file(const char* file) {
-    FILE* f = fopen(file, "r");
+bool load_entire_file(const char* file, tmb_string_builder_t* sb) {
+    bool result = true;
+
+    FILE* f = fopen(file, "rb");
     if (f == NULL) {
-        perror("cannot open file");
-        goto error_return_only;
+        result = false;
+        goto error;
     }
 
-    if (fseek(f, 0L, SEEK_END) != 0) {
-        goto error_close;
-        perror("error reading file size");
-    }
-    long buffsize = ftell(f);
-    if (buffsize == -1) {
-        goto error_close;
-        perror("error reading file size");
-    }
-    char* file_conents = malloc(sizeof(char) * ((size_t)buffsize + 1));
-    if (fseek(f, 0L, SEEK_SET) != 0) {
-        goto error_free;
-        perror("error reading file size");
+    int new_length = 0;
+    long long size = 0;
+
+    if (fseek(f, 0, SEEK_END) < 0) {
+        result = false;
+        goto error;
     }
 
-    size_t read = fread(file_conents, (size_t)buffsize, 1, f);
-    if (read != (size_t)buffsize) {
-        fprintf(stderr,
-                "error reading file, read %zu bytes, expected %lu",
-                read,
-                buffsize);
+    size = ftell(f);
+    if (size < 0) {
+        result = false;
+        goto error;
     }
-    file_conents[buffsize] = '\0';
-    fclose(f);
 
-    return file_conents;
+    if (fseek(f, 0, SEEK_SET) < 0) {
+        result = false;
+        goto error;
+    }
 
-error_free:
-    free(file_conents);
-error_close:
-    fclose(f);
-error_return_only:
-    return NULL;
+    new_length = sb->length + (int)size;
+    da_reserve(sb, new_length);
+
+    fread(sb->items + sb->length, (size_t)size, 1, f);
+
+    sb->length = new_length;
+
+error:
+    if (!result) { printf("AAA"); }
+    if (f) { fclose(f); }
+    return result;
 }
 
 void tmb_sb_just(tmb_string_builder_t* sb,
@@ -468,6 +467,14 @@ bool tmb_sv_cmp(const tmb_string_view_t* sv1, const tmb_string_view_t* sv2) {
         if (sv1->items[i] != sv2->items[i]) return false;
     }
     return true;
+}
+
+char* tmb_sv_to_ctst_copy(const tmb_string_view_t* sv) {
+    char* s = malloc(sizeof(*s) * (size_t)sv->length + 1);
+
+    memcpy(s, sv->items, (unsigned long)sv->length);
+    s[sv->length] = '\0';
+    return s;
 }
 
 bool tmb_is_substring(tmb_string_view_t haystack, const char* needle) {

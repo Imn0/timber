@@ -1,11 +1,12 @@
 #include <config.h>
+#include <config_interlal.h>
 #include <ctype.h>
 #include <stdio.h>
 
 typedef struct tmb_cfg_lexer_impl {
     const char* input;
-    size_t pos;
-    size_t length;
+    int pos;
+    int length;
     int line;
     int column;
     char current_char;
@@ -36,7 +37,7 @@ static void skip_whitespace(tmb_cfg_lexer_impl_t* lex) {
 static void token_init(tmb_cfg_tok_t* tok,
                        tmb_cfg_tok_type type,
                        const char* start,
-                       size_t length,
+                       int length,
                        int line,
                        int column) {
     tok->type   = type;
@@ -51,7 +52,7 @@ static void read_string(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
     int start_column       = lex->column;
     const char string_char = *(lex->input + lex->pos);
     const char* start      = lex->input + lex->pos + 1; // skip opening quote
-    size_t content_length  = 0;
+    int content_length     = 0;
 
     // skip opening quote
     advance(lex);
@@ -98,7 +99,7 @@ static void read_identifier(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
     int start_line    = lex->line;
     int start_column  = lex->column;
     const char* start = lex->input + lex->pos;
-    size_t length     = 0;
+    int length        = 0;
 
     while (lex->current_char &&
            (isalnum(lex->current_char) || lex->current_char == '_')) {
@@ -124,7 +125,7 @@ static void read_section(tmb_cfg_lexer_impl_t* t, tmb_cfg_tok_t* tok) {
     advance(t);
 
     const char* start = t->input + t->pos;
-    size_t length     = 0;
+    int length        = 0;
 
     while (t->current_char && t->current_char != ']') {
         if (t->current_char == '\n') {
@@ -223,7 +224,7 @@ static void print_token_value(tmb_cfg_tok_t* token) {
     }
 }
 
-void tmb_lex(tmb_cfg_lexer_t* lex, const char* input, size_t input_size) {
+void tmb_lex(tmb_cfg_lexer_t* lex, const char* input, int input_size) {
     tmb_cfg_lexer_impl_t lex_impl = {
         .input        = input,
         .length       = input_size,
@@ -245,11 +246,9 @@ bool tmb_lex_expect(tmb_cfg_lexer_t* lex,
                     int n,
                     tmb_cfg_tok_type toks[static n])
 #else
-bool tmb_lex_expect(tmb_cfg_lexer_t* lex,
-                    int n,
-                    tmb_cfg_tok_type toks[])
+bool tmb_lex_expect(tmb_cfg_lexer_t* lex, int n, tmb_cfg_tok_type toks[])
 #endif
-                     {
+{
     if (lex->current_tok_idx + n > lex->length) { return false; }
 
     int j = 0;
@@ -281,4 +280,66 @@ void tmb_token_print(tmb_cfg_tok_t* token) {
         print_token_value(token);
     }
     printf("\n");
+}
+
+void tmb_load_config(const char* filename) {
+    tmb_string_builder_t sb = { 0 };
+    bool ok                 = load_entire_file(filename, &sb);
+    if (!ok) { goto end; }
+
+    tmb_cfg_lexer_t lex = { 0 };
+    sb_append(&sb, '\n');
+
+    tmb_lex(&lex, sb.items, sb.length);
+
+    if (!tmb_lex_expect(
+                &lex,
+                2,
+                (tmb_cfg_tok_type[]) { TMB_TOK_SECTION, TMB_TOK_NEWLINE })) {
+        goto end;
+    }
+
+    auto tok        = tmb_lex_get_and_advance(&lex);
+    auto formats_sv = sv_make("formats");
+    auto tok_sv     = (tmb_string_view_t) { .items  = tok.items,
+                                            .length = tok.length };
+    if (!tmb_sv_cmp(&formats_sv, &tok_sv)) {
+        printf("unknown section\n");
+        goto end;
+    }
+    tmb_lex_advance(&lex);
+
+    tmb_config_t config = { 0 };
+
+    while (tmb_lex_expect(&lex,
+                          4,
+                          (tmb_cfg_tok_type[]) { TMB_TOK_IDENT,
+                                                 TMB_TOK_EQUALS,
+                                                 TMB_TOK_STRING,
+                                                 TMB_TOK_NEWLINE })) {
+        auto tok_ident = tmb_lex_get_and_advance(&lex);
+        tmb_lex_advance(&lex);
+        auto tok_string = tmb_lex_get_and_advance(&lex);
+        tmb_lex_advance(&lex);
+
+        auto indent_sv = (tmb_string_view_t) { .items  = tok_ident.items,
+                                               .length = tok_ident.length };
+        auto string_sv = (tmb_string_view_t) { .items  = tok_string.items,
+                                               .length = tok_string.length };
+
+        char* i = tmb_sv_to_ctst_copy(&indent_sv);
+        char* s = tmb_sv_to_ctst_copy(&string_sv);
+
+        hm_put(&config.formats, i, s);
+
+        printf("%d\n", hm_has(&config.formats, i));
+
+        free(i);
+    }
+    tok = tmb_lex_get(&lex);
+    if (tok.type != TMB_TOK_EOF) { printf("dupa\n"); }
+
+end:
+    sb_free(&sb);
+    return;
 }

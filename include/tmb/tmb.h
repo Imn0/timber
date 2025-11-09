@@ -96,7 +96,8 @@ typedef enum {
     TMB_LOG_LEVEL_COUNT
 } tmb_log_level;
 
-#define TMB_DEFAULT_LIB_CFG .enable_colors = true, .log_level = TMB_LOG_LEVEL_DEBUG
+#define TMB_DEFAULT_LIB_CFG                                                    \
+    .enable_colors = true, .log_level = TMB_LOG_LEVEL_DEBUG
 
 #define TMB_DEFAULT_LOGGER_CFG                                                 \
     .enable_colors = true, .log_level = TMB_LOG_LEVEL_INFO
@@ -193,6 +194,9 @@ TMB_API void tmb_set_options(tmb_cfg_t);
 TMB_API void tmb_print_version(void);
 TMB_API const char* tmb_get_version(void);
 TMB_API tmb_logger_t* tmb_get_default_logger();
+
+/* Config */
+TMB_API void tmb_load_config(const char* filename);
 
 /* Logger functions */
 TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg);

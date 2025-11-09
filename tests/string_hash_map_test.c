@@ -37,4 +37,17 @@ int main() {
         ASSERT(a == 123);
         ASSERT(hm.key_type == KEY_STR);
     }
+    {
+        hash_map hm = { 0 };
+        char* b_s   = tmb_strdup("b");
+        hm_put(&hm, b_s, 12);
+        ASSERT(hm_has(&hm, "b"));
+        hm_put(&hm, "a", 123);
+
+        int a = hm_get(&hm, "a");
+        int b = hm_get(&hm, "b");
+        ASSERT(a == 123);
+        ASSERT(b == 12);
+        ASSERT(hm.key_type == KEY_STR);
+    }
 }
