@@ -200,6 +200,7 @@ static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
                                       const tmb_log_ctx_t* const ctx,
                                       const tmb_logger_t* lgr) {
     tmb_string_builder_t message = { 0 };
+    da_reserve(&message, ctx->message_len + 5 * formatter->length);
     for (int i = 0; i < formatter->length; i++) {
         tmb_chip_t* current_chip = &formatter->items[i];
         tmb_chip_format(current_chip, &message, ctx, lgr);
