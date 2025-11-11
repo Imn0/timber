@@ -3,7 +3,6 @@
 
 #include <tmb/sink.h>
 
-#include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <time.h>

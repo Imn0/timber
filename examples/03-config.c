@@ -1,13 +1,23 @@
 #include <stdio.h>
 #include <tmb/tmb.h>
 
-int main(int argc, char* argv[]) {
-    char* config_file;
-    if (argc != 2) {
-        printf("provide config file\n");
-        config_file = "/home/imno/programming/timber/examples/03-config.toml";
-    } else {
-        config_file = argv[1];
-    }
-    tmb_load_config(config_file);
+/*
+[formats]
+b = "{$}"
+
+[global]
+log_level = "DEBUG"  # 4
+enable_colors = true
+*/
+
+int main(void) {
+    const char* config_contents = "[formats]                \n\
+                                  b = \"{$}\"               \n\
+                                  [global]                  \n\
+                                  log_level = \"DEBUG\" #4  \n\
+                                  enable_colors = true      \n";
+
+    struct tmb_config* cfg = tmb_config_from_string(config_contents);
+    const char* fmt        = tmb_config_get_format(cfg, "b");
+    printf("b -> %s\n", fmt);
 }

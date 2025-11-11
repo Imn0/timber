@@ -6,19 +6,29 @@
 
 typedef enum {
     TMB_TOK_EOF,
-    TMB_TOK_SECTION, // [section_name]
-    TMB_TOK_IDENT,   // key_name
-    TMB_TOK_STRING,  // 'quoted string' | "quoted string"
-    TMB_TOK_EQUALS,  // =
-    TMB_TOK_NEWLINE, // \n
-    TMB_TOK_ERROR
+    TMB_TOK_SB_OPEN,  // [
+    TMB_TOK_SB_CLOSE, // ]
+    TMB_TOK_IDENT,    // ident
+    TMB_TOK_STRING,   // 'quoted string' | "quoted string"
+    TMB_TOK_INT,      // integer literal
+    TMB_TOK_BOOL,     // true | false
+    TMB_TOK_EQUALS,   // =
+    TMB_TOK_NEWLINE,  // \n
+    TMB_TOK_ERROR,
+    TMB_TOK_COUNT
 } tmb_cfg_tok_type;
 
-static const char* const TokenTypeStr[] = {
-    [TMB_TOK_EOF] = "TOK_EOF",       [TMB_TOK_SECTION] = "TOK_SECTION",
-    [TMB_TOK_IDENT] = "TOK_IDENT",   [TMB_TOK_STRING] = "TOK_STRING",
-    [TMB_TOK_EQUALS] = "TOK_EQUALS", [TMB_TOK_NEWLINE] = "TOK_NEWLINE",
-    [TMB_TOK_ERROR] = "TOK_ERROR",
+static const char* const token_type_str[TMB_TOK_COUNT] = {
+    [TMB_TOK_EOF]      = "TOK_EOF",      // 0
+    [TMB_TOK_SB_OPEN]  = "TOK_SB_OPEN",  //
+    [TMB_TOK_SB_CLOSE] = "TOK_SB_CLOSE", //
+    [TMB_TOK_IDENT]    = "TOK_IDENT",    //
+    [TMB_TOK_STRING]   = "TOK_STRING",   //
+    [TMB_TOK_INT]      = "TOK_INT",      //
+    [TMB_TOK_BOOL]     = "TOK_BOOL",     //
+    [TMB_TOK_EQUALS]   = "TOK_EQUALS",   //
+    [TMB_TOK_NEWLINE]  = "TOK_NEWLINE",  //
+    [TMB_TOK_ERROR]    = "TOK_ERROR",    //
 };
 
 typedef struct tmb_cfg_tok {
@@ -40,9 +50,7 @@ bool tmb_lex_expect(tmb_cfg_lexer_t* lex,
                     int n,
                     tmb_cfg_tok_type toks[static n]);
 #else
-bool tmb_lex_expect(tmb_cfg_lexer_t* lex,
-                    int n,
-                    tmb_cfg_tok_type toks[]);
+bool tmb_lex_expect(tmb_cfg_lexer_t* lex, int n, tmb_cfg_tok_type toks[]);
 #endif
 void tmb_lex_advance(tmb_cfg_lexer_t* lex);
 tmb_cfg_tok_t tmb_lex_get(tmb_cfg_lexer_t* lex);

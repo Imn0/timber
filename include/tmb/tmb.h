@@ -110,6 +110,7 @@ typedef struct tmb_sink {
 } tmb_sink_t;
 
 struct tmb_chip;
+struct tmb_config;
 
 typedef struct tmb_sinks {
     int length;
@@ -190,13 +191,16 @@ typedef struct tmb_logger {
 } tmb_logger_t;
 
 /* Library functions */
-TMB_API void tmb_set_options(tmb_cfg_t);
+TMB_API void tmb_set_global_options(tmb_cfg_t);
 TMB_API void tmb_print_version(void);
 TMB_API const char* tmb_get_version(void);
 TMB_API tmb_logger_t* tmb_get_default_logger();
 
 /* Config */
-TMB_API void tmb_load_config(const char* filename);
+TMB_API struct tmb_config* tmb_config_load(const char* filename);
+TMB_API struct tmb_config* tmb_config_from_string(const char* config);
+TMB_API const char* tmb_config_get_format(struct tmb_config* config,
+                                          const char* format_name);
 
 /* Logger functions */
 TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg);
@@ -312,9 +316,9 @@ TMB_API void tmb_log_default(tmb_log_ctx_t ctx, const char* message, ...)
     } while (0)
 
 #define TMB_CFG(...)                                                           \
-    tmb_set_options((struct tmb_cfg) { .log_level     = TMB_LOG_LEVEL_INFO,    \
-                                       .enable_colors = true,                  \
-                                       __VA_ARGS__ })
+    tmb_set_global_options((struct tmb_cfg) { .log_level = TMB_LOG_LEVEL_INFO, \
+                                              .enable_colors = true,           \
+                                              __VA_ARGS__ })
 
 #define TMB_LOGGER(_m_name, ...)                                               \
     tmb_logger_create(                                                         \

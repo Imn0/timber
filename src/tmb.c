@@ -116,7 +116,7 @@ tmb_logger_t* tmb_get_logger_or_default(const char* name) {
     return lgr;
 }
 
-TMB_API void tmb_set_options(tmb_cfg_t cfg) {
+void tmb_set_global_options(tmb_cfg_t cfg) {
     tmb_cfg = cfg;
 }
 

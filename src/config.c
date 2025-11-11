@@ -107,7 +107,32 @@ static void read_identifier(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
         length++;
     }
 
+    if (length == 4 && strncmp(start, "true", 4) == 0) {
+        token_init(tok, TMB_TOK_BOOL, start, length, start_line, start_column);
+        return;
+    }
+
+    if (length == 5 && strncmp(start, "false", 5) == 0) {
+        token_init(tok, TMB_TOK_BOOL, start, length, start_line, start_column);
+        return;
+    }
+
     token_init(tok, TMB_TOK_IDENT, start, length, start_line, start_column);
+    return;
+}
+
+static void read_int(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
+    int start_line    = lex->line;
+    int start_column  = lex->column;
+    const char* start = lex->input + lex->pos;
+    int length        = 0;
+
+    while (isdigit(lex->current_char)) {
+        advance(lex);
+        length++;
+    }
+
+    token_init(tok, TMB_TOK_INT, start, length, start_line, start_column);
     return;
 }
 
@@ -115,48 +140,6 @@ static void skip_comment(tmb_cfg_lexer_impl_t* t) {
     advance(t);
     while (t->current_char && t->current_char == ' ') { advance(t); }
     while (t->current_char && t->current_char != '\n') { advance(t); }
-}
-
-static void read_section(tmb_cfg_lexer_impl_t* t, tmb_cfg_tok_t* tok) {
-    int start_line   = t->line;
-    int start_column = t->column;
-
-    // skip opening bracket
-    advance(t);
-
-    const char* start = t->input + t->pos;
-    int length        = 0;
-
-    while (t->current_char && t->current_char != ']') {
-        if (t->current_char == '\n') {
-            // unterminated section
-            token_init(tok,
-                       TMB_TOK_ERROR,
-                       t->input + t->pos,
-                       1,
-                       start_line,
-                       start_column);
-            return;
-        }
-        advance(t);
-        length++;
-    }
-
-    if (t->current_char != ']') {
-        token_init(tok,
-                   TMB_TOK_ERROR,
-                   t->input + t->pos,
-                   1,
-                   start_line,
-                   start_column);
-        return;
-    }
-
-    // skip closing bracket
-    advance(t);
-
-    token_init(tok, TMB_TOK_SECTION, start, length, start_line, start_column);
-    return;
 }
 
 static void lexer_lex(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
@@ -177,7 +160,16 @@ static void lexer_lex(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
         }
 
         if (lex->current_char == '[') {
-            read_section(lex, tok);
+            const char* start = lex->input + lex->pos;
+            advance(lex);
+            token_init(tok, TMB_TOK_SB_OPEN, start, 1, line, column);
+            return;
+        }
+
+        if (lex->current_char == ']') {
+            const char* start = lex->input + lex->pos;
+            advance(lex);
+            token_init(tok, TMB_TOK_SB_CLOSE, start, 1, line, column);
             return;
         }
 
@@ -196,6 +188,11 @@ static void lexer_lex(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
         if (lex->current_char == '#') {
             skip_comment(lex);
             continue;
+        }
+
+        if (isdigit(lex->current_char)) {
+            read_int(lex, tok);
+            return;
         }
 
         if (isalpha(lex->current_char) || lex->current_char == '_') {
@@ -273,7 +270,7 @@ tmb_cfg_tok_t tmb_lex_get_and_advance(tmb_cfg_lexer_t* lex) {
 }
 
 void tmb_token_print(tmb_cfg_tok_t* token) {
-    printf("Token: %-12s ", TokenTypeStr[token->type]);
+    printf("Token: %-12s ", token_type_str[token->type]);
     printf(" L: %3d, C: %3d", token->line, token->column);
     if (token->items || token->length > 0) {
         printf(" Value: ");
@@ -282,34 +279,36 @@ void tmb_token_print(tmb_cfg_tok_t* token) {
     printf("\n");
 }
 
-void tmb_load_config(const char* filename) {
-    tmb_string_builder_t sb = { 0 };
-    bool ok                 = load_entire_file(filename, &sb);
-    if (!ok) { goto end; }
-
+static tmb_config_t* tmb_config_load_impl(
+        const tmb_string_view_t* config_contents) {
     tmb_cfg_lexer_t lex = { 0 };
-    sb_append(&sb, '\n');
 
-    tmb_lex(&lex, sb.items, sb.length);
-
-    if (!tmb_lex_expect(
-                &lex,
-                2,
-                (tmb_cfg_tok_type[]) { TMB_TOK_SECTION, TMB_TOK_NEWLINE })) {
+    tmb_lex(&lex, config_contents->items, config_contents->length);
+    tmb_config_t* config = NULL;
+    if (!tmb_lex_expect(&lex,
+                        4,
+                        (tmb_cfg_tok_type[]) { TMB_TOK_SB_OPEN,
+                                               TMB_TOK_IDENT,
+                                               TMB_TOK_SB_CLOSE,
+                                               TMB_TOK_NEWLINE })) {
         goto end;
     }
 
+    tmb_lex_advance(&lex); // [
     tmb_cfg_tok_t tok            = tmb_lex_get_and_advance(&lex);
     tmb_string_view_t formats_sv = sv_make("formats");
     tmb_string_view_t tok_sv     = (tmb_string_view_t) { .items  = tok.items,
                                                          .length = tok.length };
-    if (!tmb_sv_cmp(&formats_sv, &tok_sv)) {
+
+    if (!tmb_sv_cmp(&formats_sv, &tok_sv)) { // ident
         printf("unknown section\n");
         goto end;
     }
-    tmb_lex_advance(&lex);
+    tmb_lex_advance(&lex); // ]
+    tmb_lex_advance(&lex); // \n
 
-    tmb_config_t config = { 0 };
+    config  = malloc(sizeof(*config));
+    *config = (tmb_config_t) { 0 };
 
     while (tmb_lex_expect(&lex,
                           4,
@@ -322,24 +321,60 @@ void tmb_load_config(const char* filename) {
         tmb_cfg_tok_t tok_string = tmb_lex_get_and_advance(&lex);
         tmb_lex_advance(&lex);
 
-        tmb_string_view_t indent_sv = (tmb_string_view_t) { .items  = tok_ident.items,
-                                               .length = tok_ident.length };
-        tmb_string_view_t string_sv = (tmb_string_view_t) { .items  = tok_string.items,
-                                               .length = tok_string.length };
+        tmb_string_view_t indent_sv = (tmb_string_view_t) {
+            .items = tok_ident.items, .length = tok_ident.length
+        };
+        tmb_string_view_t string_sv = (tmb_string_view_t) {
+            .items = tok_string.items, .length = tok_string.length
+        };
 
         char* i = tmb_sv_to_ctst_copy(&indent_sv);
         char* s = tmb_sv_to_ctst_copy(&string_sv);
-
-        hm_put(&config.formats, i, s);
-
-        printf("%d\n", hm_has(&config.formats, i));
+        hm_put(&config->formats, i, s);
 
         free(i);
     }
     tok = tmb_lex_get(&lex);
-    if (tok.type != TMB_TOK_EOF) { printf("dupa\n"); }
+    if (tok.type != TMB_TOK_EOF) {}
 
 end:
+    return config;
+}
+
+struct tmb_config* tmb_config_load(const char* filename) {
+    struct tmb_config* r    = NULL;
+    tmb_string_builder_t sb = { 0 };
+    bool ok                 = load_entire_file(filename, &sb);
+    if (!ok) { goto end; }
+    sb_append(&sb, '\n');
+
+    tmb_string_view_t sv = sv_from_sb(&sb);
+
+    r = tmb_config_load_impl(&sv);
+end:
     sb_free(&sb);
-    return;
+    return r;
+}
+
+struct tmb_config* tmb_config_from_string(const char* config) {
+    struct tmb_config* r    = NULL;
+    tmb_string_builder_t sb = { 0 };
+    sb_append_cstr(&sb, config);
+    sb_append(&sb, '\n');
+    tmb_string_view_t sv = sv_from_sb(&sb);
+
+    r = tmb_config_load_impl(&sv);
+    sb_free(&sb);
+    return r;
+}
+
+const char* tmb_config_get_format(struct tmb_config* config,
+                                  const char* format_name) {
+    if (config == NULL) { return NULL; }
+    if (format_name == NULL) { return NULL; }
+
+    if (hm_has(&config->formats, format_name)) {
+        return hm_get(&config->formats, format_name);
+    }
+    return NULL;
 }
