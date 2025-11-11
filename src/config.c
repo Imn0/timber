@@ -299,10 +299,10 @@ void tmb_load_config(const char* filename) {
         goto end;
     }
 
-    auto tok        = tmb_lex_get_and_advance(&lex);
-    auto formats_sv = sv_make("formats");
-    auto tok_sv     = (tmb_string_view_t) { .items  = tok.items,
-                                            .length = tok.length };
+    tmb_cfg_tok_t tok            = tmb_lex_get_and_advance(&lex);
+    tmb_string_view_t formats_sv = sv_make("formats");
+    tmb_string_view_t tok_sv     = (tmb_string_view_t) { .items  = tok.items,
+                                                         .length = tok.length };
     if (!tmb_sv_cmp(&formats_sv, &tok_sv)) {
         printf("unknown section\n");
         goto end;
@@ -317,14 +317,14 @@ void tmb_load_config(const char* filename) {
                                                  TMB_TOK_EQUALS,
                                                  TMB_TOK_STRING,
                                                  TMB_TOK_NEWLINE })) {
-        auto tok_ident = tmb_lex_get_and_advance(&lex);
+        tmb_cfg_tok_t tok_ident = tmb_lex_get_and_advance(&lex);
         tmb_lex_advance(&lex);
-        auto tok_string = tmb_lex_get_and_advance(&lex);
+        tmb_cfg_tok_t tok_string = tmb_lex_get_and_advance(&lex);
         tmb_lex_advance(&lex);
 
-        auto indent_sv = (tmb_string_view_t) { .items  = tok_ident.items,
+        tmb_string_view_t indent_sv = (tmb_string_view_t) { .items  = tok_ident.items,
                                                .length = tok_ident.length };
-        auto string_sv = (tmb_string_view_t) { .items  = tok_string.items,
+        tmb_string_view_t string_sv = (tmb_string_view_t) { .items  = tok_string.items,
                                                .length = tok_string.length };
 
         char* i = tmb_sv_to_ctst_copy(&indent_sv);
