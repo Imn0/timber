@@ -359,9 +359,10 @@ enum tmb_hm_key_type__ { KEY_RAW = 1, KEY_STR = 2 };
 #endif
 
 #define TMB_ADDRES_OF(T, x)                                                    \
-    &(struct { TMB_TYPEOF(T) a; }) {                                           \
-        x                                                                      \
-    }
+    &(struct {                                                                 \
+        TMB_TYPEOF(T) a;                                                       \
+        void* _b;                                                              \
+    }) { x, 0 }
 #define TMB_OFFSETOF_DEREF(__var, __field1, __field2)                          \
     ((size_t)&(((TMB_TYPEOF(*((TMB_TYPEOF(__var)*)0)->__field1)*)0)->__field2))
 
