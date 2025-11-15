@@ -412,7 +412,7 @@ static tmb_config_t* tmb_config_load_impl(
 
     return config;
 fail:
-    // todo free hashmap
+    hm_free(&config->formats);
     free(config);
     return NULL;
 }

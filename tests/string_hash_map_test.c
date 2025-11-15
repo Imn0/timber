@@ -20,6 +20,9 @@ int main() {
         int a = hm_get(&hm, p2);
         ASSERT(a == 12);
         ASSERT(hm.key_type == KEY_STR);
+        hm_free(&hm);
+        free(p1);
+        free(p2);
     }
     {
         hash_map hm = { 0 };
@@ -36,6 +39,9 @@ int main() {
                        "a very long string so its easy to see in the debbuger");
         ASSERT(a == 123);
         ASSERT(hm.key_type == KEY_STR);
+        hm_free(&hm);
+        free(p1);
+        free(p2);
     }
     {
         hash_map hm = { 0 };
@@ -49,5 +55,7 @@ int main() {
         ASSERT(a == 123);
         ASSERT(b == 12);
         ASSERT(hm.key_type == KEY_STR);
+        hm_free(&hm);
+        free(b_s);
     }
 }

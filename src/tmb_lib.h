@@ -479,6 +479,22 @@ void tmb_hm_set_wrapper(void* user_hm,
             TMB_OFFSETOF_DEREF(*(hm), tmp, key),                               \
             TMB_OFFSETOF_DEREF(*(hm), tmp, occupied))
 
+#define hm_free(hm)                                                            \
+    do {                                                                       \
+        if ((hm)->capacity) {                                                  \
+            if ((hm)->key_type == KEY_STR) {                                   \
+                for (int m_i = 0; m_i < (hm)->capacity; m_i++) {               \
+                    free((void*)(hm)->buckets[m_i].key);                       \
+                }                                                              \
+            }                                                                  \
+            free((void*)(hm)->buckets);                                        \
+            (hm)->key_type = 0;                                                \
+            (hm)->buckets  = NULL;                                             \
+            (hm)->capacity = 0;                                                \
+            (hm)->occupied = 0;                                                \
+        }                                                                      \
+    } while (0)
+
 /*
 Mutexes
 */
