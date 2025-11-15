@@ -298,9 +298,20 @@ void tmb_sb_just(tmb_string_builder_t* sb,
                  enum tmb_sb_just_opt just_setting,
                  int amount,
                  char pad_char);
+void tmb_sb_just_inplace(tmb_string_builder_t* sb,
+                         int start_pos,
+                         int content_len,
+                         enum tmb_sb_just_opt just_setting,
+                         int amount,
+                         char pad_char);
 void tmb_sb_truncate(tmb_string_builder_t* sb,
                      enum tmb_sb_truncate_opt truncate_setting,
                      int max_len);
+void tmb_sb_truncate_inplace(tmb_string_builder_t* sb,
+                             int start_pos,
+                             int content_len,
+                             enum tmb_sb_truncate_opt truncate_setting,
+                             int max_len);
 
 typedef struct tmb_string_view {
     int length;

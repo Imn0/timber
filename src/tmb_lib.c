@@ -147,6 +147,78 @@ void tmb_sb_truncate(tmb_string_builder_t* sb,
     sb->capacity = truncated.capacity;
 }
 
+void tmb_sb_just_inplace(tmb_string_builder_t* sb,
+                         int start_pos,
+                         int content_len,
+                         enum tmb_sb_just_opt just_setting,
+                         int amount,
+                         char pad_char) {
+    if (amount <= content_len || just_setting == JUST_OFF) { return; }
+
+    int total_pad = amount - content_len;
+    int pad_left  = 0;
+    int pad_right = 0;
+
+    switch (just_setting) {
+    case JUST_LEFT:
+        pad_right = total_pad;
+        break;
+    case JUST_CENTER:
+        pad_left  = total_pad / 2;
+        pad_right = total_pad - pad_left;
+        break;
+    case JUST_RIGHT:
+        pad_left = total_pad;
+        break;
+    case JUST_OFF:
+    default:
+        return;
+    }
+
+    da_reserve(sb, start_pos + amount);
+
+    if (pad_left > 0) {
+        memmove(sb->items + start_pos + pad_left,
+                sb->items + start_pos,
+                (size_t)content_len);
+
+        memset(sb->items + start_pos, pad_char, (size_t)pad_left);
+    }
+
+    if (pad_right > 0) {
+        memset(sb->items + start_pos + pad_left + content_len,
+               pad_char,
+               (size_t)pad_right);
+    }
+
+    sb->length = start_pos + amount;
+}
+
+void tmb_sb_truncate_inplace(tmb_string_builder_t* sb,
+                             int start_pos,
+                             int content_len,
+                             enum tmb_sb_truncate_opt truncate_setting,
+                             int max_len) {
+    if (max_len >= content_len || truncate_setting == TRUNCATE_OFF) { return; }
+
+    switch (truncate_setting) {
+    case TRUNCATE_RIGHT:
+        sb->length = start_pos + max_len;
+        break;
+
+    case TRUNCATE_LEFT:
+        memmove(sb->items + start_pos,
+                sb->items + start_pos + (content_len - max_len),
+                (size_t)max_len);
+        sb->length = start_pos + max_len;
+        break;
+
+    case TRUNCATE_OFF:
+    default:
+        break;
+    }
+}
+
 static u64 hash_djb2(const void* addr_of_key, size_t key_size) {
     const u8* a = addr_of_key;
     u64 hash    = 5381;

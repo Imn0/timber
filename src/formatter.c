@@ -86,66 +86,79 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
                                    const tmb_formatter_t* fmt) {
     bool use_color = fmt->enable.colors && lgr->cfg.enable_colors &&
                      tmb_cfg.enable_colors;
-    tmb_string_builder_t buff       = { 0 };
-    tmb_string_builder_t color_buff = { 0 };
-    bool auto_color_used = false; // when color comes from chip itself
+
+    bool auto_color_used = false;
+
+    if (use_color) {
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+        switch (chip->type) {
+        case CHIP_TYPE_LEVEL_L:
+        case CHIP_TYPE_LEVEL_S:
+            sb_appendn(target,
+                       tmb_log_level_color_len[ctx->log_level],
+                       tmb_log_level_color[ctx->log_level]);
+            auto_color_used = true;
+            break;
+        default:
+            break;
+        }
+    }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+
+    int content_start = target->length;
     switch (chip->type) {
     case CHIP_TYPE_UNKNOWN:
         printf("ERROR CHIP\n");
         break;
     case CHIP_TYPE_MESSAGE:
-        sb_appendn(&buff, ctx->message_len, ctx->message);
+        sb_appendn(target, ctx->message_len, ctx->message);
         break;
     case CHIP_TYPE_CONST_VAL:
-        sb_appendn(&buff, chip->const_val.length, chip->const_val.items);
+        sb_appendn(target, chip->const_val.length, chip->const_val.items);
         break;
     case CHIP_TYPE_LEVEL_L:
-        if (use_color) {
-            sb_appendn(&color_buff,
-                       tmb_log_level_color_len[ctx->log_level],
-                       tmb_log_level_color[ctx->log_level]);
-            auto_color_used = true;
-        }
-        sb_appendn(&buff,
+
+        sb_appendn(target,
                    tmb_log_level_str_len[ctx->log_level],
                    tmb_log_level_str[ctx->log_level]);
         break;
     case CHIP_TYPE_LEVEL_S:
-        if (use_color) {
-            sb_appendn(&color_buff,
-                       tmb_log_level_color_len[ctx->log_level],
-                       tmb_log_level_color[ctx->log_level]);
-            auto_color_used = true;
-        }
-        sb_append(&buff, tmb_log_level_char[ctx->log_level]);
+
+        sb_append(target, tmb_log_level_char[ctx->log_level]);
         break;
     case CHIP_TYPE_BASEFILE:
-        sb_appendn(&buff, ctx->filename_base_len, ctx->filename_base);
+        sb_appendn(target, ctx->filename_base_len, ctx->filename_base);
         break;
     case CHIP_TYPE_FILE:
-        sb_appendn(&buff, ctx->filename_len, ctx->filename);
+        sb_appendn(target, ctx->filename_len, ctx->filename);
         break;
     case CHIP_TYPE_LINE:
-        sb_appendf(&buff, "%d", ctx->line_no);
+        sb_appendf(target, "%d", ctx->line_no);
         break;
     case CHIP_TYPE_FUNC:
-        sb_appendn(&buff, ctx->funcname_len, ctx->funcname);
+        sb_appendn(target, ctx->funcname_len, ctx->funcname);
         break;
     case CHIP_TYPE_LOGGER_NAME:
-        sb_appendn(&buff, (int)strlen(lgr->name), lgr->name);
+        sb_appendn(target, (int)strlen(lgr->name), lgr->name);
         break;
     case CHIP_TYPE_TAG:
         if (lgr->tags.length > 0) {
-            sb_appendn(&buff,
+            sb_appendn(target,
                        lgr->tags.items[lgr->tags.length - 1].length,
                        lgr->tags.items[lgr->tags.length - 1].items);
         }
         break;
     case CHIP_TYPE_TAGS:
         for (int i = 0; i < lgr->tags.length; i++) {
-            sb_appendn(
-                    &buff, lgr->tags.items[i].length, lgr->tags.items[i].items);
-            if (i != lgr->tags.length - 1) { sb_append(&buff, ':'); }
+            sb_appendn(target,
+                       lgr->tags.items[i].length,
+                       lgr->tags.items[i].items);
+            if (i != lgr->tags.length - 1) { sb_append(target, ':'); }
         }
         break;
     case CHIP_TYPE_LOGGER_STOPWATCH:
@@ -154,47 +167,57 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
                                     .nsec = ctx->stopwatch_nsec },
                 (tmb_timestamp_t) { .sec  = lgr->last_message_stopwatch_sec,
                                     .nsec = lgr->last_message_stopwatch_nsec });
-        sb_appendf(&buff, "%f", (double)d);
+        sb_appendf(target, "%f", (double)d);
         break;
     case CHIP_TYPE_LOGGER_TIMESTAMP:
         // Convert to local time
-        struct tm* tm_info;
-        time_t secs = (time_t)ctx->ts_sec;
-        tm_info     = localtime(&secs);
+        {
+            tmb_string_builder_t buff = { 0 };
+            struct tm* tm_info;
+            time_t secs = (time_t)ctx->ts_sec;
+            tm_info     = localtime(&secs);
 
-        // Format the time string with nanoseconds
-        // Example: "2024-01-15 14:30:45.123456789"
-        da_reserve(&buff, 40);
-        size_t written = strftime(buff.items,
-                                  (size_t)buff.capacity,
-                                  "%Y-%m-%d %H:%M:%S",
-                                  tm_info);
-        buff.length += (int)written;
-        sb_appendf(&buff, ".%09lld", ctx->ts_nsec);
+            // Format the time string with nanoseconds
+            // Example: "2024-01-15 14:30:45.123456789"
+            da_reserve(&buff, 40);
+            size_t written = strftime(buff.items,
+                                      (size_t)buff.capacity,
+                                      "%Y-%m-%d %H:%M:%S",
+                                      tm_info);
+            buff.length += (int)written;
+            sb_appendf(&buff, ".%09lld", ctx->ts_nsec);
+            sb_free(&buff);
+        }
         break;
     case CHIP_TYPE_COLOR:
-        if (use_color) { handle_color_chip(chip, &buff); }
+        if (use_color) { handle_color_chip(chip, target); }
         break;
     default:
         break;
     }
-    if (buff.length < chip->just_amount) {
-        tmb_sb_just(&buff, chip->just_opt, chip->just_amount, ' ');
-    } else if (buff.length > chip->just_amount) {
-        tmb_sb_truncate(&buff, chip->truncate_opt, chip->just_amount);
+    int content_len = target->length - content_start;
+
+    if (chip->just_amount > 0) {
+        if (content_len < chip->just_amount) {
+            tmb_sb_just_inplace(target,
+                                content_start,
+                                content_len,
+                                chip->just_opt,
+                                chip->just_amount,
+                                ' ');
+        } else if (content_len > chip->just_amount) {
+            tmb_sb_truncate_inplace(target,
+                                    content_start,
+                                    content_len,
+                                    chip->truncate_opt,
+                                    chip->just_amount);
+        }
     }
     if (auto_color_used) {
-        sb_appendn(&color_buff, buff.length, buff.items);
-        sb_appendn(&color_buff,
+        sb_appendn(target,
                    (int)TMB_CONST_STR_SIZE(MAKE_ANSI(ANSI_RESET)),
                    MAKE_ANSI(ANSI_RESET));
-        sb_appendn(target, color_buff.length, color_buff.items);
-        sb_free(&buff);
-        sb_free(&color_buff);
-    } else {
-        sb_appendn(target, buff.length, buff.items);
     }
-    sb_free(&buff);
 }
 
 static tmb_formatted_msg_t tmb_format(const tmb_formatter_t* formatter,
@@ -203,8 +226,7 @@ static tmb_formatted_msg_t tmb_format(const tmb_formatter_t* formatter,
     tmb_string_builder_t message = { 0 };
     da_reserve(&message, ctx->message_len + 5 * formatter->length);
     for (int i = 0; i < formatter->length; i++) {
-        tmb_chip_t* current_chip = &formatter->items[i];
-        tmb_chip_format(current_chip, &message, ctx, lgr, formatter);
+        tmb_chip_format(&formatter->items[i], &message, ctx, lgr, formatter);
     }
     return (tmb_formatted_msg_t) { .items  = message.items,
                                    .length = message.length };
