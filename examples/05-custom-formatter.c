@@ -6,7 +6,7 @@ void pass(void* thing) {
     (void)thing;
 }
 
-tmb_formatted_msg_t format(tmb_formatter_t* formatter,
+tmb_formatted_msg_t format(const tmb_formatter_t* formatter,
                            const tmb_log_ctx_t* const ctx,
                            const tmb_logger_t* lgr) {
     (void)formatter;

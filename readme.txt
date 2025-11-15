@@ -19,6 +19,7 @@ format specification
             * T - logger tags separated by ':'
             * t - last added tag
             * d - time since last log message on given logger
+            * D - log timestamp
 
     Justing options is as follows
         justing

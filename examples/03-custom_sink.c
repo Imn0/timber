@@ -20,7 +20,7 @@ int main(void) {
     tmb_logger_t* lgr      = TMB_LOGGER("my logger");
     struct sink_data* data = malloc(sizeof(*data));
     tmb_sink_t sink        = { .sink_fn   = custom_sink_fn,
-                               .free_fn   = free,
+                               .data_free_fn   = free,
                                .sink_data = data };
     tmb_logger_add_sink(lgr, &sink);
     tmb_logger_set_default_format(lgr, "{$}\n");

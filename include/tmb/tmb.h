@@ -81,9 +81,10 @@ typedef struct tmb_formatted_msg {
 
 typedef void tmb_free_fn_t(void*);
 typedef void tmb_sink_fn_t(const char*, int, void*);
-typedef tmb_formatted_msg_t tmb_format_fn_t(struct tmb_formatter* formatter,
-                                            const struct tmb_log_ctx* const ctx,
-                                            const struct tmb_logger* lgr);
+typedef tmb_formatted_msg_t tmb_format_fn_t(
+        const struct tmb_formatter* formatter,
+        const struct tmb_log_ctx* const ctx,
+        const struct tmb_logger* lgr);
 
 typedef enum {
     TMB_LOG_LEVEL_FATAL   = TMB_LEVEL_FATAL,
@@ -104,13 +105,18 @@ typedef enum {
 
 typedef struct tmb_sink {
     tmb_sink_fn_t* sink_fn;
-    tmb_free_fn_t* free_fn;
+    tmb_free_fn_t* data_free_fn;
     void* sink_data;
     atomic_int ref_count;
 } tmb_sink_t;
 
 struct tmb_chip;
 struct tmb_config;
+
+typedef struct tmb_logger_cfg {
+    tmb_log_level log_level;
+    bool enable_colors;
+} tmb_logger_cfg_t;
 
 typedef struct tmb_sinks {
     int length;
@@ -128,8 +134,11 @@ typedef struct tmb_formatter {
     tmb_free_fn_t* data_free_fn;
     struct {
         bool stopwatch;
-        bool time_stamp;
+        bool timestamp;
     } has;
+    struct {
+        bool colors;
+    } enable;
 } tmb_formatter_t;
 
 typedef struct tmb_formatters {
@@ -155,11 +164,6 @@ typedef struct tmb_log_ctx {
     long long stopwatch_nsec;
 } tmb_log_ctx_t;
 
-typedef struct tmb_cfg {
-    tmb_log_level log_level;
-    bool enable_colors;
-} tmb_cfg_t;
-
 typedef struct tmb_tag {
     const char* items;
     int length;
@@ -173,7 +177,7 @@ typedef struct tmb_tags {
 
 typedef struct tmb_logger {
     char name[TMB_MAX_LOGGER_NAME_LEN];
-    tmb_cfg_t cfg;
+    tmb_logger_cfg_t cfg;
     tmb_sinks_t sinks;
     tmb_formatters_t formatters;
     tmb_tags_t tags;
@@ -186,12 +190,12 @@ typedef struct tmb_logger {
     int64_t last_message_stopwatch_nsec;
     struct {
         bool stopwatch;
-        bool time_stamp;
+        bool timestamp;
     } has;
 } tmb_logger_t;
 
 /* Library functions */
-TMB_API void tmb_set_global_options(tmb_cfg_t);
+TMB_API void tmb_set_global_options(tmb_logger_cfg_t);
 TMB_API void tmb_print_version(void);
 TMB_API const char* tmb_get_version(void);
 TMB_API tmb_logger_t* tmb_get_default_logger();
@@ -203,7 +207,7 @@ TMB_API const char* tmb_config_get_format(struct tmb_config* config,
                                           const char* format_name);
 
 /* Logger functions */
-TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_cfg_t cfg);
+TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name, tmb_logger_cfg_t cfg);
 TMB_API void tmb_logger_destroy(tmb_logger_t* logger);
 
 TMB_API bool tmb_logger_set_default_format(tmb_logger_t* logger,
@@ -225,7 +229,6 @@ TMB_API tmb_logger_t* tmb_get_logger_or_default(const char* name);
 
 /* Format functions */
 TMB_API tmb_formatter_t tmb_formatter_make(const char* fmt);
-TMB_API tmb_formatter_t tmb_formatter_graylog_make(void);
 TMB_API void tmb_formatter_deinit(tmb_formatter_t* formater);
 
 /* Logging functions */
@@ -316,13 +319,13 @@ TMB_API void tmb_log_default(tmb_log_ctx_t ctx, const char* message, ...)
     } while (0)
 
 #define TMB_CFG(...)                                                           \
-    tmb_set_global_options((struct tmb_cfg) { .log_level = TMB_LOG_LEVEL_INFO, \
+    tmb_set_global_options((struct tmb_logger_cfg) { .log_level = TMB_LOG_LEVEL_INFO, \
                                               .enable_colors = true,           \
                                               __VA_ARGS__ })
 
 #define TMB_LOGGER(_m_name, ...)                                               \
     tmb_logger_create(                                                         \
-            _m_name, (struct tmb_cfg) { TMB_DEFAULT_LOGGER_CFG, __VA_ARGS__ })
+            _m_name, (struct tmb_logger_cfg) { TMB_DEFAULT_LOGGER_CFG, __VA_ARGS__ })
 
 #ifdef TMB_LOGGING_IMPLEMENTATION
 // TODO

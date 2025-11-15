@@ -82,9 +82,11 @@ static inline void handle_color_chip(tmb_chip_t* chip,
 static inline void tmb_chip_format(tmb_chip_t* chip,
                                    tmb_string_builder_t* target,
                                    const tmb_log_ctx_t* const ctx,
-                                   const tmb_logger_t* lgr) {
-    bool use_color            = lgr->cfg.enable_colors && tmb_cfg.enable_colors;
-    tmb_string_builder_t buff = { 0 };
+                                   const tmb_logger_t* lgr,
+                                   const tmb_formatter_t* fmt) {
+    bool use_color = fmt->enable.colors && lgr->cfg.enable_colors &&
+                     tmb_cfg.enable_colors;
+    tmb_string_builder_t buff       = { 0 };
     tmb_string_builder_t color_buff = { 0 };
     bool auto_color_used = false; // when color comes from chip itself
     switch (chip->type) {
@@ -147,15 +149,14 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
         }
         break;
     case CHIP_TYPE_LOGGER_STOPWATCH:
-        float d = tmb_time_stamp_diff(
-                (tmb_time_stamp_t) { .sec  = ctx->stopwatch_sec,
-                                     .nsec = ctx->stopwatch_nsec },
-                (tmb_time_stamp_t) {
-                        .sec  = lgr->last_message_stopwatch_sec,
-                        .nsec = lgr->last_message_stopwatch_nsec });
+        float d = tmb_timestamp_diff(
+                (tmb_timestamp_t) { .sec  = ctx->stopwatch_sec,
+                                    .nsec = ctx->stopwatch_nsec },
+                (tmb_timestamp_t) { .sec  = lgr->last_message_stopwatch_sec,
+                                    .nsec = lgr->last_message_stopwatch_nsec });
         sb_appendf(&buff, "%f", (double)d);
         break;
-    case CHIP_TYPE_LOGGER_TIME_STAMP:
+    case CHIP_TYPE_LOGGER_TIMESTAMP:
         // Convert to local time
         struct tm* tm_info;
         time_t secs = (time_t)ctx->ts_sec;
@@ -196,14 +197,14 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
     sb_free(&buff);
 }
 
-static tmb_formatted_msg_t tmb_format(tmb_formatter_t* formatter,
+static tmb_formatted_msg_t tmb_format(const tmb_formatter_t* formatter,
                                       const tmb_log_ctx_t* const ctx,
                                       const tmb_logger_t* lgr) {
     tmb_string_builder_t message = { 0 };
     da_reserve(&message, ctx->message_len + 5 * formatter->length);
     for (int i = 0; i < formatter->length; i++) {
         tmb_chip_t* current_chip = &formatter->items[i];
-        tmb_chip_format(current_chip, &message, ctx, lgr);
+        tmb_chip_format(current_chip, &message, ctx, lgr, formatter);
     }
     return (tmb_formatted_msg_t) { .items  = message.items,
                                    .length = message.length };
@@ -325,8 +326,8 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
             formatter->has.stopwatch = true;
             break;
         case 'D':
-            chip.type                 = CHIP_TYPE_LOGGER_TIME_STAMP;
-            formatter->has.time_stamp = true;
+            chip.type                = CHIP_TYPE_LOGGER_TIMESTAMP;
+            formatter->has.timestamp = true;
             break;
         default:
             UNUSED fprintf(stderr, "unknown format %c\n", chip_type->items[0]);
@@ -391,17 +392,30 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
 
     for (int i = 0; i < sv.length; i++) {
         // handle lone '}' for consistency with {{ -> {
-        if (sv.items[i] == '}' && sv.items[i + 1] != '}') {
+        if (sv.items[i] == '}' && i + 1 < sv.length && sv.items[i + 1] != '}') {
             printf("BROKEN FMT next chip is %c\n", sv.items[i + 1]);
             goto fail;
-        } else if (sv.items[i] == '}' && sv.items[i + 1] == '}') {
-            i++;
-            tmb_formatter_add_const_chip(formatter, sv.items + i, 1);
+        } else if (i + 1 < sv.length && sv.items[i] == '}' &&
+                   sv.items[i + 1] == '}') {
+            // flush any buffered
+            if (buff.length > 0) {
+                tmb_formatter_add_const_chip(
+                        formatter, buff.items, buff.length);
+                sv_reset(&buff);
+            }
+            i++; // skip the second }
+            tmb_formatter_add_const_chip(formatter, "}", 1);
             continue;
         }
-        if (sv.items[i] == '{' && sv.items[i + 1] == '{') {
-            i++;
-            tmb_formatter_add_const_chip(formatter, sv.items + i, 1);
+        if (i + 1 < sv.length && sv.items[i] == '{' && sv.items[i + 1] == '{') {
+            // flush any buffered
+            if (buff.length > 0) {
+                tmb_formatter_add_const_chip(
+                        formatter, buff.items, buff.length);
+                sv_reset(&buff);
+            }
+            i++; // skip the second {
+            tmb_formatter_add_const_chip(formatter, "{", 1);
             continue;
         }
         if (sv.items[i] == '{') {
@@ -446,6 +460,7 @@ bool tmb_formatter_init(tmb_formatter_t* formatter, const char* fmt) {
     formatter->formated_free_fn = free;
     formatter->format_fn        = tmb_format;
     formatter->data             = NULL;
+    formatter->enable.colors    = true;
     da_free(&opts);
     return true;
 fail:
@@ -464,6 +479,9 @@ void tmb_formatter_print(const tmb_formatter_t* formatter) {
             break;
         case CHIP_TYPE_CONST_VAL:
             printf("CHIP_TYPE_CONST_VAL");
+            printf(" >%.*s<",
+                   formatter->items[i].const_val.length,
+                   formatter->items[i].const_val.items);
             break;
         case CHIP_TYPE_LEVEL_L:
             printf("CHIP_TYPE_LEVEL_L");
@@ -499,8 +517,8 @@ void tmb_formatter_print(const tmb_formatter_t* formatter) {
         case CHIP_TYPE_LOGGER_STOPWATCH:
             printf("CHIP_TYPE_LOGGER_STOPWATCH");
             break;
-        case CHIP_TYPE_LOGGER_TIME_STAMP:
-            printf("CHIP_TYPE_LOGGER_TIME_STAMP");
+        case CHIP_TYPE_LOGGER_TIMESTAMP:
+            printf("CHIP_TYPE_LOGGER_TIMESTAMP");
             break;
         default:
         case CHIP_TYPE_UNKNOWN:

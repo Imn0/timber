@@ -1,3 +1,4 @@
+#include <tmb/formats.h>
 #include <tmb/sink.h>
 #include <tmb/tmb.h>
 
@@ -12,6 +13,11 @@ int main(void) {
                     logger,
                     tmb_formatter_make("{D} {d} {$BLACK:$DIM}{@}:{#}{$RESET} "
                                        "{$BLUE:$}\n")));
+    tmb_logger_assign_format(
+            logger,
+            tmb_logger_add_sink(logger, TMB_SINK_STDERR()),
+            tmb_logger_add_formatter(logger,
+                                     TMB_FORMAT_JSON(.has_timestamp = true)));
 
     tmb_logger_assign_format(
             logger,

@@ -12,8 +12,8 @@ enum CLOCK_TYPE {
     CLOCK_TYPE_MONOTINIC,
 };
 
-static tmb_time_stamp_t get_ts(enum CLOCK_TYPE clock_type) {
-    // extern inline tmb_time_stamp_t tmb_timestamp();
+static tmb_timestamp_t get_ts(enum CLOCK_TYPE clock_type) {
+    // extern inline tmb_timestamp_t tmb_timestamp();
     i64 sec  = 0;
     i64 nsec = 0;
 
@@ -71,13 +71,13 @@ static tmb_time_stamp_t get_ts(enum CLOCK_TYPE clock_type) {
     sec = time(NULL);
 #endif
 
-    return (tmb_time_stamp_t) { .sec = sec, .nsec = nsec };
+    return (tmb_timestamp_t) { .sec = sec, .nsec = nsec };
 }
 
-tmb_time_stamp_t tmb_time_stamp() {
+tmb_timestamp_t tmb_timestamp() {
     return get_ts(CLOCK_TYPE_WALL);
 }
 
-tmb_time_stamp_t tmb_time_stopwatch() {
+tmb_timestamp_t tmb_time_stopwatch() {
     return get_ts(CLOCK_TYPE_MONOTINIC);
 }

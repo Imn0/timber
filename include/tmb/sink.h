@@ -12,11 +12,14 @@ TMB_API tmb_sink_t* tmb_sink_fd_create(FILE* fd);
 TMB_API tmb_sink_t* tmb_sink_file_create(const char* filename);
 #define TMB_SINK_FILE(filename) tmb_sink_file_create(filename)
 
-TMB_API tmb_sink_t* tmb_sink_rotating_file_make(const char* filename,
-                                                int max_files,
-                                                int max_file_size_B);
+TMB_API tmb_sink_t* tmb_sink_rotating_file_create(const char* filename,
+                                                  int max_files,
+                                                  int max_file_size_B);
 #define TMB_SINK_ROTATING_FILE(filename, max_files, max_file_size_B)           \
-    tmb_sink_rotating_file_make(filename, max_files, max_file_size_B)
+    tmb_sink_rotating_file_create(filename, max_files, max_file_size_B)
+
+TMB_API tmb_sink_t* tmb_sink_null_create();
+#define TMB_SINK_NULL() tmb_sink_null_create()
 
 TMB_API tmb_sink_t* tmb_sink_graylog_create(const char* graylog_host, int port);
 #define TMB_SINK_GRAYLOG(graylog_host, port)                                   \

@@ -17,8 +17,8 @@ const char* const TMB_BUILD_TIME = __DATE__ ", " __TIME__;
 
 tmb_logger_registry_t tmb_logger_registry = { 0 };
 
-const tmb_cfg_t tmb_default_logger_cfg = { TMB_DEFAULT_LOGGER_CFG };
-tmb_cfg_t tmb_cfg                      = { TMB_DEFAULT_LIB_CFG };
+const tmb_logger_cfg_t tmb_default_logger_cfg = { TMB_DEFAULT_LOGGER_CFG };
+tmb_logger_cfg_t tmb_cfg                      = { TMB_DEFAULT_LIB_CFG };
 
 const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_STR,
@@ -116,7 +116,7 @@ tmb_logger_t* tmb_get_logger_or_default(const char* name) {
     return lgr;
 }
 
-void tmb_set_global_options(tmb_cfg_t cfg) {
+void tmb_set_global_options(tmb_logger_cfg_t cfg) {
     tmb_cfg = cfg;
 }
 
@@ -163,10 +163,10 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
                                   tmb_logger_t* logger,
                                   const char* message,
                                   va_list args) {
-    tmb_time_stamp_t stop_watch = { 0 };
-    tmb_time_stamp_t ts         = { 0 };
+    tmb_timestamp_t stop_watch = { 0 };
+    tmb_timestamp_t ts         = { 0 };
 
-    if (logger->has.time_stamp) { ts = tmb_time_stamp(); }
+    if (logger->has.timestamp) { ts = tmb_timestamp(); }
     if (logger->has.stopwatch) { stop_watch = tmb_time_stopwatch(); }
 
     tmb_string_builder_t message_filled = { 0 };
@@ -180,9 +180,9 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
     ctx.stopwatch_nsec = stop_watch.nsec;
 
     tmb_log_impl_ext_ctx__(ctx, logger);
-    if (logger->has.time_stamp)
+    if (logger->has.timestamp)
         logger->last_message_stopwatch_nsec = stop_watch.nsec;
-    if (logger->has.time_stamp)
+    if (logger->has.timestamp)
         logger->last_message_stopwatch_sec = stop_watch.sec;
     sb_free(&message_filled);
 }

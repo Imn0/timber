@@ -325,14 +325,14 @@ bool tmb_is_substring(tmb_string_view_t haystack, const char* needle);
 #define MSEC_TO_NSEC(msec) ((msec) * NSEC_IN_MSEC)
 #define NSEC_TO_MSEC(nsec) ((nsec) / NSEC_IN_MSEC)
 
-typedef struct tmb_time_stamp {
+typedef struct tmb_timestamp {
     i64 sec;
     i64 nsec;
-} tmb_time_stamp_t;
+} tmb_timestamp_t;
 
-f32 tmb_time_stamp_diff(tmb_time_stamp_t ts1, tmb_time_stamp_t ts2);
-tmb_time_stamp_t tmb_time_stamp();
-tmb_time_stamp_t tmb_time_stopwatch();
+f32 tmb_timestamp_diff(tmb_timestamp_t ts1, tmb_timestamp_t ts2);
+tmb_timestamp_t tmb_timestamp();
+tmb_timestamp_t tmb_time_stopwatch();
 
 struct tmb_cmp_flt_opt {
     f32 eps;
