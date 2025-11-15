@@ -1,58 +1,29 @@
-#include <config_interlal.h>
-#include <string.h>
+#include <stdio.h>
+#include <tmb_internal.h>
 
-int main() {
-    tmb_cfg_lexer_t lex = { 0 };
-    const char* cfg     = "[loggers]\n"
-                          "hello = \"aaa%d%$\"\n"
-                          "a = 3123\n"
-                          "a = oihwrg\n"
-                          "a = true\n";
-    tmb_lex(&lex, cfg, (int)strlen(cfg));
+/*
+[formats]
+b = "{$}"
 
-    for (int i = 0; i < lex.length; i++) { tmb_token_print(&lex.items[i]); }
-    if (tmb_lex_expect(
-                &lex,
-                4,
-                (tmb_cfg_tok_type[]) { TMB_TOK_SB_OPEN,
-                                       TMB_TOK_IDENT,
-                                       TMB_TOK_SB_CLOSE,
-                                       TMB_TOK_NEWLINE })) { // "[loggers]\n"
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-    } else {
-        ASSERT(0);
+[global]
+log_level = "DEBUG"  # 4
+enable_colors = true
+*/
+
+int main(void) {
+    const char* config_contents = "[formats]                \n\
+                                  b = \"{$}\"               \n\
+                                  [global]                  \n\
+                                  log_level = \"DEBUG\" #4  \n\
+                                  enable_colors = true      \n";
+
+    struct tmb_config* cfg = tmb_config_from_string(config_contents);
+    if (cfg == NULL) {
+        printf("loading config failed\n");
+        return 1;
     }
-
-    if (tmb_lex_expect(&lex,
-                       4,
-                       (tmb_cfg_tok_type[]) {
-                               TMB_TOK_IDENT,
-                               TMB_TOK_EQUALS,
-                               TMB_TOK_STRING,
-                               TMB_TOK_NEWLINE })) { // "hello = \"aaa%d%$\"\n"
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-    } else {
-        ASSERT(0);
-    }
-
-    if (tmb_lex_expect(
-                &lex,
-                4,
-                (tmb_cfg_tok_type[]) { TMB_TOK_IDENT,
-                                       TMB_TOK_EQUALS,
-                                       TMB_TOK_INT,
-                                       TMB_TOK_NEWLINE })) { // "a = 3123\n"
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-        tmb_lex_advance(&lex);
-    } else {
-        ASSERT(0);
-    }
+    const char* fmt = tmb_config_get_format(cfg, "b");
+    ASSERT(tmb_sv_cmp(&sv_make("{$}"), &sv_make(fmt)));
+    ASSERT(tmb_cfg.enable_colors == true);
+    ASSERT(tmb_cfg.log_level == TMB_LOG_LEVEL_DEBUG);
 }

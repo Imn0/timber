@@ -309,7 +309,7 @@ typedef struct tmb_string_view {
 
 #define sv_make(chrs)                                                          \
     (tmb_string_view_t) {                                                      \
-        .items = (chrs), .length = strlen(chrs)                                \
+        .items = (chrs), .length = (int)strlen(chrs)                           \
     }
 
 tmb_string_view_t sv_from_sb(tmb_string_builder_t* sb);

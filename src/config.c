@@ -109,11 +109,13 @@ static void read_identifier(tmb_cfg_lexer_impl_t* lex, tmb_cfg_tok_t* tok) {
 
     if (length == 4 && strncmp(start, "true", 4) == 0) {
         token_init(tok, TMB_TOK_BOOL, start, length, start_line, start_column);
+        tok->data.bool_val = true;
         return;
     }
 
     if (length == 5 && strncmp(start, "false", 5) == 0) {
         token_init(tok, TMB_TOK_BOOL, start, length, start_line, start_column);
+        tok->data.bool_val = false;
         return;
     }
 
@@ -279,47 +281,83 @@ void tmb_token_print(tmb_cfg_tok_t* token) {
     printf("\n");
 }
 
-static tmb_config_t* tmb_config_load_impl(
-        const tmb_string_view_t* config_contents) {
-    tmb_cfg_lexer_t lex = { 0 };
+static bool parse_global(tmb_cfg_lexer_t* lex, tmb_config_t* target_config) {
+    tmb_string_view_t log_level_sv     = sv_make("log_level");
+    tmb_string_view_t enable_colors_sv = sv_make("enable_colors");
 
-    tmb_lex(&lex, config_contents->items, config_contents->length);
-    tmb_config_t* config = NULL;
-    if (!tmb_lex_expect(&lex,
-                        4,
-                        (tmb_cfg_tok_type[]) { TMB_TOK_SB_OPEN,
-                                               TMB_TOK_IDENT,
-                                               TMB_TOK_SB_CLOSE,
-                                               TMB_TOK_NEWLINE })) {
-        goto end;
-    }
-
-    tmb_lex_advance(&lex); // [
-    tmb_cfg_tok_t tok            = tmb_lex_get_and_advance(&lex);
-    tmb_string_view_t formats_sv = sv_make("formats");
-    tmb_string_view_t tok_sv     = (tmb_string_view_t) { .items  = tok.items,
+    while (tmb_lex_expect(
+            lex, 2, (tmb_cfg_tok_type[]) { TMB_TOK_IDENT, TMB_TOK_EQUALS })) {
+        tmb_cfg_tok_t tok = tmb_lex_get_and_advance(lex);
+        tmb_lex_advance(lex); // =
+        tmb_string_view_t tok_sv = (tmb_string_view_t) { .items  = tok.items,
                                                          .length = tok.length };
 
-    if (!tmb_sv_cmp(&formats_sv, &tok_sv)) { // ident
-        printf("unknown section\n");
-        goto end;
+        if (tmb_sv_cmp(&log_level_sv, &tok_sv)) {
+            if (tmb_lex_expect(lex,
+                               2,
+                               (tmb_cfg_tok_type[]) { TMB_TOK_STRING,
+                                                      TMB_TOK_NEWLINE })) {
+                tmb_cfg_tok_t log_level_val_tok = tmb_lex_get_and_advance(lex);
+                tmb_string_view_t log_level_val_sv = (tmb_string_view_t) {
+                    .items  = log_level_val_tok.items,
+                    .length = log_level_val_tok.length
+                };
+                tmb_lex_advance(lex);
+                bool set = false;
+                for (int i = 0; i < TMB_LOG_LEVEL_COUNT; i++) {
+                    if (tmb_sv_cmp(
+                                &log_level_val_sv,
+                                &(tmb_string_view_t) {
+                                        .items  = tmb_log_level_str[i],
+                                        .length = tmb_log_level_str_len[i] })) {
+                        tmb_cfg.log_level = (tmb_log_level)i;
+                        set               = true;
+                        break;
+                    }
+                }
+                if (!set) {
+                    // todo print error
+                    return false;
+                }
+            } else {
+                // todo print error
+                return false;
+            }
+        }
+        if (tmb_sv_cmp(&enable_colors_sv, &tok_sv)) {
+            if (tmb_lex_expect(lex,
+                               2,
+                               (tmb_cfg_tok_type[]) { TMB_TOK_BOOL,
+                                                      TMB_TOK_NEWLINE })) {
+                tmb_cfg_tok_t enable_colors_tok = tmb_lex_get_and_advance(lex);
+                if (enable_colors_tok.data.bool_val == true) {
+                    tmb_cfg.enable_colors = true;
+                } else {
+                    tmb_cfg.enable_colors = false;
+                }
+                tmb_lex_advance(lex);
+
+            } else {
+                // todo print error
+                return false;
+            }
+        }
     }
-    tmb_lex_advance(&lex); // ]
-    tmb_lex_advance(&lex); // \n
+    UNUSED target_config;
+    return true;
+}
 
-    config  = malloc(sizeof(*config));
-    *config = (tmb_config_t) { 0 };
-
-    while (tmb_lex_expect(&lex,
+static bool parse_formats(tmb_cfg_lexer_t* lex, tmb_config_t* target_config) {
+    while (tmb_lex_expect(lex,
                           4,
                           (tmb_cfg_tok_type[]) { TMB_TOK_IDENT,
                                                  TMB_TOK_EQUALS,
                                                  TMB_TOK_STRING,
                                                  TMB_TOK_NEWLINE })) {
-        tmb_cfg_tok_t tok_ident = tmb_lex_get_and_advance(&lex);
-        tmb_lex_advance(&lex);
-        tmb_cfg_tok_t tok_string = tmb_lex_get_and_advance(&lex);
-        tmb_lex_advance(&lex);
+        tmb_cfg_tok_t tok_ident = tmb_lex_get_and_advance(lex);
+        tmb_lex_advance(lex);
+        tmb_cfg_tok_t tok_string = tmb_lex_get_and_advance(lex);
+        tmb_lex_advance(lex);
 
         tmb_string_view_t indent_sv = (tmb_string_view_t) {
             .items = tok_ident.items, .length = tok_ident.length
@@ -330,15 +368,53 @@ static tmb_config_t* tmb_config_load_impl(
 
         char* i = tmb_sv_to_ctst_copy(&indent_sv);
         char* s = tmb_sv_to_ctst_copy(&string_sv);
-        hm_put(&config->formats, i, s);
+        hm_put(&target_config->formats, i, s);
 
         free(i);
     }
-    tok = tmb_lex_get(&lex);
-    if (tok.type != TMB_TOK_EOF) {}
+    return true;
+}
 
-end:
+static tmb_config_t* tmb_config_load_impl(
+        const tmb_string_view_t* config_contents) {
+    tmb_cfg_lexer_t lex = { 0 };
+
+    tmb_lex(&lex, config_contents->items, config_contents->length);
+    tmb_config_t* config = NULL;
+
+    tmb_string_view_t formats_sv = sv_make("formats");
+    tmb_string_view_t global_sv  = sv_make("global");
+
+    config  = malloc(sizeof(*config));
+    *config = (tmb_config_t) { 0 };
+
+    while (tmb_lex_expect(&lex,
+                          4,
+                          (tmb_cfg_tok_type[]) { TMB_TOK_SB_OPEN,
+                                                 TMB_TOK_IDENT,
+                                                 TMB_TOK_SB_CLOSE,
+                                                 TMB_TOK_NEWLINE })) {
+        tmb_lex_advance(&lex); // [
+        tmb_cfg_tok_t tok        = tmb_lex_get_and_advance(&lex);
+        tmb_string_view_t tok_sv = (tmb_string_view_t) { .items  = tok.items,
+                                                         .length = tok.length };
+        tmb_lex_advance(&lex); // ]
+        tmb_lex_advance(&lex); // \n
+
+        if (tmb_sv_cmp(&formats_sv, &tok_sv)) { // ident
+            if (!parse_formats(&lex, config)) goto fail;
+        }
+
+        if (tmb_sv_cmp(&global_sv, &tok_sv)) { // ident
+            if (!parse_global(&lex, config)) goto fail;
+        }
+    }
+
     return config;
+fail:
+    // todo free hashmap
+    free(config);
+    return NULL;
 }
 
 struct tmb_config* tmb_config_load(const char* filename) {

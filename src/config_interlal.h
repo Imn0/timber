@@ -37,6 +37,10 @@ typedef struct tmb_cfg_tok {
     int length;
     int line;
     int column;
+    union {
+        bool bool_val;
+        int int_val;
+    } data;
 } tmb_cfg_tok_t;
 
 typedef struct tmb_cfg_lexer {

@@ -18,6 +18,10 @@ int main(void) {
                                   enable_colors = true      \n";
 
     struct tmb_config* cfg = tmb_config_from_string(config_contents);
-    const char* fmt        = tmb_config_get_format(cfg, "b");
+    if (cfg == NULL) {
+        printf("loading config failed\n");
+        return 1;
+    }
+    const char* fmt = tmb_config_get_format(cfg, "b");
     printf("b -> %s\n", fmt);
 }
