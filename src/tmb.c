@@ -9,10 +9,11 @@
 #include <stdio.h>
 #include <time.h>
 
-const char* const TMB_PATCH_V    = "0";
-const char* const TMB_MINOR_V    = "0";
-const char* const TMB_MAJOR_V    = "0";
 const char* const TMB_SO_V       = "0";
+
+const char* const TMB_MAJOR_V    = "0";
+const char* const TMB_MINOR_V    = "0";
+const char* const TMB_PATCH_V    = "1";
 const char* const TMB_BUILD_TIME = __DATE__ ", " __TIME__;
 
 tmb_logger_registry_t tmb_logger_registry = { 0 };
