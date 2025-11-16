@@ -93,6 +93,15 @@ inline void unreachable() {
         exit(1);                                                               \
     } while (0)
 
+#define ASSERT(expr)                                                           \
+    do {                                                                       \
+        if (!(expr)) {                                                         \
+            UNUSED fprintf(                                                    \
+                    stderr, "assertion failed at %s:%d", __FILE__, __LINE__);  \
+            exit(1);                                                           \
+        }                                                                      \
+    } while (0)
+
 #define UNUSED (void)
 
 typedef int8_t i8;
