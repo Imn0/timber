@@ -28,7 +28,7 @@
     #endif
 #elif defined(__unix__)
     #define TMB_UNIX
-    #define _POSIX_C_SOURCE 199309L
+    #define _POSIX_C_SOURCE 200809L
 #else
     #error "unknown os"
 #endif
@@ -91,15 +91,6 @@ inline void unreachable() {
     do {                                                                       \
         fprintf(stderr, __VA_ARGS__);                                          \
         exit(1);                                                               \
-    } while (0)
-
-#define ASSERT(expr)                                                           \
-    do {                                                                       \
-        if (!(expr)) {                                                         \
-            UNUSED fprintf(                                                    \
-                    stderr, "assertion failed at %s:%d", __FILE__, __LINE__);  \
-            exit(1);                                                           \
-        }                                                                      \
     } while (0)
 
 #define UNUSED (void)

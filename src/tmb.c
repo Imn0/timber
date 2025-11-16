@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <time.h>
 
-const char* const TMB_SO_V       = "0";
+const char* const TMB_SO_V = "0";
 
 const char* const TMB_MAJOR_V    = "0";
 const char* const TMB_MINOR_V    = "0";
@@ -171,6 +171,8 @@ static inline void tmb_log_impl__(tmb_log_ctx_t ctx,
     if (logger->has.stopwatch) { stop_watch = tmb_time_stopwatch(); }
 
     tmb_string_builder_t message_filled = { 0 };
+    UNUSED message;
+    UNUSED args;
     sb_appendv(&message_filled, message, args);
 
     ctx.message        = message_filled.items;

@@ -107,7 +107,7 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
         }
     }
 #if defined(__clang__)
-#pragma clang diagnostic pop
+    #pragma clang diagnostic pop
 #endif
 
     int content_start = target->length;

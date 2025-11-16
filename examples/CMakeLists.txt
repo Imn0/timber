@@ -17,5 +17,6 @@ if(BUILD_EXAMPLES)
     add_example(03-config)
     add_example(03-logger_registry)
     add_example(05-custom-formatter)
+    add_example(bench)
 
 endif()

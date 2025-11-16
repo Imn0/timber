@@ -1,6 +1,7 @@
 #ifndef TMB_SINK_INTERNAL_H_
 #define TMB_SINK_INTERNAL_H_
 
+#include <tmb_lib.h>
 #include <tmb_internal.h>
 
 struct sink_buffer_data {

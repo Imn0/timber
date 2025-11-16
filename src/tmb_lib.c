@@ -1,6 +1,4 @@
 #include <tmb_lib.h>
-#define STB_SPRINTF_IMPLEMENTATION
-#include "stb_sprintf.h"
 
 #include <stdio.h>
 
@@ -15,13 +13,13 @@ void sb_appendv__(tmb_string_builder_t* sb, const char* fmt, va_list args) {
     va_list args1;
     va_copy(args1, args);
 
-    int n = stbsp_vsnprintf(NULL, 0, fmt, args1);
+    int n = vsnprintf(NULL, 0, fmt, args1);
     va_end(args1);
 
     da_reserve(sb, sb->length + n + 1);
 
     va_copy(args1, args);
-    stbsp_vsnprintf(sb->items + sb->length, n + 1, fmt, args1);
+    vsnprintf(sb->items + sb->length, n + 1, fmt, args1);
     va_end(args1);
 
     sb->length += n;
