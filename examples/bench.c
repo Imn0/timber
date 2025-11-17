@@ -3,7 +3,7 @@
 #include <time.h>
 #include <tmb/sink.h>
 #include <tmb/tmb.h>
-
+#ifndef _WIN32
 static inline void measure_start(struct timespec* c) {
     clock_gettime(CLOCK_MONOTONIC, c);
 }
@@ -15,9 +15,9 @@ static inline double measure_end(struct timespec* start) {
            ((double)end.tv_nsec - (double)start->tv_nsec) / 1e9;
 }
 
-#ifndef BENCH_T
-    #define BENCH_T 1000000
-#endif
+    #ifndef BENCH_T
+        #define BENCH_T 1000000
+    #endif
 
 int main(void) {
     tmb_logger_t* logger = TMB_LOGGER("bench_timber");
@@ -41,3 +41,8 @@ int main(void) {
 
     return 0;
 }
+#else
+int main() {
+    return 0;
+}
+#endif
