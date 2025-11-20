@@ -1,9 +1,15 @@
-#define _POSIX_C_SOURCE 200809L
-#include <stdio.h>
-#include <time.h>
-#include <tmb/sink.h>
-#include <tmb/tmb.h>
 #ifndef _WIN32
+    #ifndef _POSIX_C_SOURCE
+        #define _POSIX_C_SOURCE 200809L
+    #endif
+
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <time.h>
+    #include <tmb/sink.h>
+    #include <tmb/tmb.h>
+    #include <unistd.h>
+
 static inline void measure_start(struct timespec* c) {
     clock_gettime(CLOCK_MONOTONIC, c);
 }
@@ -30,14 +36,60 @@ int main(void) {
                     "{$}\n"));
 
     struct timespec start;
-    measure_start(&start);
+    {
+        measure_start(&start);
 
-    for (int i = 0; i < BENCH_T; i++) {
-        LOG_INFO(logger,
-                 "Benchmarking Timber logging library: message number %d",
-                 i);
+        for (int i = 0; i < BENCH_T; i++) {
+            fprintf(stderr,
+                    "Benchmarking Timber logging library: message number %d",
+                    i);
+        }
+        printf("printf %f\n", measure_end(&start));
     }
-    printf("%f\n", measure_end(&start));
+    {
+        measure_start(&start);
+
+        for (int i = 0; i < BENCH_T; i++) {
+            LOG_INFO(logger,
+                     "Benchmarking Timber logging library: message number %d",
+                     i);
+        }
+        printf("timber %f\n", measure_end(&start));
+    }
+
+    {
+        measure_start(&start);
+
+        for (int i = 0; i < BENCH_T; i++) {
+            char* buff = malloc(1024);
+            int w      = snprintf(
+                    buff,
+                    1024,
+                    "Benchmarking Timber logging library: message number %d",
+                    i);
+            int a = write(2, buff, (size_t)w);
+            (void)a;
+            free(buff);
+        }
+        printf("write + malloc %f\n", measure_end(&start));
+    }
+
+    {
+        char* buff = malloc(1024);
+        measure_start(&start);
+
+        for (int i = 0; i < BENCH_T; i++) {
+            int w = snprintf(
+                    buff,
+                    1024,
+                    "Benchmarking Timber logging library: message number %d",
+                    i);
+            int a = write(2, buff, (size_t)w);
+            (void)a;
+        }
+        free(buff);
+        printf("write + static %f\n", measure_end(&start));
+    }
 
     return 0;
 }

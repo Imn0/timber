@@ -60,8 +60,11 @@ bool load_entire_file(const char* file, tmb_string_builder_t* sb) {
     new_length = sb->length + (int)size;
     da_reserve(sb, new_length);
 
-    fread(sb->items + sb->length, (size_t)size, 1, f);
-
+    int read = fread(sb->items + sb->length, (size_t)size, 1, f);
+    if (read == 0) {
+        result = false;
+        goto error;
+    }
     sb->length = new_length;
 
 error:

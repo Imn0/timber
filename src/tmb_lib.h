@@ -28,7 +28,9 @@
     #endif
 #elif defined(__unix__)
     #define TMB_UNIX
-    #define _POSIX_C_SOURCE 200809L
+    #ifndef _POSIX_C_SOURCE
+        #define _POSIX_C_SOURCE 200809L
+    #endif
 #else
     #error "unknown os"
 #endif
