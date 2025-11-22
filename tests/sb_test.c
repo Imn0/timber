@@ -15,17 +15,17 @@ int main(void) {
     sb_append_cstr(&sb, "hello");
     sb_append_cstr(&sb, " world");
     ASSERT(sb.length == 11); // no \0 termination
-    ASSERT(tmb_sv_cmp(&sv_make("hello world"), &sb_as_sv(&sb)) == 0);
+    ASSERT(tmb_sv_cmp(&sv_make("hello world"), &sb_as_sv(&sb)));
 
     sb_appendf(&sb, "%d", 3);
     ASSERT(sb.length == 12);
-    ASSERT(tmb_sv_cmp(&sv_make("hello world3"), &sb_as_sv(&sb)) == 0);
+    ASSERT(tmb_sv_cmp(&sv_make("hello world3"), &sb_as_sv(&sb)));
 
     test_sb_anppendv(&sb, "aa%d", 2);
     ASSERT(sb.length == 15);
-    ASSERT(tmb_sv_cmp(&sv_make("hello world3aa2"), &sb_as_sv(&sb)) == 0);
+    ASSERT(tmb_sv_cmp(&sv_make("hello world3aa2"), &sb_as_sv(&sb)));
 
     sb_appendn(&sb, 4, "hell");
     ASSERT(sb.length == 19);
-    ASSERT(tmb_sv_cmp(&sv_make("hello world3aa2hell"), &sb_as_sv(&sb)) == 0);
+    ASSERT(tmb_sv_cmp(&sv_make("hello world3aa2hell"), &sb_as_sv(&sb)));
 }

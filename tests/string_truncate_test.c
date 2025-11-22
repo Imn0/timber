@@ -32,7 +32,7 @@ void test_just(const char* file,
     sb_append_cstr(&sb, what);
     tmb_sb_truncate(&sb, how, amount);
 
-    CHECK(tmb_sv_cmp(&sv_make(expected), &sb_as_sv(&sb)) == 0);
+    CHECK(tmb_sv_cmp(&sv_make(expected), &sb_as_sv(&sb)));
 }
 
 int main(void) {

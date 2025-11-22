@@ -98,9 +98,11 @@ inline void unreachable() {
 #define ASSERT(expr)                                                           \
     do {                                                                       \
         if (!(expr)) {                                                         \
-            UNUSED fprintf(                                                    \
-                    stderr, "assertion failed at %s:%d", __FILE__, __LINE__);  \
-            exit(1);                                                           \
+            UNUSED fprintf(stderr,                                             \
+                           "assertion failed at %s:%d\n",                      \
+                           __FILE__,                                           \
+                           __LINE__);                                          \
+            abort();                                                           \
         }                                                                      \
     } while (0)
 

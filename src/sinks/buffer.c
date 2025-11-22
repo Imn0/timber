@@ -24,5 +24,6 @@ tmb_sink_t* tmb_sink_buffer_create(int buff_size) {
     sink->sink_fn   = buffer_sink;
     sink->data_free_fn   = free;
     sink->ref_count = 0;
+    sink->min_log_level = TMB_LOG_LEVEL_TRACE;
     return sink;
 }
