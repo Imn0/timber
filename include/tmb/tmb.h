@@ -290,11 +290,12 @@ TMB_API void tmb_sink_destroy(tmb_sink_t* sink);
 
 /*
 ********************************************************************************
-Library macors
+Library macros
 ********************************************************************************
  */
 #define TMB_DEFAULT_LIB_CFG                                                    \
-    .enable_colors = true, .log_level = TMB_LOG_LEVEL_INFO, .default_sink_fd = 2
+    .enable_colors = true, .log_level = TMB_LOG_LEVEL_TRACE,                   \
+    .default_sink_fd = 2
 
 #define TMB_CFG(...)                                                           \
     tmb_set_global_options(                                                    \

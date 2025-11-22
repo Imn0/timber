@@ -33,7 +33,7 @@ int main(void) {
 
     LOG_FATAL(logger, "just a message");
     LOG_ERROR(logger, "a message with number %d", 3);
-    LOG_WARNING(logger, "literrally just %s", "printf"); // no file error here
+    LOG_WARNING(logger, "literally just %s", "printf"); // no file error here
 
     LOG_INFO(logger, "message %d", 3);        // no json logs here
     LOG_DEBUG(logger, "fancy message %d", 3); // no json logs here

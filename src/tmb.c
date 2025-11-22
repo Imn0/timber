@@ -115,9 +115,7 @@ tmb_logger_t* tmb_get_logger_or_default(const char* name) {
     return lgr;
 }
 
-void tmb_set_global_options(tmb_lib_cfg_t cfg) {
-    tmb_lib_cfg = cfg;
-}
+void tmb_set_global_options(tmb_lib_cfg_t cfg) { tmb_lib_cfg = cfg; }
 
 /// LOGGING FUNCTIONS
 static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,

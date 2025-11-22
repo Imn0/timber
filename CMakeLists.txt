@@ -75,7 +75,9 @@ function(apply_compile_flags target_name)
         -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden -Wno-initializer-overrides -Wno-gnu-zero-variadic-macro-arguments -Wno-error=override-init -Wno-override-init
         -Wint-conversion -Wconversion>
         $<$<C_COMPILER_ID:MSVC>:
-        /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest /experimental:c11atomics>)
+        /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest /experimental:c11atomics>
+        $<$<C_COMPILER_ID:TinyCC>:
+        -std=c23>)
 endfunction()
 
 function(setup_shared_lib)
