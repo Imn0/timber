@@ -222,9 +222,9 @@ void tmb_sb_truncate_inplace(tmb_string_builder_t* sb,
     }
 }
 
-static u64 hash_djb2(const void* addr_of_key, size_t key_size) {
+static u32 hash_djb2(const void* addr_of_key, size_t key_size) {
     const u8* a = addr_of_key;
-    u64 hash    = 5381;
+    u32 hash    = 5381;
     for (size_t i = 0; i < key_size; i++) {
         hash = ((hash << 5) + hash) + a[i];
     }
