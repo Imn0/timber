@@ -14,7 +14,7 @@ tmb_formatted_msg_t format(const tmb_formatter_t* formatter,
     static char buff[1024];
     snprintf(buff, 1024, "message -> %s\n", ctx->message);
 
-    return (tmb_formatted_msg_t) { .message = buff, .length = strlen(buff) };
+    return (tmb_formatted_msg_t) { .message = buff, .length = (int)strlen(buff) };
 }
 
 int main(void) {

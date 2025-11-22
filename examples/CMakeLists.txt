@@ -12,7 +12,7 @@ if(BUILD_EXAMPLES)
 
     add_example(01-default_logger)
     add_example(02-simple_logger)
-    add_example(02-graylog)
+    add_example(03-graylog)
     add_example(03-custom_sink)
     add_example(03-config)
     add_example(03-logger_registry)

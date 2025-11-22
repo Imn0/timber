@@ -19,7 +19,7 @@ void sb_appendv__(tmb_string_builder_t* sb, const char* fmt, va_list args) {
     da_reserve(sb, sb->length + n + 1);
 
     va_copy(args1, args);
-    vsnprintf(sb->items + sb->length, n + 1, fmt, args1);
+    vsnprintf(sb->items + sb->length, (size_t)n + 1, fmt, args1);
     va_end(args1);
 
     sb->length += n;
@@ -60,7 +60,7 @@ bool load_entire_file(const char* file, tmb_string_builder_t* sb) {
     new_length = sb->length + (int)size;
     da_reserve(sb, new_length);
 
-    int read = fread(sb->items + sb->length, (size_t)size, 1, f);
+    int read = (int)fread(sb->items + sb->length, (size_t)size, 1, f);
     if (read == 0) {
         result = false;
         goto error;

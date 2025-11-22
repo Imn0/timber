@@ -24,7 +24,7 @@ static void fd_sink(const char* msg, int msg_len, void* data) {
     }
 #else
     if (sink_data->fd) {
-        int written = write(sink_data->fd, msg, (size_t)msg_len);
+        int written = (int)write(sink_data->fd, msg, (size_t)msg_len);
         if(written == 0){
             // error writing to fd 
         }

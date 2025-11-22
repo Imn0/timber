@@ -1,10 +1,11 @@
 #ifndef TMB_INTERNAL_H_
 #define TMB_INTERNAL_H_
 
-#include <tmb/tmb.h>
+#include <tmb_lib.h>
+
 #include <tmb/formats.h>
 #include <tmb/sink.h>
-#include <tmb_lib.h>
+#include <tmb/tmb.h>
 
 #ifndef TMB_LEVEL_FATAL_STR
     #define TMB_LEVEL_FATAL_STR "FATAL"

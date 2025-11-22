@@ -67,8 +67,7 @@ int main(void) {
                     1024,
                     "Benchmarking Timber logging library: message number %d",
                     i);
-            int a = write(2, buff, (size_t)w);
-            (void)a;
+            (void)write(2, buff, (size_t)w);
             free(buff);
         }
         printf("write + malloc %f\n", measure_end(&start));
@@ -84,8 +83,7 @@ int main(void) {
                     1024,
                     "Benchmarking Timber logging library: message number %d",
                     i);
-            int a = write(2, buff, (size_t)w);
-            (void)a;
+            (void)write(2, buff, (size_t)w);
         }
         free(buff);
         printf("write + static %f\n", measure_end(&start));

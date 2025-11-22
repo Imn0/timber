@@ -325,6 +325,11 @@ typedef struct tmb_string_view {
         .items = (chrs), .length = (int)strlen(chrs)                           \
     }
 
+#define sb_as_sv(sb)                                                           \
+    (tmb_string_view_t) {                                                      \
+        .items = (sb)->items, .length = (sb)->length                           \
+    }
+
 tmb_string_view_t sv_from_sb(tmb_string_builder_t* sb);
 bool tmb_sv_cmp(const tmb_string_view_t* sv1, const tmb_string_view_t* sv2);
 char* tmb_sv_to_ctst_copy(const tmb_string_view_t* sv);
@@ -353,7 +358,7 @@ struct tmb_cmp_flt_opt {
 bool tmb_cmp_flt_impl(f32 a, f32 b, struct tmb_cmp_flt_opt);
 #define tmb_cmp_flt(a, b, ...)                                                 \
     tmb_cmp_flt_impl(                                                          \
-            (a), (b), (struct tmb_cmp_flt_opt) { .eps = 1e-9, __VA_ARGS__ })
+            (a), (b), (struct tmb_cmp_flt_opt) { .eps = 1e-9f, __VA_ARGS__ })
 
 typedef struct tmb_hm_opt {
     int initial_size;

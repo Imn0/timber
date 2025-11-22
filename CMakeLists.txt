@@ -72,7 +72,8 @@ file(GLOB_RECURSE LIB_SOURCES "src/*.c" ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 function(apply_compile_flags target_name)
     target_compile_options(${target_name} PRIVATE
         $<$<OR:$<C_COMPILER_ID:Clang>,$<C_COMPILER_ID:AppleClang>,$<C_COMPILER_ID:GNU>>:
-        -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden -Wno-initializer-overrides -Wno-gnu-zero-variadic-macro-arguments -Wno-error=override-init -Wno-override-init>
+        -Wall -Wextra -pedantic -Wshadow -Werror -D_CRT_SECURE_NO_WARNINGS -fvisibility=hidden -Wno-initializer-overrides -Wno-gnu-zero-variadic-macro-arguments -Wno-error=override-init -Wno-override-init
+        -Wint-conversion -Wconversion>
         $<$<C_COMPILER_ID:MSVC>:
         /W4 /D_CRT_SECURE_NO_WARNINGS /std:clatest /experimental:c11atomics>)
 endfunction()
