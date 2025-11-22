@@ -107,6 +107,7 @@ typedef struct tmb_sink {
     tmb_sink_fn_t* sink_fn;
     tmb_free_fn_t* data_free_fn;
     void* sink_data;
+    tmb_log_level min_log_level;
     atomic_int ref_count;
 } tmb_sink_t;
 

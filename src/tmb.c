@@ -141,6 +141,7 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
     }
 
     for (int i = 0; i < logger->sinks.length; i++) {
+        if (logger->sinks.items[i]->min_log_level < ctx.log_level) { continue; }
         int fmt_idx = logger->sink_formatter_map.items[i];
         logger->sinks.items[i]->sink_fn(
                 formatted_messages.items[fmt_idx].items,

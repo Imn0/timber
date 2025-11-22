@@ -11,8 +11,9 @@ int main(void) {
             tmb_logger_add_sink(logger, TMB_SINK_STDOUT()),
             tmb_logger_add_formatter(
                     logger,
-                    tmb_formatter_make("{D} {d} {$BLACK:$DIM}{@}:{#}{$RESET} "
-                                       "{$BLUE:$}\n")));
+                    tmb_formatter_make(
+                            "{$LEVEL} {D}  {d} {$BLACK:$DIM}{@}:{#}{$RESET} "
+                            "{$LEVEL:$}\n")));
     tmb_logger_assign_format(
             logger,
             tmb_logger_add_sink(logger, TMB_SINK_STDERR()),

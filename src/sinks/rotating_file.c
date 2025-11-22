@@ -53,7 +53,8 @@ static void rotating_file_sink(const char* msg, int msg_len, void* data) {
     tmb_mutex_unlock(&sink_data->sink_mtx);
 }
 
-TMB_API tmb_sink_t* tmb_sink_rotating_file_create(const char* filename,
+TMB_API tmb_sink_t* tmb_sink_rotating_file_create(struct tmb_sink_opts opts,
+                                                  const char* filename,
                                                   int max_files,
                                                   int max_file_size_B) {
     tmb_sink_t* sink                         = malloc(sizeof(*sink));
@@ -72,9 +73,10 @@ TMB_API tmb_sink_t* tmb_sink_rotating_file_create(const char* filename,
     rot_file_data->max_num_files     = max_files;
     rot_file_data->current_written_B = 0;
 
-    sink->sink_data = (void*)rot_file_data;
-    sink->ref_count = 0;
-    sink->sink_fn   = rotating_file_sink;
-    sink->data_free_fn   = free;
+    sink->sink_data     = (void*)rot_file_data;
+    sink->ref_count     = 0;
+    sink->sink_fn       = rotating_file_sink;
+    sink->data_free_fn  = free;
+    sink->min_log_level = opts.min_log_level;
     return sink;
 }

@@ -25,14 +25,14 @@ static void fd_sink(const char* msg, int msg_len, void* data) {
 #else
     if (sink_data->fd) {
         int written = (int)write(sink_data->fd, msg, (size_t)msg_len);
-        if(written == 0){
-            // error writing to fd 
+        if (written == 0) {
+            // error writing to fd
         }
     }
 #endif
 }
 
-tmb_sink_t* tmb_sink_fd_create(FILE* fd) {
+tmb_sink_t* tmb_sink_fd_create(struct tmb_sink_opts opts, FILE* fd) {
     tmb_sink_t* sink                 = malloc(sizeof(*sink));
     struct sink_fd_data* fd_malloced = malloc(sizeof(*fd_malloced));
 #ifdef TMB_WINDOWS
@@ -41,9 +41,10 @@ tmb_sink_t* tmb_sink_fd_create(FILE* fd) {
     fd_malloced->fd = fileno(fd);
 #endif
 
-    sink->sink_data    = (void*)fd_malloced;
-    sink->sink_fn      = fd_sink;
-    sink->data_free_fn = free;
-    sink->ref_count    = 0;
+    sink->sink_data     = (void*)fd_malloced;
+    sink->sink_fn       = fd_sink;
+    sink->data_free_fn  = free;
+    sink->ref_count     = 0;
+    sink->min_log_level = opts.min_log_level;
     return sink;
 }

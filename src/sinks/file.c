@@ -12,11 +12,12 @@ static void close_and_free_fd(void* data) {
     free(data);
 }
 
-TMB_API tmb_sink_t* tmb_sink_file_create(const char* filename) {
+TMB_API tmb_sink_t* tmb_sink_file_create(struct tmb_sink_opts opts,
+                                         const char* filename) {
     FILE* fd = fopen(filename, "a");
     if (fd == NULL) {}
 
-    tmb_sink_t* sink = tmb_sink_fd_create(fd);
-    sink->data_free_fn    = close_and_free_fd;
+    tmb_sink_t* sink   = tmb_sink_fd_create(opts, fd);
+    sink->data_free_fn = close_and_free_fd;
     return sink;
 }

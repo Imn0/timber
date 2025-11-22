@@ -128,7 +128,6 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
                    tmb_log_level_str[ctx->log_level]);
         break;
     case CHIP_TYPE_LEVEL_S:
-
         sb_append(target, tmb_log_level_char[ctx->log_level]);
         break;
     case CHIP_TYPE_BASEFILE:
@@ -172,25 +171,31 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
     case CHIP_TYPE_LOGGER_TIMESTAMP:
         // Convert to local time
         {
-            tmb_string_builder_t buff = { 0 };
             struct tm* tm_info;
             time_t secs = (time_t)ctx->ts_sec;
             tm_info     = localtime(&secs);
 
             // Format the time string with nanoseconds
             // Example: "2024-01-15 14:30:45.123456789"
-            da_reserve(&buff, 40);
-            size_t written = strftime(buff.items,
-                                      (size_t)buff.capacity,
-                                      "%Y-%m-%d %H:%M:%S",
-                                      tm_info);
-            buff.length += (int)written;
-            sb_appendf(&buff, ".%09lld", ctx->ts_nsec);
-            sb_free(&buff);
+            da_reserve(target, target->length + 40);
+            size_t written = strftime(
+                    target->items + target->length,
+                    (size_t)(target->capacity - target->length),
+                    "%Y-%m-%d %H:%M:%S",
+                    tm_info);
+            target->length += (int)written;
+            sb_appendf(target, ".%09lld", ctx->ts_nsec);
         }
         break;
     case CHIP_TYPE_COLOR:
         if (use_color) { handle_color_chip(chip, target); }
+        break;
+    case CHIP_TYPE_LOG_LEVEL_COLOR:
+        if (use_color) {
+            sb_appendn(target,
+                       tmb_log_level_color_len[ctx->log_level],
+                       tmb_log_level_color[ctx->log_level]);
+        }
         break;
     default:
         break;
@@ -273,11 +278,18 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
     for (int i = 0; i < opts->length; i++) {
         tmb_string_view_t* current_opt = &opts->items[i];
         if (current_opt->length <= 0) { continue; }
+
+        // when we have color as an additional option, not as the main thing
         if (current_opt->items[0] == '$') {
-            doing_color           = true;
-            tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
-            color_chip.ansi_val   = chip_ansi_from_str(*current_opt);
-            da_append(formatter, color_chip);
+            doing_color = true;
+            if (tmb_sv_cmp(&sv_make("$LEVEL"), current_opt)) {
+                tmb_chip_t color_chip = { .type = CHIP_TYPE_LOG_LEVEL_COLOR };
+                da_append(formatter, color_chip);
+            } else {
+                tmb_chip_t color_chip = { .type = CHIP_TYPE_COLOR };
+                color_chip.ansi_val   = chip_ansi_from_str(*current_opt);
+                da_append(formatter, color_chip);
+            }
             continue;
         }
         // we are left with just justing options []<>^ and a number
@@ -357,8 +369,14 @@ static bool tmb_formatter_add_chip_from_opt(tmb_formatter_t* formatter,
             break;
         }
     } else if (chip_type->length > 1 && chip_type->items[0] == '$') {
-        chip.type     = CHIP_TYPE_COLOR;
-        chip.ansi_val = chip_ansi_from_str(*chip_type);
+        // when $<COLOR> is the only thing in format chip
+        if (tmb_sv_cmp(&sv_make("$LEVEL"), chip_type)) {
+            chip.type = CHIP_TYPE_LOG_LEVEL_COLOR;
+        } else {
+            chip.type     = CHIP_TYPE_COLOR;
+            chip.ansi_val = chip_ansi_from_str(*chip_type);
+        }
+
     } else if (chip_type->length == 0) {
         goto skip_append;
         // idk do nothing
@@ -541,6 +559,9 @@ void tmb_formatter_print(const tmb_formatter_t* formatter) {
             break;
         case CHIP_TYPE_LOGGER_TIMESTAMP:
             printf("CHIP_TYPE_LOGGER_TIMESTAMP");
+            break;
+        case CHIP_TYPE_LOG_LEVEL_COLOR:
+            printf("CHIP_TYPE_LOG_LEVEL_COLOR");
             break;
         default:
         case CHIP_TYPE_UNKNOWN:

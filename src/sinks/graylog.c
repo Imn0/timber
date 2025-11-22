@@ -39,7 +39,8 @@ static void graylog_log(const char* msg, int msg_len, void* data) {
     if (sent_bytes < 0) {}
 }
 
-TMB_API tmb_sink_t* tmb_sink_graylog_create(const char* graylog_host,
+TMB_API tmb_sink_t* tmb_sink_graylog_create(struct tmb_sink_opts opts,
+                                            const char* graylog_host,
                                             int port) {
     struct sink_graylog_data* gdata = malloc(sizeof(*gdata));
     strncpy(gdata->address, graylog_host, sizeof(gdata->address) - 1);
@@ -51,10 +52,11 @@ TMB_API tmb_sink_t* tmb_sink_graylog_create(const char* graylog_host,
     }
     tmb_sink_t* sink = malloc(sizeof(*sink));
 
-    sink->sink_data = (void*)gdata;
-    sink->sink_fn   = graylog_log;
-    sink->data_free_fn   = free;
-    sink->ref_count = 0;
+    sink->sink_data     = (void*)gdata;
+    sink->sink_fn       = graylog_log;
+    sink->data_free_fn  = free;
+    sink->ref_count     = 0;
+    sink->min_log_level = opts.min_log_level;
     return sink;
 }
 #endif
