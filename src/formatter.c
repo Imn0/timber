@@ -85,7 +85,7 @@ static inline void tmb_chip_format(tmb_chip_t* chip,
                                    const tmb_logger_t* lgr,
                                    const tmb_formatter_t* fmt) {
     bool use_color = fmt->enable.colors && lgr->cfg.enable_colors &&
-                     tmb_cfg.enable_colors;
+                     tmb_lib_cfg.enable_colors;
 
     bool auto_color_used = false;
 

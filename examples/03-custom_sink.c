@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <tmb/sink.h>
 #include <tmb/tmb.h>
 
 struct sink_data {

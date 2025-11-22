@@ -1,11 +1,8 @@
 #ifndef TMB_INTERNAL_H_
 #define TMB_INTERNAL_H_
 
-#include <tmb_lib.h>
-
-#include <tmb/formats.h>
-#include <tmb/sink.h>
 #include <tmb/tmb.h>
+#include <tmb_lib.h>
 
 #ifndef TMB_LEVEL_FATAL_STR
     #define TMB_LEVEL_FATAL_STR "FATAL"
@@ -95,7 +92,7 @@ extern int const tmb_log_level_str_len[TMB_LOG_LEVEL_COUNT];
 extern const char* const tmb_log_level_color[TMB_LOG_LEVEL_COUNT];
 extern int const tmb_log_level_color_len[TMB_LOG_LEVEL_COUNT];
 extern const char tmb_log_level_char[TMB_LOG_LEVEL_COUNT];
-extern tmb_logger_cfg_t tmb_cfg;
+extern tmb_lib_cfg_t tmb_lib_cfg;
 
 bool tmb_formatter_init(tmb_formatter_t* format, const char* fmt);
 void tmb_formatter_print(const tmb_formatter_t* formatter);

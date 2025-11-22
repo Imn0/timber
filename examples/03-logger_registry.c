@@ -1,4 +1,3 @@
-#include <tmb/sink.h>
 #include <tmb/tmb.h>
 
 int main(void) {

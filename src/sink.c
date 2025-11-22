@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include <tmb/sink.h>
+#include <tmb/tmb.h>
 
 TMB_API void tmb_sink_destroy(tmb_sink_t* sink) {
     sink->ref_count--;

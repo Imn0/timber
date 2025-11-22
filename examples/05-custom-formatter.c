@@ -1,5 +1,4 @@
 #include <string.h>
-#include <tmb/sink.h>
 #include <tmb/tmb.h>
 
 void pass(void* thing) {

@@ -1,8 +1,6 @@
 #include <formatter.h>
 #include <tmb_internal.h>
 
-#include <tmb/sink.h>
-
 #include <stdarg.h>
 #include <stdbool.h>
 #include <time.h>

@@ -35,7 +35,7 @@ DerivePointerAlignment: false
 AllowShortBlocksOnASingleLine: Always
 AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: true
-AllowShortFunctionsOnASingleLine: Inline
+AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
@@ -55,3 +55,4 @@ Cpp11BracedListStyle: false
 UseTab: Never
 TabWidth: 4
 InsertNewlineAtEOF: true
+BreakStringLiterals: false

@@ -6,7 +6,6 @@
     #include <stdio.h>
     #include <stdlib.h>
     #include <time.h>
-    #include <tmb/sink.h>
     #include <tmb/tmb.h>
     #include <unistd.h>
 
@@ -67,7 +66,8 @@ int main(void) {
                     1024,
                     "Benchmarking Timber logging library: message number %d",
                     i);
-            (void)write(2, buff, (size_t)w);
+            auto a = write(2, buff, (size_t)w);
+            (void)a;
             free(buff);
         }
         printf("write + malloc %f\n", measure_end(&start));
@@ -83,7 +83,9 @@ int main(void) {
                     1024,
                     "Benchmarking Timber logging library: message number %d",
                     i);
-            (void)write(2, buff, (size_t)w);
+
+            auto a = write(2, buff, (size_t)w);
+            (void)a;
         }
         free(buff);
         printf("write + static %f\n", measure_end(&start));

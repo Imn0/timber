@@ -19,4 +19,11 @@ if(BUILD_EXAMPLES)
     add_example(05-custom-formatter)
     add_example(bench)
 
+    add_executable(01-header_only 01-header_only.c)
+    target_include_directories(01-header_only PRIVATE ../include)
+    set_target_properties(01-header_only PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/
+    )
+    apply_compile_flags(01-header_only)
+
 endif()

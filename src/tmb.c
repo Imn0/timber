@@ -1,8 +1,6 @@
 #include <formatter.h>
 #include <tmb_internal.h>
 
-#include <tmb/sink.h>
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -19,7 +17,7 @@ const char* const TMB_BUILD_TIME = __DATE__ ", " __TIME__;
 tmb_logger_registry_t tmb_logger_registry = { 0 };
 
 const tmb_logger_cfg_t tmb_default_logger_cfg = { TMB_DEFAULT_LOGGER_CFG };
-tmb_logger_cfg_t tmb_cfg                      = { TMB_DEFAULT_LIB_CFG };
+tmb_lib_cfg_t tmb_lib_cfg                     = { TMB_DEFAULT_LIB_CFG };
 
 const char* const tmb_log_level_str[TMB_LOG_LEVEL_COUNT] = {
     [TMB_LEVEL_FATAL]   = TMB_LEVEL_FATAL_STR,
@@ -117,14 +115,14 @@ tmb_logger_t* tmb_get_logger_or_default(const char* name) {
     return lgr;
 }
 
-void tmb_set_global_options(tmb_logger_cfg_t cfg) {
-    tmb_cfg = cfg;
+void tmb_set_global_options(tmb_lib_cfg_t cfg) {
+    tmb_lib_cfg = cfg;
 }
 
 /// LOGGING FUNCTIONS
 static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                                           tmb_logger_t* logger) {
-    if (ctx.log_level > tmb_cfg.log_level) { return; }
+    if (ctx.log_level > tmb_lib_cfg.log_level) { return; }
     if (ctx.log_level > logger->cfg.log_level) { return; }
 
     if (logger->formatters.length < 1) {
@@ -149,9 +147,10 @@ static inline void tmb_log_impl_ext_ctx__(tmb_log_ctx_t ctx,
                 logger->sinks.items[i]->sink_data);
     }
     if (logger->sinks.length < 1) {
-        printf("%.*s",
-               formatted_messages.items[0].length,
-               formatted_messages.items[0].items);
+        (void)fprintf(stderr,
+                      "%.*s",
+                      formatted_messages.items[0].length,
+                      formatted_messages.items[0].items);
     }
 
     for (int j = 0; j < logger->formatters.length; j++) {

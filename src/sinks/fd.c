@@ -1,6 +1,5 @@
 #include <sink_internal.h>
 #include <stdio.h>
-#include <tmb/sink.h>
 #include <tmb_internal.h>
 
 #ifdef TMB_UNIX

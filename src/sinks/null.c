@@ -1,5 +1,4 @@
 #include <sink_internal.h>
-#include <tmb/sink.h>
 #include <tmb_internal.h>
 
 static void null_sink(const char* msg, int msg_len, void* data) {

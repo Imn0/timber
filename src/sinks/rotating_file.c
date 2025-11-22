@@ -1,5 +1,4 @@
 #include <sink_internal.h>
-#include <tmb/sink.h>
 #include <tmb_internal.h>
 
 struct rotating_file_data {

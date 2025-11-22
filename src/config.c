@@ -310,7 +310,7 @@ static bool parse_global(tmb_cfg_lexer_t* lex, tmb_config_t* target_config) {
                                 &(tmb_string_view_t) {
                                         .items  = tmb_log_level_str[i],
                                         .length = tmb_log_level_str_len[i] })) {
-                        tmb_cfg.log_level = (tmb_log_level)i;
+                        tmb_lib_cfg.log_level = (tmb_log_level)i;
                         set               = true;
                         break;
                     }
@@ -331,9 +331,9 @@ static bool parse_global(tmb_cfg_lexer_t* lex, tmb_config_t* target_config) {
                                                       TMB_TOK_NEWLINE })) {
                 tmb_cfg_tok_t enable_colors_tok = tmb_lex_get_and_advance(lex);
                 if (enable_colors_tok.data.bool_val == true) {
-                    tmb_cfg.enable_colors = true;
+                    tmb_lib_cfg.enable_colors = true;
                 } else {
-                    tmb_cfg.enable_colors = false;
+                    tmb_lib_cfg.enable_colors = false;
                 }
                 tmb_lex_advance(lex);
 

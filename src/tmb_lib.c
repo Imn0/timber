@@ -25,9 +25,7 @@ void sb_appendv__(tmb_string_builder_t* sb, const char* fmt, va_list args) {
     sb->length += n;
 }
 
-void do_nothing__(void* _data) {
-    UNUSED _data;
-}
+void do_nothing__(void* _data) { UNUSED _data; }
 
 bool load_entire_file(const char* file, tmb_string_builder_t* sb) {
     bool result = true;

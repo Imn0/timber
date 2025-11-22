@@ -24,6 +24,6 @@ int main(void) {
     }
     const char* fmt = tmb_config_get_format(cfg, "b");
     ASSERT(tmb_sv_cmp(&sv_make("{$}"), &sv_make(fmt)));
-    ASSERT(tmb_cfg.enable_colors == true);
-    ASSERT(tmb_cfg.log_level == TMB_LOG_LEVEL_DEBUG);
+    ASSERT(tmb_lib_cfg.enable_colors == true);
+    ASSERT(tmb_lib_cfg.log_level == TMB_LOG_LEVEL_DEBUG);
 }

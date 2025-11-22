@@ -4,7 +4,7 @@ int main(void) {
     // just use it
     LOG_FATAL("just a message");
     LOG_ERROR("a message with number %d", 3);
-    LOG_WARNING("literrally just %s", "printf");
+    LOG_WARNING("Cannot build river");
     LOG_INFO("message %d", 3);
     LOG_DEBUG("debug wont show by default");
 
