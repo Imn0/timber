@@ -3,14 +3,14 @@ sidebar_position: 1
 slug: /
 ---
 
-# Timber
+# Intro
 
 Welcome to **timber** - a C logging library.
 <img src="/img/screenshot.png" alt="Screenshot" style={{width: '80%'}} />
 
 Timber is a logging library made to be simple to use.
-Source code available at [GitHub](https://github.com/Imn0/timber).
-Additionally there are bindings for [C++](https://github.com/Imn0/timber-cpp) and for [Python](https://github.com/Imn0/timber-py)
+Source code available at [GitHub↗](https://github.com/Imn0/timber).
+Additionally there are bindings for [C++↗](https://github.com/Imn0/timber-cpp)(wip) and for [Python↗](https://github.com/Imn0/timber-py)(wip).
 
 ## Example
 

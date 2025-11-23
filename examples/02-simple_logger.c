@@ -3,6 +3,7 @@
 int main(void) {
     tmb_logger_t* logger = TMB_LOGGER("my logger",
                                       .log_level = TMB_LOG_LEVEL_DEBUG);
+    LOG_ERROR(logger, "It behaves like a default logger %d", 3);
 
     TMB_LOGGER_ADD(
             logger,

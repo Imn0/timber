@@ -13,6 +13,28 @@ Tested compilers:
 - clang >= 18.1.3
 - MSVC >= 19.44.35219.0
 
+## Include in a project
+
+Library can be also directly included as in cmake a project.  
+In an existing project either clone it
+
+```bash
+git clone https://github.com/Imn0/timber.git libs/timber
+```
+
+or add as a submodule
+
+```bash
+git submodule add https://github.com/Imn0/timber.git libs/timber
+```
+
+Example `CMakeLists.txt` to link with a static version
+
+```cmake
+add_subdirectory(libs/timber)
+target_link_libraries(${PROJECT_NAME} timber::static)
+```
+
 ## Single header
 
 1. download `tmb.h` file and place it in your source tree.
@@ -65,25 +87,3 @@ In every other file just include the `tmb.h`
     ```
 
     then link as normal
-
-## Include in a project
-
-Library can be also directly included as in cmake a project.  
-In an existing project either clone it
-
-```bash
-git clone https://github.com/Imn0/timber.git libs/timber
-```
-
-or add as a submodule
-
-```bash
-git submodule add https://github.com/Imn0/timber.git libs/timber
-```
-
-Example `CMakeLists.txt` to link with a static version
-
-```cmake
-add_subdirectory(libs/timber)
-target_link_libraries(${PROJECT_NAME} timber::static)
-```

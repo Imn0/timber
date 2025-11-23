@@ -246,7 +246,6 @@ Logger
 TMB_API tmb_logger_t* tmb_logger_create(const char* logger_name,
                                         tmb_logger_cfg_t cfg);
 TMB_API void tmb_logger_destroy(tmb_logger_t* logger);
-
 TMB_API bool tmb_logger_set_default_format(tmb_logger_t* logger,
                                            const char* fmt);
 TMB_API int tmb_logger_add_formatter(tmb_logger_t* lgr,
@@ -265,7 +264,7 @@ Formatter API
 ********************************************************************************
 */
 TMB_API tmb_formatter_t tmb_formatter_make(const char* fmt);
-TMB_API void tmb_formatter_deinit(tmb_formatter_t* formater);
+TMB_API void tmb_formatter_deinit(tmb_formatter_t* formatter);
 /* Pre made formats */
 TMB_API tmb_formatter_t tmb_formatter_graylog_make(void);
 TMB_API tmb_formatter_t tmb_formatter_json_make(tmb_json_formatter_opts_t opts);
@@ -407,15 +406,6 @@ Sink Creation macros
     #define TMB_LOG_TRACE(lgr_or_fmt, ...)
 #endif
 
-
-#ifndef TMB_DONT_STRIP_PREFIX
-#define LOG_FATAL TMB_LOG_FATAL
-#define LOG_ERROR TMB_LOG_ERROR
-#define LOG_WARNING TMB_LOG_WARNING
-#define LOG_INFO TMB_LOG_INFO
-#define LOG_DEBUG TMB_LOG_DEBUG
-#define LOG_TRACE TMB_LOG_TRACE
-#endif
 // clang-format on
 
 #define TMB_CALL(func, ...)   func(__VA_ARGS__)
@@ -442,6 +432,16 @@ Sink Creation macros
         };                                                                     \
         TMB_DISPATCH(_m__ctx, logger_or_format __VA_OPT__(, ) __VA_ARGS__);    \
     } while (0)
+
+#ifndef TMB_DONT_STRIP_PREFIX
+    #define LOG_FATAL   TMB_LOG_FATAL
+    #define LOG_ERROR   TMB_LOG_ERROR
+    #define LOG_WARNING TMB_LOG_WARNING
+    #define LOG_INFO    TMB_LOG_INFO
+    #define LOG_DEBUG   TMB_LOG_DEBUG
+    #define LOG_TRACE   TMB_LOG_TRACE
+    #define LOG         TMB_LOG
+#endif
 
 #ifdef TMB_LOGGING_IMPLEMENTATION
 
