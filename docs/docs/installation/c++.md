@@ -3,6 +3,12 @@ sidebar_position: 2
 ---
 # C++
 
+:::warning[C++ bindings are WIP]
+
+not all features are usable
+
+:::
+
 Same as in C version library can be installed system wide or included directly in a cmake project.
 
 ## Include in a project

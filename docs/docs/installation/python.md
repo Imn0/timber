@@ -3,6 +3,12 @@ sidebar_position: 2
 ---
 # Python
 
+:::warning[Python bindings are WIP]
+
+not all features are usable
+
+:::
+
 ## Package manager
 
 Python bindings can be installed via a package manager directly from github
