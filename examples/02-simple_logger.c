@@ -4,32 +4,20 @@ int main(void) {
     tmb_logger_t* logger = TMB_LOGGER("my logger",
                                       .log_level = TMB_LOG_LEVEL_DEBUG);
 
-    tmb_logger_assign_format(
+    TMB_LOGGER_ADD(
             logger,
-            tmb_logger_add_sink(logger, TMB_SINK_STDOUT()),
-            tmb_logger_add_formatter(
-                    logger,
-                    tmb_formatter_make(
-                            "{$LEVEL} {D} {d} {$BLACK:$DIM}{@}:{#}{$RESET} {$LEVEL:$}\n")));
+            TMB_SINK_STDOUT(),
+            TMB_FORMAT("{D} {d} {$BLACK:$DIM}{@}:{#}{$RESET} {$LEVEL:$}\n"));
 
-    tmb_logger_assign_format(
-            logger,
-            tmb_logger_add_sink(
-                    logger,
-                    TMB_SINK_STDERR(.min_log_level = TMB_LOG_LEVEL_WARNING)),
-            tmb_logger_add_formatter(logger,
-                                     TMB_FORMAT_JSON(.has_timestamp = true)));
+    TMB_LOGGER_ADD(logger,
+                   TMB_SINK_STDERR(.min_log_level = TMB_LOG_LEVEL_WARNING),
+                   TMB_FORMAT_JSON(.has_timestamp = true));
 
-    tmb_logger_assign_format(
+    TMB_LOGGER_ADD(
             logger,
-            tmb_logger_add_sink(logger,
-                                TMB_SINK_ROTATING_FILE(
-                                        "log.txt",
-                                        5,
-                                        1024,
-                                        .min_log_level = TMB_LOG_LEVEL_ERROR)),
-            tmb_logger_add_formatter(
-                    logger, tmb_formatter_make("{D} {d} {@}:{#} {$}\n")));
+            TMB_SINK_ROTATING_FILE(
+                    "log.txt", 5, 1024, .min_log_level = TMB_LOG_LEVEL_ERROR),
+            TMB_FORMAT("{D} {d} {@}:{#} {$}\n"));
 
     LOG_FATAL(logger, "just a message");
     LOG_ERROR(logger, "a message with number %d", 3);

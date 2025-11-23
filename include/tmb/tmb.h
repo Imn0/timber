@@ -313,11 +313,17 @@ Logger Creation macros
             _m_name,                                                           \
             (struct tmb_logger_cfg) { TMB_DEFAULT_LOGGER_CFG, __VA_ARGS__ })
 
+#define TMB_LOGGER_ADD(logger, sink, formatter)                                \
+    tmb_logger_assign_format(logger,                                           \
+                             tmb_logger_add_sink(logger, sink),                \
+                             tmb_logger_add_formatter(logger, formatter))
+
 /*
 ********************************************************************************
 Premade formatter macros
 ********************************************************************************
 */
+#define TMB_FORMAT(fmt)      tmb_formatter_make(fmt)
 #define TMB_FORMAT_GRAYLOG() tmb_formatter_graylog_make()
 
 #define TMB_FORMAT_JSON(...)                                                   \
