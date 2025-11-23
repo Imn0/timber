@@ -87,6 +87,7 @@ function(setup_shared_lib)
     set_target_properties(${PROJECT_NAME}-shared PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${GIT_SOVERSION}
+        OUTPUT_NAME ${PROJECT_NAME}
     )
     target_include_directories(${PROJECT_NAME}-shared
         PRIVATE
