@@ -84,5 +84,6 @@ git submodule add https://github.com/Imn0/timber.git libs/timber
 Example `CMakeLists.txt` to link with a static version
 
 ```cmake
+add_subdirectory(libs/timber)
 target_link_libraries(${PROJECT_NAME} timber::static)
 ```

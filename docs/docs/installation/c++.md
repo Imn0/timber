@@ -50,7 +50,7 @@ Library can be also directly included as in cmake a project.
 In an existing project either clone it
 
 ```bash
-git clone https://github.com/Imn0/timber.git libs/timber
+git clone https://github.com/Imn0/timber-cpp.git libs/timber
 ```
 
 or add as a submodule
@@ -59,8 +59,16 @@ or add as a submodule
 git submodule add https://github.com/Imn0/timber-cpp.git libs/timber
 ```
 
-Example `CMakeLists.txt` to link with a static version
+Example `CMakeLists.txt` to link with timber-cpp
 
-```cmake
-target_link_libraries(${PROJECT_NAME} timber-cpp::static)
+```c
+add_subdirectory(libs/timber)
+target_link_libraries(${PROJECT_NAME} timber-cpp)
+```
+
+⚠️ Manual setting of C++23 standard might be required ⚠️
+
+```c
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 ```
