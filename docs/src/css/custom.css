@@ -4,7 +4,24 @@
  * work well for content-centric websites.
  */
 
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/JetBrainsMono-Regular.woff2")
+        format("woff2");
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal;
+    font-weight: 900;
+    font-display: swap;
+    src: url("/fonts/JetBrainsMono-ExtraBold.woff2")
+        format("woff2");
+}
+
 
 /* You can override the default Infima variables here. */
 :root {
@@ -16,17 +33,12 @@
     --ifm-color-primary-lighter: #cb6868;
     --ifm-color-primary-lightest: #d58686;
 
-    /* Change the default font family */
-    --ifm-font-family-base: "Inter", -apple-system, BlinkMacSystemFont,
-        "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
-        "Droid Sans", "Helvetica Neue", sans-serif;
-
-    /* Change the code/monospace font */
-    --ifm-font-family-monospace: "JetBrains Mono", SFMono-Regular, Menlo, Monaco,
-        Consolas, "Liberation Mono", "Courier New", monospace;
+    --ifm-font-family-monospace: "JetBrains Mono";
+    --ifm-font-family-base: "JetBrains Mono";
 
     --ifm-code-font-size: 95%;
     --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+    --ifm-font-weight-bold: 900;
 }
 
 /* For dark mode */
@@ -43,14 +55,11 @@
     --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
-/* Optional: Adjust navbar logo size */
 .navbar__logo {
-    height: 2rem;
+    height: 3rem;
 }
 
-/* Optional: Style the navbar title */
 .navbar__title {
-    font-family: "JetBrains Mono", monospace;
-    font-weight: 600;
-    font-size: 1.25rem;
+    font-weight: 900;
+    font-size: 1.5rem;
 }
