@@ -30,8 +30,7 @@ const config = {
                 docs: {
                     sidebarPath: require.resolve("./sidebars.js"),
                     routeBasePath: "/",
-                    editUrl:
-                        "https://github.com/Imn0/timber/tree/master/docs/",
+                    editUrl: "https://github.com/Imn0/timber/tree/master/docs/",
                 },
                 blog: false,
                 theme: {
@@ -42,6 +41,10 @@ const config = {
     ],
 
     themeConfig: {
+        colorMode: {
+            defaultMode: "dark",
+            respectPrefersColorScheme: true,
+        },
         prism: {
             theme: prismThemes.gruvboxMaterialLight,
             darkTheme: prismThemes.gruvboxMaterialDark,
