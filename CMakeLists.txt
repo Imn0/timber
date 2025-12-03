@@ -175,13 +175,9 @@ endif()
 configure_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/library_config/Config.cmake.in
     ${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake @ONLY)
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/library_config/ConfigVersion.cmake.in
-    ${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake @ONLY)
 
 install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
